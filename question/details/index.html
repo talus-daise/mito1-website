@@ -120,8 +120,8 @@
 				return;
 			}
 
-			document.getElementById('question-title').textContent = parseMarkdown(question.title);
-			document.getElementById('username').textContent = '質問者:' + parseMarkdown(question.username);
+			document.getElementById('question-title').innerHTML = parseMarkdown(question.title);
+			document.getElementById('username').innerHTML = '質問者:' + parseMarkdown(question.username);
 			document.getElementById('question-content').innerHTML = parseMarkdown(question.content);
 
 			// 質問の投稿日時を表示
