@@ -1,0 +1,27 @@
+{
+  "name": "水戸一高附属中総合ウェブサイト",
+  "short_name": "4期生HP",
+  "description": "水戸一高附属中4期生に向けた総合ウェブサイトです。",
+  "start_url": "/mito1-website/",
+  "theme_color": "#5787ff",
+  "background_color": "#5787ff",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "img/favicon.ico",
+      "sizes": "64x64"
+    },
+    {
+      "src": "img/mitoichi-fuzoku-180x180.png",
+      "sizes": "180x180"
+    },
+    {
+      "src": "img/mitoichi-fuzoku-192x192.png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "img/mitoichi-fuzoku.png",
+      "sizes": "500x500"
+    }
+  ]
+}

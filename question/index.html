@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>みとい知恵袋 | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../notice/notice.css">
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="../img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#5787ff">
+    <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../script/customAlert.js"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../manifest.json">
+</head>
+
+<body>
+    <header>
+        <h1><a href="../">水戸一高附属中総合ウェブサイト</a></h1>
+        <p class="header__breadcrumb">
+            <a href="../"><i class="fa-solid fa-house"></i>トップページ</a>
+            <a href="./"><i class="fa-solid fa-list-check"></i>みとい知恵袋</a>
+        </p>
+    </header>
+
+    <main>
+        <h1>みとい知恵袋</h1>
+        <section>
+            <h2>ページ概要</h2>
+            <p>スパムに回答されると削除が大変なので無回答にご協力ください。</p>
+            <p>自分が勉強などのことで困っていることを他の人に質問できます。</p>
+            <p>※プライベートな質問は個人でしてください。</p>
+            <a href="new_question/">新しい質問を投稿する</a>
+        </section>
+
+        <section>
+            <h2>質問一覧</h2>
+            <!-- 検索フォーム -->
+            <hr>
+            <label for="search-box">検索：<input type="text" id="search-box" placeholder="質問を検索..."></label>
+            <button id="search-btn">検索</button>
+
+            <h3>未回答の質問</h3>
+            <ul id="unanswered-list"></ul>
+
+            <h3>回答済みの質問</h3>
+            <ul id="answered-list"></ul>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2025 talus</p>
+        <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意ください。</p>
+        <p><a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
+        </p>
+    </footer>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const pd = createClient('https://mgsbwkidyxmicbacqeeh.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg');
+
+        let allQuestions = []; // 取得した質問データを保存
+
+        async function fetchQuestions() {
+            const { data: questions, error } = await pd
+                .from('questions')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching questions:', error);
+                return;
+            }
+
+            allQuestions = questions; // データを保存
+            displayQuestions(allQuestions); // 初回表示
+        }
+
+        function displayQuestions(questions) {
+            const unansweredList = document.getElementById("unanswered-list");
+            const answeredList = document.getElementById("answered-list");
+
+            unansweredList.innerHTML = "";
+            answeredList.innerHTML = "";
+
+            questions.forEach(q => {
+                const li = document.createElement("li");
+                const answerDate = new Date(q.created_at).toLocaleString();
+                li.innerHTML = `<a href="details/?id=${q.id}">${q.title}</a>
+                <small>- ${q.username} (${answerDate})</small>`;
+
+                if (q.answered) {
+                    answeredList.appendChild(li);
+                } else {
+                    if (q.faster) {
+                        li.innerHTML += ` <small class="faster">至急求む!!!</small>`
+                    }
+
+                    unansweredList.appendChild(li);
+                }
+            });
+        }
+
+        function filterQuestions() {
+            const keyword = document.getElementById("search-box").value.toLowerCase();
+            const filtered = allQuestions.filter(q =>
+                q.title.toLowerCase().includes(keyword) || q.username.toLowerCase().includes(keyword) || q.content.toLowerCase().includes(keyword)
+            );
+            displayQuestions(filtered);
+        }
+
+        // 検索ボタンのクリックで検索実行
+        document.getElementById("search-btn").addEventListener("click", filterQuestions);
+
+        // Enterキーでも検索できるようにする
+        document.getElementById("search-box").addEventListener("keypress", (event) => {
+            if (event.key === "Enter") {
+                filterQuestions();
+            }
+        });
+
+        fetchQuestions();
+    </script>
+    <script type="module" src="../notice/notice.js"></script>
+    <script src="../script/customAlert.js"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../manifest.json">
+    <script src="../script/verification.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+
+</html>

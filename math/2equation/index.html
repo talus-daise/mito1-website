@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>2次方程式を解く | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../../notice/notice.css">
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="../../">
+    <!--Android-->
+    <meta name="theme-color" content="#5787ff">
+    <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../../script/customAlert.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>2次方程式を解く</h1>
+        <p>入力されたa,b,cから以下のように計算します。</p>
+        <div style="font-size: 1.5rem;">
+            \( x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} \)
+        </div>
+        <p>約分などにはまだ対応していません。</p>
+        <a href="index.html">←戻る</a>
+    </header>
+
+    <main>
+        <section>
+            <h2>入力</h2>
+            <label for="a">a:<input type="number" name="a" id="a"></label><br>
+            <label for="b">b:<input type="number" name="b" id="b"></label><br>
+            <label for="c">c:<input type="number" name="c" id="c"></label><br>
+            <button id="submit">解く！</button>
+            <button id="reset">リセット！</button>
+        </section>
+
+        <section>
+            <h2>結果</h2>
+            <div id="result" style="font-size: 2rem;"></div>
+        </section>
+    </main>
+
+    <script type="module" src="../../notice/notice.js"></script>
+    <script src="../../script/customAlert.js"></script>
+    <script src="../../script/verification.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <script>
+        let a_value; let b_value; let c_value;
+        window.addEventListener('input', () => {
+            a_value = document.getElementById('a').value;
+            b_value = document.getElementById('b').value;
+            c_value = document.getElementById('c').value;
+        })
+
+
+        document.getElementById("submit").addEventListener("click", () => {
+            const a = Number(a_value);
+            const b = Number(b_value);
+            const c = Number(c_value);
+
+            if (isNaN(a) || isNaN(b) || isNaN(c)) {
+                document.getElementById("result").textContent = '値が正しくありません';
+                return;
+            }
+
+            const bottom = 2 * a;
+            let discriminant = Math.sqrt((b * b) - (4 * a * c));
+
+            if (!Number.isInteger(discriminant)) {
+                discriminant = `\\sqrt{${(b * b) - (4 * a * c)}}`;
+            }
+
+            let expr;
+
+            if (discriminant < 0) {
+                expr = '解なし';
+            } else if (discriminant === 0) {
+                const root = -b / bottom;
+                expr = `\\( x = ${root} \\)`;
+            } else {
+                // 正の判別式
+                expr = `\\( x = \\frac{${-b} \\pm ${discriminant}}{${bottom}} \\)`;
+            }
+
+            document.getElementById("result").innerHTML = expr;
+
+            localStorage.setItem('2equation_a', a);
+            localStorage.setItem('2equation_b', b);
+            localStorage.setItem('2equation_c', c);
+
+            MathJax.typesetPromise()
+                .then(() => {
+                    console.log('MathJax レンダリング成功');
+                })
+                .catch((err) => {
+                    console.error('MathJax レンダリング失敗:', err);
+                });
+        });
+
+        document.getElementById("reset").addEventListener("click", () => {
+            a_value = '';
+            b_value = '';
+            c_value = '';
+            document.getElementById("result").textContent = '';
+
+            localStorage.removeItem('2equation_a');
+            localStorage.removeItem('2equation_b');
+            localStorage.removeItem('2equation_c');
+        });
+
+        document.getElementById("c").addEventListener("keydown", (event) => {
+            if (event.key === 'Enter') {
+                document.getElementById('submit').click();
+            }
+        })
+    </script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+
+</html>

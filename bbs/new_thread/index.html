@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>新規投稿 - 掲示板 | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../../notice/notice.css">
+    <style>
+        .format-buttons {
+            margin-bottom: 10px;
+        }
+
+        .format-buttons button {
+            margin-right: 5px;
+            padding: 5px 10px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 2.5rem;
+        }
+    </style>
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="../../img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#5787ff">
+    <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../../script/customAlert.js"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../../manifest.json">
+</head>
+
+<body>
+    <header>
+        <h1><a href="../../">水戸一高附属中総合ウェブサイト</a></h1>
+        <p class="header__breadcrumb">
+            <a href="../../"><i class="fa-solid fa-house"></i>トップページ</a>
+            <a href="../"><i class="fa-solid fa-chalkboard"></i>掲示板</a>
+            <a href="./"><i class="fa-solid fa-pen-to-square"></i>新規スレッド作成</a>
+        </p>
+    </header>
+
+    <main>
+        <h1>新規スレッド作成</h1>
+        <a href="../">掲示板トップへ</a>
+
+        <section>
+            <h2>スレッド一覧</h2>
+            <label for="search-box">検索：<input type="text" id="search-box" placeholder="スレッドを検索..."></label>
+            <button id="search-btn">検索</button>
+            <ul id="threadList"></ul>
+        </section>
+
+        <section>
+            <h2>新規スレッド作成</h2>
+            <form id="newThreadForm">
+                <h3>スレッド名</h3>
+                <input type="text" id="threadName" placeholder="スレッド名" required><br>
+                <hr>
+                <h3>最初の投稿</h3>
+                <input type="text" id="username" placeholder="名前"><br>
+                <input type="text" id="title" placeholder="タイトル" required><br>
+                <div class="format-buttons">
+                    <button id="bold"><strong>B</strong></button>
+                    <button id="italic"><em>I</em></button>
+                    <button id="strikethrough"><s>S</s></button>
+                    <button id="link"><i class="fa-solid fa-link"></i></button>
+                </div>
+                <textarea id="content" placeholder="本文" required></textarea><br>
+                <button type="submit">スレッド作成＆投稿</button>
+            </form>
+
+            <h3>プレビュー</h3>
+            <div id="preview"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 talus</p>
+        <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意ください。</p>
+        <p><a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
+        </p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const supabase = createClient(
+            "https://mgsbwkidyxmicbacqeeh.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
+        );
+
+        function loadThreads() {
+            document.addEventListener("DOMContentLoaded", async () => {
+                const threadList = document.getElementById("threadList");
+
+                const { data: threads, error } = await supabase
+                    .from("BBS")
+                    .select("thread")
+                    .order("thread", { ascending: true });
+
+                if (error) { console.error(error); return; }
+
+                threadList.innerHTML = "";
+                const uniqueThreads = [...new Set(threads.map(t => t.thread))];
+                uniqueThreads.forEach(thread => {
+                    const li = document.createElement("li");
+                    const a = document.createElement("a");
+                    a.href = `../thread/index.html?thread=${encodeURIComponent(thread)}`;
+                    a.innerHTML = parseMarkdown(thread);
+                    li.appendChild(a);
+                    threadList.appendChild(li);
+                });
+            });
+        }
+
+        document.getElementById("newThreadForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const thread = parseMarkdown(document.getElementById("threadName").value.trim());
+            const username = parseMarkdown(document.getElementById("username").value.trim());
+            const title = parseMarkdown(document.getElementById("title").value.trim());
+            const content = parseMarkdown(document.getElementById("content").value.trim());
+
+            if (!thread || !title || !content) {
+                showCustomAlert("必須項目を入力してください！");
+                return;
+            }
+
+            const { error } = await supabase.from("BBS").insert([{ thread, username: username || "とある水戸一の名無し", title, content }]);
+
+            if (error) {
+                console.error("スレッド作成エラー:", error);
+                showCustomAlert("スレッド作成に失敗しました");
+                return;
+            }
+
+            showCustomAlert("スレッド作成完了！");
+            // 作成したスレッドページへ遷移
+            window.location.href = `../thread/index.html?thread=${encodeURIComponent(thread)}`;
+        });
+
+        function parseMarkdown(text) {
+            // 太字: **太字**
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+            // 斜体: *斜体*
+            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            // 取り消し線: ~~取り消し~~
+            text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
+
+            // リンク: [リンク文字](URL)
+            text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>');
+
+            // 裸のURLを自動リンク化
+            text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+
+            return text;
+        }
+
+        loadThreads();
+
+        const textarea = document.getElementById("content");
+
+        document.getElementById("bold").addEventListener("click", (e) => {
+            e.preventDefault();
+            insertAtCursor(textarea, "**", "**", " ");
+        });
+
+        document.getElementById("italic").addEventListener("click", (e) => {
+            e.preventDefault();
+            insertAtCursor(textarea, "*", "*", " ");
+        });
+
+        document.getElementById("strikethrough").addEventListener("click", (e) => {
+            e.preventDefault();
+            insertAtCursor(textarea, "~~", "~~", " ");
+        });
+
+        document.getElementById("link").addEventListener("click", (e) => {
+            e.preventDefault();
+            // デフォルトで「リンクテキスト」を選択
+            insertAtCursor(textarea, "[", "](URL)", "リンクテキスト");
+        });
+
+        function insertAtCursor(textarea, before, after, selectText = "") {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+
+            const text = textarea.value;
+            const selected = text.slice(start, end) || selectText;
+
+            // テキスト挿入
+            const newText = text.slice(0, start) + before + selected + after + text.slice(end);
+            textarea.value = newText;
+
+            // 選択範囲設定
+            textarea.focus();
+            textarea.setSelectionRange(start + before.length, start + before.length + selected.length);
+        }
+
+        const previewArea = document.getElementById("preview");
+
+        document.getElementById("newThreadForm").addEventListener("keyup", (e) => {
+            const username = document.getElementById("username").value.trim();
+            const title = parseMarkdown(document.getElementById("title").value.trim());
+            const content = parseMarkdown(document.getElementById("content").value.trim());
+
+            previewArea.innerHTML = `
+                <span>1. </span>
+                <strong>${username || "とある水戸一の名無し"}</strong> 
+                <small>${new Date().toLocaleString()}</small>
+                <br>
+                <strong>${title || "無題"}</strong>
+                <p>${content}</p>
+            `
+        })
+
+        window.addEventListener('beforeunload', function (event) {
+            if (document.getElementById('title').value.trim() === '' && document.getElementById('content').value.trim() === '' && document.getElementById('threadName').value.trim() === '') {
+                return; // フォームが空なら警告しない
+            }
+            event.preventDefault() // (1)
+            event.returnValue = '' // (2)
+        })
+
+        document.getElementById("search-btn").addEventListener("click", async () => {
+            const query = document.getElementById("search-box").value.trim().toLowerCase();
+
+            if (!query) {
+                // 空のクエリなら全スレッド表示
+                const { data: threads, error } = await supabase
+                    .from("BBS")
+                    .select("thread")
+                    .order("thread", { ascending: true });
+
+                if (error) { console.error(error); return; }
+
+                const uniqueThreads = [...new Set(threads.map(t => t.thread))];
+
+                const threadList = document.getElementById("threadList");
+                threadList.innerHTML = uniqueThreads.map(t =>
+                    `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${parseMarkdown(t)}</a></span><hr>`
+                ).join("");
+                return;
+            }
+
+            const { data: threads, error } = await supabase
+                .from("BBS")
+                .select("thread")
+                .order("thread", { ascending: true });
+
+            if (error) { console.error(error); return; }
+
+            const uniqueThreads = [...new Set(threads.map(t => t.thread))];
+
+            const filteredThreads = uniqueThreads.filter(t => t.toLowerCase().includes(query));
+
+            const threadList = document.getElementById("threadList");
+            if (filteredThreads.length === 0) {
+                threadList.innerHTML = "<p>該当するスレッドが見つかりませんでした。</p>";
+            } else {
+                threadList.innerHTML = filteredThreads.map(t =>
+                    `<li><a href="thread/index.html?thread=${encodeURIComponent(t)}">${parseMarkdown(t)}</a></li>`
+                ).join("");
+            }
+        });
+
+        document.getElementById("search-box").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                document.getElementById("search-btn").click();
+            }
+        });
+    </script>
+    <script type="module" src="../../notice/notice.js"></script>
+    <script src="../../script/customAlert.js"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../../manifest.json">
+    <script src="../../script/verification.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>新規投稿 - 掲示板 | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../../notice/notice.css">
+    <style>
+        .format-buttons {
+            margin-bottom: 10px;
+        }
+
+        .format-buttons button {
+            margin-right: 5px;
+            padding: 5px 10px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 2.5rem;
+        }
+    </style>
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="../../img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#5787ff">
+    <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../../script/customAlert.js"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../../manifest.json">
+</head>
+
+<body>
+    <header>
+        <h1><a href="../../">水戸一高附属中総合ウェブサイト</a></h1>
+        <p class="header__breadcrumb">
+            <a href="../../"><i class="fa-solid fa-house"></i>トップページ</a>
+            <a href="../"><i class="fa-solid fa-chalkboard"></i>掲示板</a>
+            <a href="./"><i class="fa-solid fa-pen-to-square"></i>スレッド: <span id="threadTitle"></span></a>
+        </p>
+    </header>
+
+    <main>
+        <h1 id="listTitle"></h1>
+        <a href="../">掲示板トップへ</a>
+
+        <section>
+            <h2>投稿一覧</h2>
+            <div id="postList"></div>
+        </section>
+
+        <section>
+            <h2>新規投稿</h2>
+            <form id="postForm">
+                <input type="text" id="username" placeholder="名前"><br>
+                <input type="text" id="title" placeholder="タイトル" required><br>
+                <div class="format-buttons">
+                    <button id="bold"><strong>B</strong></button>
+                    <button id="italic"><em>I</em></button>
+                    <button id="strikethrough"><s>S</s></button>
+                    <button id="link"><i class="fa-solid fa-link"></i></button>
+                </div>
+                <textarea id="content" placeholder="本文" required></textarea><br>
+                <button type="submit">投稿</button>
+            </form>
+
+            <h3>プレビュー</h3>
+            <div id="preview"></div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const supabase = createClient("https://mgsbwkidyxmicbacqeeh.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg");
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const params = new URLSearchParams(window.location.search);
+            const thread = params.get("thread");
+            const listTitle = document.getElementById("listTitle");
+            const postList = document.getElementById("postList");
+            const postForm = document.getElementById("postForm");
+
+            if (!thread) { listTitle.textContent = "スレッドが指定されていません"; return; }
+            listTitle.innerHTML = `スレッド: ${parseMarkdown(thread)}`;
+            document.getElementById("threadTitle").innerHTML = parseMarkdown(thread);
+
+            // 投稿一覧表示
+            async function loadPosts() {
+                const { data: posts, error } = await supabase
+                    .from("BBS")
+                    .select("*")
+                    .eq("thread", thread)
+                    .order("created_at", { ascending: false });
+
+                if (error) { console.error(error); return; }
+
+                postList.innerHTML = posts
+                    .filter(post => post.title)
+                    .map((post, index) => `
+                <div>
+                    <span>${posts.length - index}. </span>
+                    <strong>${parseMarkdown(post.username.trim() || "とある水戸一の名無し")}</strong>
+                    <small>${new Date(post.created_at).toLocaleString()}</small>
+                    <br>
+                    <strong>${parseMarkdown(post.title.trim() || "無題")}</strong>
+                    <p>${parseMarkdown(post.content)}</p>
+                </div>
+                <hr>
+            `).join("");
+            }
+
+            await loadPosts();
+
+            // 投稿フォーム
+            postForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const username = document.getElementById("username").value;
+                const title = parseMarkdown(document.getElementById("title").value);
+                const content = parseMarkdown(document.getElementById("content").value);
+
+                const { error } = await supabase.from("BBS").insert([{ thread, username, title, content }]);
+                if (error) { console.error(error); return; }
+
+                // 投稿後フォームをクリア
+                postForm.reset();
+
+                // 投稿一覧を更新
+                await loadPosts();
+            });
+
+            function parseMarkdown(text) {
+                // 太字: **太字**
+                text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                // 斜体: *斜体*
+                text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+                // 取り消し線: ~~取り消し~~
+                text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
+
+                // リンク: [リンク文字](URL)
+                text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>');
+
+                // 裸のURLを自動リンク化
+                text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+
+                return text;
+            };
+
+            const textarea = document.getElementById("content");
+
+            document.getElementById("bold").addEventListener("click", (e) => {
+                e.preventDefault();
+                insertAtCursor(textarea, "**", "**", " ");
+            });
+
+            document.getElementById("italic").addEventListener("click", (e) => {
+                e.preventDefault();
+                insertAtCursor(textarea, "*", "*", " ");
+            });
+
+            document.getElementById("strikethrough").addEventListener("click", (e) => {
+                e.preventDefault();
+                insertAtCursor(textarea, "~~", "~~", " ");
+            });
+
+            document.getElementById("link").addEventListener("click", (e) => {
+                e.preventDefault();
+                // デフォルトで「リンクテキスト」を選択
+                insertAtCursor(textarea, "[", "](URL)", "リンクテキスト");
+            });
+
+            function insertAtCursor(textarea, before, after, selectText = "") {
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+
+                const text = textarea.value;
+                const selected = text.slice(start, end) || selectText;
+
+                // テキスト挿入
+                const newText = text.slice(0, start) + before + selected + after + text.slice(end);
+                textarea.value = newText;
+
+                // 選択範囲設定
+                textarea.focus();
+                textarea.setSelectionRange(start + before.length, start + before.length + selected.length);
+            }
+
+            const previewArea = document.getElementById("preview");
+
+            document.getElementById("postForm").addEventListener("keyup", (e) => {
+                const username = document.getElementById("username").value.trim();
+                const title = parseMarkdown(document.getElementById("title").value.trim());
+                const content = parseMarkdown(document.getElementById("content").value.trim());
+
+                previewArea.innerHTML = `
+                <span>x. </span>
+                <strong>${username || "とある水戸一の名無し"}</strong> 
+                <small>${new Date().toLocaleString()}</small>
+                <br>
+                <strong>${title || "無題"}</strong>
+                <p>${content}</p>
+            `
+            })
+
+        })
+
+        
+        window.addEventListener('beforeunload', function (event) {
+            if (document.getElementById('title').value.trim() === '' && document.getElementById('content').value.trim() === '' && document.getElementById('username').value.trim() === '') {
+                return; // フォームが空なら警告しない
+            }
+            event.preventDefault() // (1)
+            event.returnValue = '' // (2)
+        });
+    </script>
+
+    <script type="module" src="../../notice/notice.js"></script>
+    <script src="../../script/customAlert.js"></script>
+    <script src="../../script/verification.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+
+</html>

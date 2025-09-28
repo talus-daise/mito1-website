@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>課題(A) | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../notice/notice.css">
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="../img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#5787ff">
+    <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../script/customAlert.js"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../manifest.json">
+</head>
+
+<body>
+    <header>
+        <h1><a href="../">水戸一高附属中総合ウェブサイト</a></h1>
+        <p class="header__breadcrumb">
+            <a href="../"><i class="fa-solid fa-house"></i>トップページ</a>
+            <a href="./"><i class="fa-solid fa-list-check"></i>課題</a>
+        </p>
+    </header>
+
+    <main>
+        <h1>課題</h1>
+        <section>
+            <h2>ページ概要</h2>
+            <p>現在出されている課題の一覧です。</p>
+            <p>サイトを観覧できる人が投稿できるようになっているので、課題ができたりしたらどんどん投稿してください。</p>
+            <p>ただし、以下の注意をよく読んでからにしてください。</p>
+        </section>
+
+        <section class="highlight">
+            <h2>課題を追加する際の注意</h2>
+            <p>できるだけ正しい情報を入力することにご協力ください。</p>
+            <p>もし正しくない情報や適切でない情報だった場合は削除させていただくことがありますのでご了承ください。</p>
+        </section>
+
+        <section>
+            <h2>課題を追加</h2>
+            <form id="taskForm">
+                <input type="text" id="grade-class" placeholder="学年・クラス 例）2A" required><br>
+                <input type="text" id="title" placeholder="課題名" required><br>
+                <input type="date" id="deadline" required><br>
+                <input type="text" id="description" placeholder="課題内容" required><br>
+                <input type="text" id="notes" placeholder="備考"><br>
+                <button type="submit">追加</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>課題一覧</h2>
+            <label for="search-box">検索：<input type="text" id="search-box" placeholder="課題を検索..."></label>
+            <button id="search-btn">検索</button>
+            <div class="table-container">
+                <h3>1A</h3>
+                <p class="toggle-button">▼1Aの課題を表示</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>学年・クラス</th>
+                            <th>課題名</th>
+                            <th>期限</th>
+                            <th>課題内容</th>
+                            <th>備考</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskTable1A"></tbody>
+                </table>
+                <h3>1B</h3>
+                <p class="toggle-button">▼1Bの課題を表示</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>学年・クラス</th>
+                            <th>課題名</th>
+                            <th>期限</th>
+                            <th>課題内容</th>
+                            <th>備考</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskTable1B"></tbody>
+                </table>
+                <h3>2A</h3>
+                <p class="toggle-button">▼2Aの課題を表示</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>学年・クラス</th>
+                            <th>課題名</th>
+                            <th>期限</th>
+                            <th>課題内容</th>
+                            <th>備考</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskTable2A"></tbody>
+                </table>
+                <h3>2B</h3>
+                <p class="toggle-button">▼2Bの課題を表示</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>学年・クラス</th>
+                            <th>課題名</th>
+                            <th>期限</th>
+                            <th>課題内容</th>
+                            <th>備考</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskTable2B"></tbody>
+                </table>
+                <h3>3A</h3>
+                <p class="toggle-button">▼3Aの課題を表示</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>学年・クラス</th>
+                            <th>課題名</th>
+                            <th>期限</th>
+                            <th>課題内容</th>
+                            <th>備考</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskTable3A"></tbody>
+                </table>
+                <h3>3B</h3>
+                <p class="toggle-button">▼3Bの課題を表示</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>学年・クラス</th>
+                            <th>課題名</th>
+                            <th>期限</th>
+                            <th>課題内容</th>
+                            <th>備考</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskTable3B"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 talus</p>
+        <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意<a href="../2equation.html">ください。</a></p>
+        <p><a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
+        </p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script type="module">
+        // Supabase ライブラリをインポート
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        // Supabase 設定
+        const supabaseUrl = "https://mgsbwkidyxmicbacqeeh.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg";
+
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // フォーム送信処理
+        document.getElementById("taskForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const gradeClass = document.getElementById("grade-class").value;
+            const title = document.getElementById("title").value;
+            const deadline = document.getElementById("deadline").value;
+            const description = document.getElementById("description").value;
+            const notes = document.getElementById("notes").value;
+
+            const { error } = await supabase.from("tasks").insert([{ gradeClass, title, deadline, description, notes }]);
+
+            if (error) {
+                console.error("データ送信エラー:", error);
+                return;
+            }
+
+            document.getElementById("taskForm").reset();
+            showCustomAlert("課題が追加されました！");
+            loadTasks(); // 課題を再読み込み
+        });
+
+        window.addEventListener('beforeunload', function (event) {
+            if (document.getElementById('title').value.trim() === '' && document.getElementById('description').value.trim() === '') {
+                return; // フォームが空なら警告しない
+            }
+            event.preventDefault() // (1)
+            event.returnValue = '' // (2)
+        })
+
+        // 折りたたみ機能
+        document.querySelectorAll('.toggle-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const table = button.nextElementSibling;
+                if (table.style.display === 'none' || table.style.display === '') {
+                    table.style.display = 'table';
+                    button.textContent = button.textContent.replace('▼', '▲').replace('の課題を表示', 'の課題を隠す');
+                } else {
+                    table.style.display = 'none';
+                    button.textContent = button.textContent.replace('▲', '▼').replace('の課題を隠す', 'の課題を表示');
+                }
+            });
+        });
+
+        document.querySelectorAll('table').forEach(table => {
+            table.style.display = 'none'; // 初期状態で非表示
+        });
+
+        document.addEventListener("DOMContentLoaded", loadTasks);
+
+        async function loadTasks() {
+            const taskTables = {
+                "1A": document.getElementById("taskTable1A"),
+                "1B": document.getElementById("taskTable1B"),
+                "2A": document.getElementById("taskTable2A"),
+                "2B": document.getElementById("taskTable2B"),
+                "3A": document.getElementById("taskTable3A"),
+                "3B": document.getElementById("taskTable3B"),
+            };
+
+            for (const key in taskTables) {
+                taskTables[key].innerHTML = ""; // 既存の行をクリア
+            }
+
+            const { data, error } = await supabase
+                .from("tasks")
+                .select("*")
+                .order("deadline", { ascending: true });
+
+            console.log(data);
+
+            if (error) {
+                console.error("データ取得エラー:", error);
+                showCustomAlert("課題の取得に失敗しました");
+                return;
+            }
+
+            const now = new Date();
+
+            for (const task of data) {
+                const deadlineDate = new Date(task.deadline);
+                const row = document.createElement("tr");
+                row.innerHTML = `<td>${task.gradeClass}</td>
+                                 <td>${task.title}</td>
+                                 <td>${task.deadline}</td>
+                                 <td>${task.description}</td>
+                                 <td>${task.notes}</td>`;
+
+                // 期限切れのタスクは赤くする
+                if (deadlineDate < now) {
+                    row.style.color = "red";
+                }
+
+                if (taskTables[task.gradeClass]) {
+                    taskTables[task.gradeClass].appendChild(row);
+                }
+            }
+        }
+
+        document.getElementById("search-btn").addEventListener("click", () => {
+            const query = document.getElementById("search-box").value.toLowerCase();
+            const tableContainer = document.querySelector(".table-container");
+            const containers = document.querySelectorAll(".table-container > h3");
+
+            // 既存の「該当なし」メッセージを削除
+            const oldMsg = tableContainer.querySelector(".no-result-message");
+            if (oldMsg) oldMsg.remove();
+
+            if (!query) {
+                // 検索ボックスが空なら全て表示（折りたたみ状態へ）
+                containers.forEach(h3 => {
+                    const toggle = h3.nextElementSibling; // <p class="toggle-button">
+                    const table = toggle.nextElementSibling; // <table>
+                    const rows = table.querySelectorAll("tbody tr");
+                    h3.style.display = "";
+                    toggle.style.display = "";
+                    table.style.display = "none";
+                    toggle.textContent = `▼${h3.textContent}の課題を表示`;
+                    rows.forEach(row => row.style.display = "");
+                });
+                return;
+            }
+
+            let anyMatch = false; // 全体で1件でもヒットがあるか
+
+            containers.forEach(h3 => {
+                const toggle = h3.nextElementSibling;
+                const table = toggle.nextElementSibling;
+                const rows = table.querySelectorAll("tbody tr");
+
+                let hasMatch = false;
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll("td");
+
+                    // 1列目（学年・クラス）は検索対象外
+                    let rowText = "";
+                    cells.forEach((cell, i) => {
+                        if (i > 0) {
+                            rowText += cell.textContent.toLowerCase() + " ";
+                        }
+                    });
+
+                    if (rowText.includes(query)) {
+                        row.style.display = "";
+                        hasMatch = true;
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
+
+                if (hasMatch) {
+                    h3.style.display = "";
+                    toggle.style.display = "";
+                    table.style.display = "";
+                    anyMatch = true;
+                } else {
+                    h3.style.display = "none";
+                    toggle.style.display = "none";
+                    table.style.display = "none";
+                }
+            });
+
+            if (!anyMatch) {
+                tableContainer.insertAdjacentHTML(
+                    "beforeend",
+                    '<p class="no-result-message">該当する課題が見つかりませんでした。</p>'
+                );
+            }
+        });
+
+        document.getElementById("search-box").addEventListener("keypress", (event) => {
+            if (event.key === "Enter") {
+                document.getElementById("search-btn").click();
+            }
+        });
+    </script>
+    <script type="module" src="../notice/notice.js"></script>
+    <script src="../script/customAlert.js"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../manifest.json">
+    <script src="../script/verification.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>名簿 | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../notice/notice.css">
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="../img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#5787ff">
+    <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../script/customAlert.js"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../manifest.json">
+</head>
+
+<body>
+    <header>
+        <h1>
+            <a href="../">水戸一高附属中総合ウェブサイト</a>
+        </h1>
+        <p class="header__breadcrumb">
+            <a href="../">
+                <i class="fa-solid fa-house"></i>トップページ</a>
+            <a href="./">
+                <i class="fa-solid fa-clipboard-list"></i>名簿</a>
+        </p>
+    </header>
+    <main>
+        <h1>名簿</h1>
+        <section>
+            <h2>先生方</h2>
+            <h3>1学年担任</h3>
+            <p>主任 綿引利弘</p>
+            <p>副主任 阿内文弘</p>
+            <p>担任 鳴井柚紀</p>
+            <p>担任 岡崎翔太</p>
+            <hr>
+            <h3>2学年担任</h3>
+            <p>主任 羽成文江</p>
+            <p>副主任 浅野玲子</p>
+            <p>担任 渡邊大介</p>
+            <p>担任 藤田忠弘</p>
+            <hr>
+            <h3>3学年担任</h3>
+            <p>主任 丸山聡一郎</p>
+            <p>副主任 矢崎寛子</p>
+            <p>担任 白石拓史</p>
+            <p>担任 石田竜祐</p>
+            <hr>
+            <h3>英語</h3>
+            <p>Super 白石拓史</p>
+            <p>Advance 鳴井柚紀</p>
+            <p>Basic 浅野玲子</p>
+            <p>E2 Andres Gonzales</p>
+            <hr>
+            <h3>数学</h3>
+            <p>発展 平塚祐二</p>
+            <p>応用 羽成文江</p>
+            <p>基礎 綿引利弘</p>
+            <hr>
+            <h3>国語</h3>
+            <p>A 阿内文弘</p>
+            <p>B 矢崎寛子</p>
+            <hr>
+            <h3>理科</h3>
+            <p>R1 木村由佳</p>
+            <p>R2 藤田忠弘</p>
+            <hr>
+            <h3>社会</h3>
+            <p>地理 丸山聡一郎</p>
+            <p>歴史 岡崎翔太</p>
+            <hr>
+            <h3>体育</h3>
+            <p>渡邊大介</p>
+            <p>石田竜祐</p>
+            <hr>
+            <h3>技術</h3>
+            <p>清浦昌之</p>
+            <hr>
+            <h3>家庭</h3>
+            <p>柴田京子</p>
+            <p>川井美穂</p>
+            <hr>
+            <h3>美術</h3>
+            <p>武本夏子</p>
+            <hr>
+            <h3>音楽</h3>
+            <p>小沼みのり</p>
+            <hr>
+            <p>(以上敬称略)</p>
+        </section>
+        <section class="main__student">
+            <h2>生徒</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>学籍番号</th>
+                        <th>名前</th>
+                    </tr>
+                </thead>
+                <tbody id="roster"></tbody>
+            </table>
+        </section>
+    </main>
+    <footer>
+        <p>© 2025 talus</p>
+        <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意ください。</p>
+        <p>
+            <a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
+        </p>
+    </footer>
+
+    <script type="module" src="../notice/notice.js"></script>
+    <script src="../script/customAlert.js"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../manifest.json">
+    <script src="../script/verification.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    <script>
+        const classes = {
+            "1A": [
+                "相原文広", "赤塚壮介", "麻植雅文", "伊藤龍太", "岩井怜央", "江淵昊輝", "大川晴", "大原京花", "小貫雄平",
+                "小野稜弥", "金澤真帆", "熊倉琉眞", "栗田駿", "小鶴載衡", "後藤笑真", "小橋川明", "小松﨑結子", "紺野真友",
+                "佐々木理帆", "沢田葉", "白濵理子", "杉井知佳子", "鈴木美友", "住川漣", "高橋拓杜", "田中音羽", "田山楓季",
+                "柘植悠那", "永井沙佳", "中西りこ", "中村葵琴", "根本樹", "根本佑香", "野村和花", "早谷直季", "藤芳直生",
+                "峯岸隼吾", "宮本陽菜", "和田稜正", "渡部柚"
+            ],
+            "1B": [
+                "芦分悠夏", "臼井真之介", "江坂颯良斗", "枝川聡汰", "江成暁佑", "太田結仁", "大貫慧里衣", "小幡香菜子",
+                "風間敬太", "梶美咲", "小橋楠々", "佐藤美菜子", "芝間つむぎ", "嶋田こころ", "嶋根沙希", "清水龍太",
+                "鈴木朋花", "住川遼", "曽我あかね", "高柳祐梨奈", "谷越百華", "田村香晴", "德宿はるか", "戸髙創司",
+                "富永光貴", "内藤咲良", "七里春樹", "西中千晃", "西野莉佳子", "橋本健", "濱野敬弘", "平野陽大",
+                "平間琴葉", "深谷澪一朗", "増山幸之介", "峯岸拓吾", "森一眞", "森田彩未", "森野志保", "山崎昇龍"
+            ],
+            "2A": [
+                "相田和", "相田悠乃介", "安藤陸", "飯塚悠仁", "石田晴大", "伊藤希", "岩島綾子", "岩田樹弥",
+                "薄井圭護", "江幡遥人", "小曽納璃佳", "菊池顕広", "木許咲希", "久保田涼斗", "小林史佳",
+                "小林拓海", "坂井敬伍", "篠﨑咲良", "清水玲菜", "志村拓真", "菅田悠暉", "鈴木将弘", "田口翔清",
+                "田村孝太", "塚田旭", "ドカン", "堂田有紗", "戸間替咲希", "野中美遥", "芳賀かえで", "人見桜子",
+                "二川ひなた", "古川陽菜", "星音羽", "松井結愛", "山口陽花", "山下真歩", "山本朱璃", "山本悠二朗",
+                "渡辺太造"
+            ],
+            "2B": [
+                "青山ひかり", "有馬暁都", "飯村和香", "石川陽菜", "石川眞帆", "石原遼門", "市川聡真",
+                "稲田光孝", "井村百花", "岩淵由真", "岩元祥一郎", "小國丈太朗", "河野蒼士", "木津碧咲", "黒澤遼",
+                "小泉裕貴", "小林蒼依", "西城奈那", "佐川慶一郎", "佐々木和義", "清水和奏", "白土咲恵", "杉本桔花",
+                "武田証", "飛田愼也", "直井大和", "中里ゆり奈", "野尻裕貴", "板東すずな", "廣瀬太一", "福田翼",
+                "船尾帆夏", "古川陽菜", "松嶋隼士", "松本悠菜", "森啓惺", "森山心愛", "八木優歌", "安川愛菜", "山田優希"
+            ],
+            "3A": [
+                "浅見太一", "芦田喜一", "有田隼飛", "一家優太", "海野心絆", "大河葉奈歌", "太田和希", "柿原佑真", "木村仁",
+                "黒川大智", "黒澤誠", "小林賢佑", "小松﨑宗汰", "佐々木紳伍", "佐藤航大", "塩谷華奈", "杉本美風",
+                "鈴木朝陽", "鈴木茉莉香", "髙橋希", "巽美陽", "蓼沼歩", "飛田真奈", "中川愛菜", "南指原礼人", "西墻芽咲",
+                "萩原仁子", "羽田琉美香", "百武佳穂", "平石暖馬", "平間太惺", "布施未杜", "古橋宙富", "本田瑛一朗",
+                "前澤実日子", "町井智恵実", "マリーソフィア麗花", "丸茂愛佳", "門間恭汰", "山内尚香"
+            ],
+            "3B": [
+                "安部徳晃", "石﨑遼", "稲川陽太", "上野陽葵", "江﨑園乃", "大内彩愛", "大西昴", "大沼奏太", "小瀬蒼",
+                "金谷一輝", "狐塚結月", "木村菜々子", "熊野御堂樹里", "黒澤礼", "今野心宇", "境菜々香", "佐藤明日香",
+                "塩幡篤杜", "清水千尋", "清水優", "新藤礼菜", "鈴木彩夏", "鈴木波琉", "鈴木隆太", "諏訪美桜利", "添田紗愛",
+                "堤望結", "中川航輝", "中根貴大", "二階堂華", "沼田凜太朗", "野手悠理", "濱田歩乃実", "平根吏人",
+                "藤芳莉子", "本田創甫", "持丸涼穏", "山口史華", "山田歩茉"
+            ]
+        };
+
+        const tbody = document.getElementById('roster');
+
+        for (const cls in classes) {
+            classes[cls].forEach((name, index) => {
+                const tr = document.createElement('tr');
+                const tdId = document.createElement('td');
+                const tdName = document.createElement('td');
+
+                // 学籍番号：クラス+出席番号2桁
+                const number = (index + 1).toString().padStart(2, '0');
+                tdId.textContent = `${cls}${number}`;
+                tdName.textContent = name;
+
+                tr.appendChild(tdId);
+                tr.appendChild(tdName);
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+
+</html>

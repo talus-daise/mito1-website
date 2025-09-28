@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>2次関数と1次関数の共有点を求める&beta; | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../../notice/notice.css">
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#5787ff">
+    <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../../script/customAlert.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        #graph {
+            min-width: 600px;
+            min-height: 400px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>2次関数と1次関数の共有点を求める&beta;</h1>
+        <div style="font-size: 1.5rem;">
+            \( y = ax^2 + bx + c \)
+        </div>
+        <div style="font-size: 1.5rem;">
+            \( y = dx + e \)
+        </div>
+        <p>の形式で入力してください</p>
+        <p>&#x203B;ベータ版です。正しく動かない可能性があります。</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>入力</h2>
+            <label for="a">a:<input type="number" name="a" id="a"></label><br>
+            <label for="b">b:<input type="number" name="b" id="b"></label><br>
+            <label for="c">c:<input type="number" name="c" id="c"></label><br>
+            <label for="d">d:<input type="number" name="d" id="d"></label><br>
+            <label for="e">e:<input type="number" name="e" id="e"></label><br>
+            <button id="submit">解く！</button>
+            <button id="reset">リセット！</button>
+        </section>
+
+        <section>
+            <h2>結果</h2>
+            <div id="result" style="font-size: 2rem;"></div>
+        </section>
+
+        <section>
+            <canvas id="graph" width="600" height="400"></canvas>
+        </section>
+    </main>
+
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <script type="module" src="../../notice/notice.js"></script>
+    <script src="../../script/verification.js"></script>
+    <script>
+        let a = 1, b = -2, c = -3; // 2次関数 y = ax² + bx + c
+        let d = 1, e = 1;          // 1次関数 y = dx + e
+
+        window.addEventListener('input', () => {
+            a = document.getElementById('a').value;
+            b = document.getElementById('b').value;
+            c = document.getElementById('c').value;
+            d = document.getElementById('d').value;
+            e = document.getElementById('e').value;
+        })
+
+        function findIntersectionPoints(a, b, c, d, e) {
+            const A = a;
+            const B = b - d;
+            const C = c - e;
+            const D = B * B - 4 * A * C;
+
+            if (A === 0 && B === 0 && C === 0) {
+                return "infinite";
+            } else if (A === 0) {
+                const x = -C / B;
+                return [[x, d * x + e]];
+            } else if (D < 0) {
+                return [];
+            } else if (D === 0) {
+                const x = -B / (2 * A);
+                return [[x, d * x + e]];
+            } else {
+                const sqrtD = Math.sqrt(D);
+                const x1 = (-B + sqrtD) / (2 * A);
+                const x2 = (-B - sqrtD) / (2 * A);
+                return [[x1, d * x1 + e], [x2, d * x2 + e]];
+            }
+        }
+
+        const intersections = findIntersectionPoints(a, b, c, d, e);
+        const intersectionData = [];
+
+        if (Array.isArray(intersections)) {
+            for (const [x, y] of intersections) {
+                intersectionData.push({ x, y });
+            }
+        }
+
+        new Chart(document.getElementById("graph"), {
+            type: "scatter",  // scatter に統一
+            data: {
+                datasets: [
+                    {
+                        label: "共有点",
+                        type: "scatter",
+                        data: intersectionData,
+                        backgroundColor: "red",
+                        pointRadius: 6,
+                        showLine: false
+                    }
+                ]
+            },
+            options: {
+                responsive: false,
+                scales: {
+                    x: { type: 'linear', position: 'bottom' },
+                    y: { beginAtZero: false }
+                },
+                elements: {
+                    point: {
+                        radius: 6,
+                        hoverRadius: 6
+                    }
+                }
+            }
+        });
+    </script>
+<script data-goatcounter="https://talus.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+
+</html>

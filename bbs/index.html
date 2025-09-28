@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>掲示板 | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../notice/notice.css">
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="../img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#5787ff">
+    <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../script/customAlert.js"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../manifest.json">
+</head>
+
+<body>
+    <header>
+        <h1><a href="../">水戸一高附属中総合ウェブサイト</a></h1>
+        <p class="header__breadcrumb">
+            <a href="../"><i class="fa-solid fa-house"></i>トップページ</a>
+            <a href="./"><i class="fa-solid fa-chalkboard"></i>掲示板</a>
+        </p>
+    </header>
+
+    <main>
+        <h1>掲示板</h1>
+        <section>
+            <h2>ページ概要</h2>
+            <p>掲示板です。</p>
+            <p>ここでは、様々なトピックについての議論や情報交換が行われています。</p>
+            <p>新しいスレッドを作成したり、既存のスレッドに返信したりすることができます。</p>
+            <p>興味のあるトピックについて気軽に投稿してください。</p>
+            <a href="new_thread/">新規スレッド作成はここ</a>
+        </section>
+
+        <section class="highlight">
+            <h2>スパム行為について</h2>
+            <p>掲示板ではスパム行為を禁止しています。</p>
+            <p>スパム行為が確認された場合、該当する投稿は削除され、投稿者はサイトへのアクセスができなくなる場合があります。</p>
+        </section>
+
+        <section>
+            <h2>スレ一覧</h2>
+            <label for="search-box">検索：<input type="text" id="search-box" placeholder="スレッドを検索..."></label>
+            <button id="search-btn">検索</button>
+            <div id="threadList"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 talus</p>
+        <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意ください。</p>
+        <p><a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
+        </p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const supabase = createClient("https://mgsbwkidyxmicbacqeeh.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg");
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const threadList = document.getElementById("threadList");
+
+            const { data: threads, error } = await supabase
+                .from("BBS")
+                .select("thread")
+                .order("thread", { ascending: true });
+
+            if (error) { console.error(error); return; }
+
+            const uniqueThreads = [...new Set(threads.map(t => t.thread))];
+
+            threadList.innerHTML = uniqueThreads.map(t =>
+                `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${parseMarkdown(t)}</a></span><hr>`
+            ).join("");
+        });
+
+        function parseMarkdown(text) {
+            // 太字: **太字**
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+            // 斜体: *斜体*
+            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            // 取り消し線: ~~取り消し~~
+            text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
+
+            // リンク: [リンク文字](URL)
+            text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>');
+
+            // 裸のURLを自動リンク化
+            text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+
+            return text;
+        }
+
+        document.getElementById("search-btn").addEventListener("click", async () => {
+            const query = document.getElementById("search-box").value.trim().toLowerCase();
+
+            if (!query) {
+                // 空のクエリなら全スレッド表示
+                const { data: threads, error } = await supabase
+                    .from("BBS")
+                    .select("thread")
+                    .order("thread", { ascending: true });
+
+                if (error) { console.error(error); return; }
+
+                const uniqueThreads = [...new Set(threads.map(t => t.thread))];
+
+                const threadList = document.getElementById("threadList");
+                threadList.innerHTML = uniqueThreads.map(t =>
+                    `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${parseMarkdown(t)}</a></span><hr>`
+                ).join("");
+                return;
+            }
+
+            const { data: threads, error } = await supabase
+                .from("BBS")
+                .select("thread")
+                .order("thread", { ascending: true });
+
+            if (error) { console.error(error); return; }
+
+            const uniqueThreads = [...new Set(threads.map(t => t.thread))];
+
+            const filteredThreads = uniqueThreads.filter(t => t.toLowerCase().includes(query));
+
+            const threadList = document.getElementById("threadList");
+            if (filteredThreads.length === 0) {
+                threadList.innerHTML = "<p>該当するスレッドが見つかりませんでした。</p>";
+            } else {
+                threadList.innerHTML = filteredThreads.map(t =>
+                    `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${parseMarkdown(t)}</a></span><hr>`
+                ).join("");
+            }
+        });
+
+        document.getElementById("search-box").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                document.getElementById("search-btn").click();
+            }
+        });
+    </script>
+    <script type="module" src="../notice/notice.js"></script>
+    <script src="../script/customAlert.js"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../manifest.json">
+    <script src="../script/verification.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+
+</html>

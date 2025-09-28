@@ -1,0 +1,232 @@
+/* サイドメニューのスタイル */
+#asideMenu {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 40dvw;
+    height: 100dvh;
+    background-color: #e3f2fd;
+    /* 明るい水色背景 */
+    color: #0a2540;
+    /* 濃い青みのテキスト */
+    transition: opacity 1s ease;
+    padding: 1rem 3rem 1rem 2rem;
+    z-index: 1001;
+    filter: drop-shadow(0px 0px 16px rgba(0, 0, 0, 0.6));
+    overflow: scroll;
+    pointer-events: none;
+    /* ボタン拡大中は操作できない */
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* サイドメニュー内のコンテンツ */
+#asideMenu h2,
+#asideMenu h3 {
+    color: #0a2540;
+}
+
+#asideMenu #noticeContainer {
+    margin-top: 20px;
+}
+
+/* メニューボタン */
+#menuButton {
+    position: fixed;
+    top: 20px;
+    right: 1rem;
+    cursor: pointer;
+    font-size: 2rem;
+    color: #3498db;
+    background: #ffffff;
+    border: none;
+    box-shadow: none;
+    z-index: 1000;
+    transition: all 0.8s ease;
+    filter: drop-shadow(0px 0px 16px rgba(0, 0, 0, 0.6));
+    border-radius: 5px;
+    width: 3rem;
+    height: 3rem;
+    margin: 0;
+}
+
+/* メニューを閉じるボタン */
+#closeButton {
+    position: fixed;
+    top: 20px;
+    right: -100%;
+    cursor: pointer;
+    font-size: 2rem;
+    color: #3498db;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    z-index: 1003;
+    transition: right 1s ease, transform 1s ease 0.5s;
+    transform: rotate(180deg);
+}
+
+/* サイドメニューが表示されている時の位置 */
+#asideMenu.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0.8s;
+    /* ボタンが拡大してから表示 */
+}
+
+#asideMenu.closing {
+    opacity: 0;
+    visibility: hidden;
+    transition-delay: 0s;
+    /* ボタン縮小と同時に消える */
+}
+
+#menuButton.open {
+    width: 40dvw;
+    /* サイドメニューと同じ幅 */
+    height: 100dvh;
+    /* サイドメニューと同じ高さ */
+    right: 0;
+    top: 0;
+    border-radius: 0;
+    background: #e3f2fd;
+    color: #0a2540;
+    font-size: 0;
+    /* アイコンを消す */
+    transition: all 0.8s ease;
+}
+
+#closeButton.open {
+    right: 2rem;
+    transform: rotate(0);
+}
+
+.notice-item {
+    margin: 0;
+    margin-block-start: 0;
+}
+
+body.no-scroll {
+    overflow: hidden;
+}
+
+/* ナビゲーション全体 */
+nav {
+    width: 100%;
+    margin: 2rem 0;
+}
+
+nav ul {
+    width: 100%;
+    padding: 0;
+    list-style: none;
+    gap: 0.5rem;
+}
+
+nav li {
+    display: flex;
+    width: 100%;
+}
+
+nav li ul li {
+    width: 100%;
+}
+
+nav li ul li a::before {
+    content: '　\25B6';
+}
+
+/* 各リンクのスタイル */
+nav a {
+    display: block;
+    min-width: 15rem;
+    padding: 0.5rem;
+    text-align: left;
+    background-color: #3498db;
+    color: #ffffff;
+    transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+/* アイコン（<i>タグ）スタイル */
+nav i {
+    color: #ffffff;
+    transition: color 0.3s ease;
+}
+
+/* ホバー時のリンクとアイコン */
+nav a:hover {
+    background-color: #21618c;
+    color: #ffffff;
+}
+
+nav a:hover i {
+    color: #ffffff;
+}
+
+/* サブメニュー非表示 */
+.menu-item .submenu {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.3s ease, max-height 0.3s ease;
+    pointer-events: none;
+    /* hover 判定されないように */
+}
+
+.menu-item:hover .submenu {
+    opacity: 1;
+    max-height: 500px;
+    /* サブメニューの高さに合わせて調整 */
+    pointer-events: auto;
+    /* クリック可能にする */
+}
+
+/* 表示状態 */
+.submenu.show {
+    opacity: 1;
+    max-height: 200px;
+    /* サブメニューの高さに応じて調整 */
+}
+
+
+/* レスポンシブ対応 */
+@media (max-width: 960px) {
+    nav a {
+        min-width: 50%;
+    }
+}
+
+@media (max-width: 428px) {
+    nav li {
+        flex-wrap: wrap;
+    }
+
+    nav a {
+        min-width: 100%;
+        padding: 1rem;
+    }
+
+    #asideMenu {
+        transition: right 0.3s ease;
+    }
+
+    #menuButton {
+        top: 4rem;
+        right: -2rem;
+    }
+
+    #closeButton {
+        transition: right 0.5s ease, transform 0.5s ease 0.25s;
+    }
+
+    #closeButton.open {
+        right: 0;
+    }
+
+    .menu-item.open .submenu {
+        opacity: 1;
+        max-height: 500px;
+        pointer-events: auto;
+    }
+}
