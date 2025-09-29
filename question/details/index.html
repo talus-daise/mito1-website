@@ -14,16 +14,16 @@
 	<link rel="stylesheet" href="../../notice/notice.css">
 	<style>
 		.format-buttons {
-            margin-bottom: 10px;
-        }
+			margin-bottom: 10px;
+		}
 
-        .format-buttons button {
-            margin-right: 5px;
-            padding: 5px 10px;
-            font-size: 16px;
-            cursor: pointer;
-            width: 2.5rem;
-        }
+		.format-buttons button {
+			margin-right: 5px;
+			padding: 5px 10px;
+			font-size: 16px;
+			cursor: pointer;
+			width: 2.5rem;
+		}
 	</style>
 	<!--web情報-->
 	<meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
@@ -120,9 +120,9 @@
 				return;
 			}
 
-			document.getElementById('question-title').innerHTML = parseMarkdown(question.title);
-			document.getElementById('username').innerHTML = '質問者:' + parseMarkdown(question.username);
-			document.getElementById('question-content').innerHTML = parseMarkdown(question.content);
+			document.getElementById('question-title').innerHTML = question.title;
+			document.getElementById('username').innerHTML = '質問者:' + question.username;
+			document.getElementById('question-content').innerHTML = question.content;
 
 			// 質問の投稿日時を表示
 			const postDate = new Date(question.created_at).toLocaleString();
@@ -155,7 +155,7 @@
 				const li = document.createElement('li');
 				const answerDate = new Date(answer.created_at).toLocaleString();
 				li.innerHTML = `
-          ${answer.content} - by ${answer.username} 
+          ${answer.content} - by ${answer.username}
           <small>(${answerDate})</small>`;
 				answerList.appendChild(li);
 			});
@@ -228,14 +228,27 @@
 			// 取り消し線: ~~取り消し~~
 			text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
 
-			// リンク: [リンク文字](URL)
-			text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>');
+			// プレースホルダー格納用
+			const placeholders = {};
+			let index = 0;
 
-			// 裸のURLを自動リンク化
+			// リンク: [リンク文字](URL)
+			text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, label, url) => {
+				const key = `__URL_PLACEHOLDER_${index++}__`;
+				placeholders[key] = `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+				return key;
+			});
+
+			// 裸のURLを自動リンク化（リンクのURL部分は除外済み）
 			text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
 
+			// プレースホルダーを元に戻す
+			Object.keys(placeholders).forEach(key => {
+				text = text.replace(key, placeholders[key]);
+			});
+
 			return text;
-		};
+		}
 
 		const textarea = document.getElementById("answer-content");
 
@@ -293,12 +306,12 @@
 		})
 
 		window.addEventListener('beforeunload', function (event) {
-            if (document.getElementById('answer-content').value.trim() === '' && document.getElementById('answer-username').value.trim() === '') {
-                return; // フォームが空なら警告しない
-            }
-            event.preventDefault() // (1)
-            event.returnValue = '' // (2)
-        })
+			if (document.getElementById('answer-content').value.trim() === '' && document.getElementById('answer-username').value.trim() === '') {
+				return; // フォームが空なら警告しない
+			}
+			event.preventDefault() // (1)
+			event.returnValue = '' // (2)
+		})
 	</script>
 	<script type="module" src="../../notice/notice.js" defer></script>
 	<script src="../../script/customAlert.js"></script>

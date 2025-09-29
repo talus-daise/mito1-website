@@ -99,28 +99,9 @@
             const uniqueThreads = [...new Set(threads.map(t => t.thread))];
 
             threadList.innerHTML = uniqueThreads.map(t =>
-                `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${parseMarkdown(t)}</a></span><hr>`
+                `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${t}</a></span><hr>`
             ).join("");
         });
-
-        function parseMarkdown(text) {
-            // 太字: **太字**
-            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-            // 斜体: *斜体*
-            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-            // 取り消し線: ~~取り消し~~
-            text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
-
-            // リンク: [リンク文字](URL)
-            text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>');
-
-            // 裸のURLを自動リンク化
-            text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-
-            return text;
-        }
 
         document.getElementById("search-btn").addEventListener("click", async () => {
             const query = document.getElementById("search-box").value.trim().toLowerCase();
@@ -138,7 +119,7 @@
 
                 const threadList = document.getElementById("threadList");
                 threadList.innerHTML = uniqueThreads.map(t =>
-                    `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${parseMarkdown(t)}</a></span><hr>`
+                    `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${t}</a></span><hr>`
                 ).join("");
                 return;
             }
@@ -159,7 +140,7 @@
                 threadList.innerHTML = "<p>該当するスレッドが見つかりませんでした。</p>";
             } else {
                 threadList.innerHTML = filteredThreads.map(t =>
-                    `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${parseMarkdown(t)}</a></span><hr>`
+                    `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${t}</a></span><hr>`
                 ).join("");
             }
         });

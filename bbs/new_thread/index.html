@@ -173,11 +173,24 @@
             // 取り消し線: ~~取り消し~~
             text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
 
-            // リンク: [リンク文字](URL)
-            text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>');
+            // プレースホルダー格納用
+            const placeholders = {};
+            let index = 0;
 
-            // 裸のURLを自動リンク化
+            // リンク: [リンク文字](URL)
+            text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, label, url) => {
+                const key = `__URL_PLACEHOLDER_${index++}__`;
+                placeholders[key] = `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+                return key;
+            });
+
+            // 裸のURLを自動リンク化（リンクのURL部分は除外済み）
             text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+
+            // プレースホルダーを元に戻す
+            Object.keys(placeholders).forEach(key => {
+                text = text.replace(key, placeholders[key]);
+            });
 
             return text;
         }

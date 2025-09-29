@@ -91,6 +91,13 @@
         </section>
     </main>
 
+    <footer>
+        <p>&copy; 2025 talus</p>
+        <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意ください。</p>
+        <p><a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
+        </p>
+    </footer>
+
     <script type="module">
         import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -122,11 +129,11 @@
                     .map((post, index) => `
                 <div>
                     <span>${posts.length - index}. </span>
-                    <strong>${parseMarkdown(post.username.trim() || "とある水戸一の名無し")}</strong>
+                    <strong>${post.username.trim() || "とある水戸一の名無し"}</strong>
                     <small>${new Date(post.created_at).toLocaleString()}</small>
                     <br>
-                    <strong>${parseMarkdown(post.title.trim() || "無題")}</strong>
-                    <p>${parseMarkdown(post.content)}</p>
+                    <strong>${post.title.trim() || "無題"}</strong>
+                    <p>${post.content}</p>
                 </div>
                 <hr>
             `).join("");
@@ -161,14 +168,27 @@
                 // 取り消し線: ~~取り消し~~
                 text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
 
-                // リンク: [リンク文字](URL)
-                text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>');
+                // プレースホルダー格納用
+                const placeholders = {};
+                let index = 0;
 
-                // 裸のURLを自動リンク化
+                // リンク: [リンク文字](URL)
+                text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, label, url) => {
+                    const key = `__URL_PLACEHOLDER_${index++}__`;
+                    placeholders[key] = `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+                    return key;
+                });
+
+                // 裸のURLを自動リンク化（リンクのURL部分は除外済み）
                 text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
 
+                // プレースホルダーを元に戻す
+                Object.keys(placeholders).forEach(key => {
+                    text = text.replace(key, placeholders[key]);
+                });
+
                 return text;
-            };
+            }
 
             const textarea = document.getElementById("content");
 
@@ -212,7 +232,7 @@
             const previewArea = document.getElementById("preview");
 
             document.getElementById("postForm").addEventListener("keyup", (e) => {
-                const username = document.getElementById("username").value.trim();
+                const username = parseMarkdown(document.getElementById("username").value.trim());
                 const title = parseMarkdown(document.getElementById("title").value.trim());
                 const content = parseMarkdown(document.getElementById("content").value.trim());
 
@@ -228,7 +248,7 @@
 
         })
 
-        
+
         window.addEventListener('beforeunload', function (event) {
             if (document.getElementById('title').value.trim() === '' && document.getElementById('content').value.trim() === '' && document.getElementById('username').value.trim() === '') {
                 return; // フォームが空なら警告しない
