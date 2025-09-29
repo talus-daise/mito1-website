@@ -219,21 +219,4 @@ document.addEventListener("DOMContentLoaded", () => {
     function isWideScreen() {
         return window.innerWidth >= 428; // スマホかPCかの閾値（必要に応じて調整）
     }
-
-    const pageList = document.querySelectorAll('ul>li')
-
-    document.querySelectorAll(".menu-item").forEach(item => {
-        item.addEventListener("click", (e) => {
-            if (isWideScreen()) return; // PC hover は CSS に任せる
-
-            e.preventDefault();
-            // 他の open を閉じる
-            document.querySelectorAll(".menu-item.open").forEach(openItem => {
-                if (openItem !== item) openItem.classList.remove("open");
-            });
-
-            // 自分は toggle
-            item.classList.toggle("open");
-        });
-    })
 });

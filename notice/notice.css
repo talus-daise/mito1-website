@@ -207,13 +207,18 @@ nav a:hover i {
         padding: 1rem;
     }
 
-    #asideMenu {
-        transition: right 0.3s ease;
+    #asideMenu.open{
+        width: 100dvw;
     }
 
     #menuButton {
-        top: 4rem;
-        right: -2rem;
+        top: 1rem;
+        right: 1rem;
+    }
+
+    #menuButton.open {
+        width: 100dvw;
+        height: 100dvh;
     }
 
     #closeButton {
