@@ -43,7 +43,7 @@
     <!--safari-->
     <link rel="mask-icon" href="">
     <!--Android-->
-    <meta name="theme-color" content="#5787ff">
+    <meta name="theme-color" content="#3498db">
     <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
@@ -133,6 +133,8 @@
                 return;
             }
 
+            isFormDirty = false; // フォームが送信されたので汚れていない状態にリセット
+
             const { error } = await pd
                 .from('questions')
                 .insert([{ title, content, username: username || 'とある水戸一の名無し', faster, created_at: new Date() }]);
@@ -149,13 +151,27 @@
 
         document.getElementById('question-form').addEventListener('submit', postQuestion);
 
-        window.addEventListener('beforeunload', function (event) {
-            if (document.getElementById('question-title').value.trim() === '' && document.getElementById('question-content').value.trim() === '') {
-                return; // フォームが空なら警告しない
+        let isFormDirty = false;
+
+        const formElements = [
+            document.getElementById('question-username'),
+            document.getElementById('question-title'),
+            document.getElementById('question-content'),
+            document.getElementById('faster')
+        ];
+
+        formElements.forEach(el => {
+            el.addEventListener('input', () => {
+                isFormDirty = true;
+            });
+        });
+
+        window.addEventListener('beforeunload', (event) => {
+            if (isFormDirty) {
+                event.preventDefault();
+                event.returnValue = '';
             }
-            event.preventDefault() // (1)
-            event.returnValue = '' // (2)
-        })
+        });
 
         function parseMarkdown(text) {
             // 太字: **太字**
@@ -180,6 +196,13 @@
 
             // 裸のURLを自動リンク化（リンクのURL部分は除外済み）
             text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+
+            text = text.replace(/\n/g, '<br>'); // 改行
+
+            // インラインコード: `code`
+            text = text.replace(/\`(.*?)\`/g, (match, code) => {
+                return `<code>${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code>`;
+            });
 
             // プレースホルダーを元に戻す
             Object.keys(placeholders).forEach(key => {

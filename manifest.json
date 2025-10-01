@@ -1,10 +1,10 @@
 {
   "name": "水戸一高附属中総合ウェブサイト",
-  "short_name": "4期生HP",
-  "description": "水戸一高附属中4期生に向けた総合ウェブサイトです。",
+  "short_name": "水戸一附属HP",
+  "description": "水戸一高附属中に向けた総合ウェブサイトです。",
   "start_url": "/mito1-website/",
-  "theme_color": "#5787ff",
-  "background_color": "#5787ff",
+  "theme_color": "#3498db",
+  "background_color": "#3498db",
   "display": "standalone",
   "icons": [
     {

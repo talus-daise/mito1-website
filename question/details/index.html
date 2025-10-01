@@ -2,300 +2,309 @@
 <html lang="ja">
 
 <head>
-	<!--文字コード・互換モード-->
-	<meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
-	<title id="page-title">みとい知恵袋 | 水戸一高附属中総合ウェブサイト</title>
-	<!--ビューポート-->
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<!--css-->
-	<link rel="stylesheet" href="../../css/style.css">
-	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
-	<link rel="stylesheet" href="../../notice/notice.css">
-	<style>
-		.format-buttons {
-			margin-bottom: 10px;
-		}
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title id="page-title">みとい知恵袋 | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../../notice/notice.css">
+    <style>
+        .format-buttons {
+            margin-bottom: 10px;
+        }
 
-		.format-buttons button {
-			margin-right: 5px;
-			padding: 5px 10px;
-			font-size: 16px;
-			cursor: pointer;
-			width: 2.5rem;
-		}
-	</style>
-	<!--web情報-->
-	<meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
-	<meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
-	<meta name="author" content="©️ 2025 talus">
-	<!--更新日時-->
-	<meta name="date" content="2025-02-28">
-	<meta name="creation_date" content="2025-02-19">
-	<!--URL-->
-	<link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
-	<!--アイコン-->
-	<link rel="shortcut icon" href="../../img/favicon.ico" type="image/x-icon">
-	<link rel="apple-touch-icon" href="../../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
-	<!--windows-->
-	<meta name="msapplication-config" content="none">
-	<meta name="msapplication-TileImage" content="../../img/mitoichi-fuzoku.png">
-	<!--safari-->
-	<link rel="mask-icon" href="">
-	<!--Android-->
-	<meta name="theme-color" content="#5787ff">
-	<link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
-	<!--CDN-->
-	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-	<script src="../../script/customAlert.js"></script>
-	<!--マニフェスト-->
-	<link rel="manifest" href="../../manifest.json">
+        .format-buttons button {
+            margin-right: 5px;
+            padding: 5px 10px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 2.5rem;
+        }
+    </style>
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="../../img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#3498db">
+    <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../../script/customAlert.js"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../../manifest.json">
 </head>
 
 <body>
-	<header>
-		<h1><a href="../../">水戸一高附属中総合ウェブサイト</a></h1>
-		<p class="header__breadcrumb">
-			<a href="../../"><i class="fa-solid fa-house"></i>トップページ</a>
-			<a href="../"><i class="fa-solid fa-list-check"></i>みとい知恵袋</a>
-			<span id="page-link"></span>
+    <header>
+        <h1><a href="../../">水戸一高附属中総合ウェブサイト</a></h1>
+        <p class="header__breadcrumb">
+            <a href="../../"><i class="fa-solid fa-house"></i>トップページ</a>
+            <a href="../"><i class="fa-solid fa-list-check"></i>みとい知恵袋</a>
+            <span id="page-link"></span>
 
-		</p>
-	</header>
+        </p>
+    </header>
 
-	<main>
-		<section>
-			<h2 id="question-title"></h2>
-			<p id="username"></p>
-			<p id="question-content"></p>
-			<small id="question-posted-at"></small> <!-- 質問の投稿日時表示 -->
-		</section>
+    <main>
+        <section>
+            <h2 id="question-title"></h2>
+            <p id="username"></p>
+            <p id="question-content"></p>
+            <small id="question-posted-at"></small> <!-- 質問の投稿日時表示 -->
+        </section>
 
-		<section>
-			<h2>回答</h2>
-			<ul id="answer-list"></ul>
-			<h3>回答を投稿する</h3>
-			<form id="answer-form">
-				<div class="format-buttons">
-					<button id="bold" title="太字"><strong>B</strong></button>
-					<button id="italic" title="斜体"><em>I</em></button>
-					<button id="strikethrough" title="取り消し線"><del>S</del></button>
-					<button id="link" title="リンク"><i class="fa-solid fa-link"></i></button>
-				</div>
-				<textarea id="answer-content" placeholder="回答の内容" required></textarea><br>
-				<input type="text" id="answer-username" placeholder="ユーザー名"><br>
-				<button type="submit">回答</button>
-			</form>
+        <section>
+            <h2>回答</h2>
+            <ul id="answer-list"></ul>
+            <h3>回答を投稿する</h3>
+            <form id="answer-form">
+                <div class="format-buttons">
+                    <button id="bold" title="太字"><strong>B</strong></button>
+                    <button id="italic" title="斜体"><em>I</em></button>
+                    <button id="strikethrough" title="取り消し線"><del>S</del></button>
+                    <button id="link" title="リンク"><i class="fa-solid fa-link"></i></button>
+                </div>
+                <textarea id="answer-content" placeholder="回答の内容" required></textarea><br>
+                <input type="text" id="answer-username" placeholder="ユーザー名"><br>
+                <button type="submit">回答</button>
+            </form>
 
-			<h3>プレビュー</h3>
-			<div id="preview"></div>
-		</section>
-	</main>
+            <h3>プレビュー</h3>
+            <div id="preview"></div>
+        </section>
+    </main>
 
-	<footer>
-		<p>&copy; 2025 talus</p>
-		<p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意ください。</p>
-		<p><a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
-		</p>
-	</footer>
+    <footer>
+        <p>&copy; 2025 talus</p>
+        <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意ください。</p>
+        <p><a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
+        </p>
+    </footer>
 
-	<script type="module">
-		// Supabase ライブラリをインポート
-		import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    <script type="module">
+        // Supabase ライブラリをインポート
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-		const pd = createClient('https://mgsbwkidyxmicbacqeeh.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg');
+        const pd = createClient('https://mgsbwkidyxmicbacqeeh.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg');
 
-		const urlParams = new URLSearchParams(window.location.search);
-		const questionId = urlParams.get('id');
+        const urlParams = new URLSearchParams(window.location.search);
+        const questionId = urlParams.get('id');
 
-		async function fetchQuestion() {
-			const { data: question, error } = await pd
-				.from('questions')
-				.select('*')
-				.eq('id', questionId)
-				.single();
+        async function fetchQuestion() {
+            const { data: question, error } = await pd
+                .from('questions')
+                .select('*')
+                .eq('id', questionId)
+                .single();
 
-			if (error) {
-				console.error('Error fetching question:', error);
-				return;
-			}
+            if (error) {
+                console.error('Error fetching question:', error);
+                return;
+            }
 
-			document.getElementById('question-title').innerHTML = question.title;
-			document.getElementById('username').innerHTML = '質問者:' + question.username;
-			document.getElementById('question-content').innerHTML = question.content;
+            document.getElementById('question-title').innerHTML = question.title;
+            document.getElementById('username').innerHTML = '質問者:' + question.username;
+            document.getElementById('question-content').innerHTML = question.content;
 
-			// 質問の投稿日時を表示
-			const postDate = new Date(question.created_at).toLocaleString();
-			document.getElementById('question-posted-at').textContent = `投稿日時: ${postDate}`;
+            // 質問の投稿日時を表示
+            const postDate = new Date(question.created_at).toLocaleString();
+            document.getElementById('question-posted-at').textContent = `投稿日時: ${postDate}`;
 
 
-			// ページタイトルを更新
-			document.getElementById('page-title').textContent = `${question.title} - みとい知恵袋 | R6年度1学年ウェブサイト`;
+            // ページタイトルを更新
+            document.getElementById('page-title').textContent = `${question.title} - みとい知恵袋 | 水戸一高附属中総合ウェブサイト`;
 
-			document.getElementById('page-link').innerHTML = `<a href="?id=${questionId}"><i class="fa-solid fa-circle-info"></i>質問「${question.title}」の詳細</a>`
+            document.getElementById('page-link').innerHTML = `<a href="?id=${questionId}"><i class="fa-solid fa-circle-info"></i>質問「${question.title}」の詳細</a>`
 
-			fetchAnswers();
-		}
+            fetchAnswers();
+        }
 
-		async function fetchAnswers() {
-			const { data: answers, error } = await pd
-				.from('answers')
-				.select('*')
-				.eq('question_id', questionId)
-				.order('created_at', { ascending: false });
+        async function fetchAnswers() {
+            const { data: answers, error } = await pd
+                .from('answers')
+                .select('*')
+                .eq('question_id', questionId)
+                .order('created_at', { ascending: false });
 
-			if (error) {
-				console.error('Error fetching answers:', error);
-				return;
-			}
+            if (error) {
+                console.error('Error fetching answers:', error);
+                return;
+            }
 
-			const answerList = document.getElementById('answer-list');
-			answerList.innerHTML = '';
-			answers.forEach(answer => {
-				const li = document.createElement('li');
-				const answerDate = new Date(answer.created_at).toLocaleString();
-				li.innerHTML = `
+            const answerList = document.getElementById('answer-list');
+            answerList.innerHTML = '';
+            answers.forEach(answer => {
+                const li = document.createElement('li');
+                const answerDate = new Date(answer.created_at).toLocaleString();
+                li.innerHTML = `
           ${answer.content} - by ${answer.username}
           <small>(${answerDate})</small>`;
-				answerList.appendChild(li);
-			});
-		}
+                answerList.appendChild(li);
+            });
+        }
 
-		document.getElementById('answer-form').addEventListener('submit', async (event) => {
-			event.preventDefault();
-			event.target.disabled = true;
+        document.getElementById('answer-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            event.target.disabled = true;
 
-			const content = parseMarkdown(document.getElementById('answer-content').value.trim());
-			const username = parseMarkdown(document.getElementById('answer-username').value.trim());
+            const content = parseMarkdown(document.getElementById('answer-content').value.trim());
+            const username = parseMarkdown(document.getElementById('answer-username').value.trim());
 
-			// スパム対策: 入力チェック
-			if (!content) {
-				showCustomAlert('すべてのフィールドを入力してください');
-				return;
-			}
-			if (content.length < 20) {
-				showCustomAlert('回答は20文字以上にしてください\n(スパム対策です)');
-				return;
-			}
+            // スパム対策: 入力チェック
+            if (!content) {
+                showCustomAlert('すべてのフィールドを入力してください');
+                return;
+            }
+            if (content.length < 20) {
+                showCustomAlert('回答は20文字以上にしてください\n(スパム対策です)');
+                return;
+            }
 
-			// スパム対策: 投稿間隔制限（30秒）
-			const lastAnswerTime = localStorage.getItem('lastAnswerTime') || 0;
-			const now = Date.now();
-			if (now - lastAnswerTime < 60000) {
-				showCustomAlert('短時間での連続投稿はできません。少し待ってから再度投稿してください');
-				return;
-			}
+            // スパム対策: 投稿間隔制限（30秒）
+            const lastAnswerTime = localStorage.getItem('lastAnswerTime') || 0;
+            const now = Date.now();
+            if (now - lastAnswerTime < 60000) {
+                showCustomAlert('短時間での連続投稿はできません。少し待ってから再度投稿してください');
+                return;
+            }
 
-			const { error } = await pd
-				.from('answers')
-				.insert([{ question_id: questionId, content, username: username || 'とある水戸一の名無し', created_at: new Date() }]);
+            isFormDirty = false; // フォームが送信されたので汚れていない状態にリセット
 
-			if (error) {
-				console.error('Error posting answer:', error);
-			} else {
-				showCustomAlert('回答が投稿されました');
-				localStorage.setItem('lastAnswerTime', now); // 投稿時刻を保存
-				markAsAnswered(questionId);
-				fetchAnswers();
-				document.getElementById('answer-content').value = '';
-				document.getElementById('answer-username').value = '';
-			}
-			setTimeout(() => {
-				event.target.disabled = false;
-			}, 5000);
-		});
+            const { error } = await pd
+                .from('answers')
+                .insert([{ question_id: questionId, content, username: username || 'とある水戸一の名無し', created_at: new Date() }]);
 
-		async function markAsAnswered(questionId) {
-			const { error } = await pd
-				.from('questions')
-				.update({ answered: true })
-				.eq('id', questionId);
+            if (error) {
+                console.error('Error posting answer:', error);
+            } else {
+                showCustomAlert('回答が投稿されました');
+                localStorage.setItem('lastAnswerTime', now); // 投稿時刻を保存
+                markAsAnswered(questionId);
+                fetchAnswers();
+                document.getElementById('answer-content').value = '';
+                document.getElementById('answer-username').value = '';
+            }
+            setTimeout(() => {
+                event.target.disabled = false;
+            }, 5000);
+        });
 
-			if (error) {
-				console.error("回答済みフラグ更新エラー:", error);
-			}
-		}
+        async function markAsAnswered(questionId) {
+            const { error } = await pd
+                .from('questions')
+                .update({ answered: true })
+                .eq('id', questionId);
 
-		fetchQuestion();
+            if (error) {
+                console.error("回答済みフラグ更新エラー:", error);
+            }
+        }
 
-		function parseMarkdown(text) {
-			// 太字: **太字**
-			text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        fetchQuestion();
 
-			// 斜体: *斜体*
-			text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        function parseMarkdown(text) {
+            // 太字: **太字**
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-			// 取り消し線: ~~取り消し~~
-			text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
+            // 斜体: *斜体*
+            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-			// プレースホルダー格納用
-			const placeholders = {};
-			let index = 0;
+            // 取り消し線: ~~取り消し~~
+            text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
 
-			// リンク: [リンク文字](URL)
-			text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, label, url) => {
-				const key = `__URL_PLACEHOLDER_${index++}__`;
-				placeholders[key] = `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
-				return key;
-			});
+            // プレースホルダー格納用
+            const placeholders = {};
+            let index = 0;
 
-			// 裸のURLを自動リンク化（リンクのURL部分は除外済み）
-			text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+            // リンク: [リンク文字](URL)
+            text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, label, url) => {
+                const key = `__URL_PLACEHOLDER_${index++}__`;
+                placeholders[key] = `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+                return key;
+            });
 
-			// プレースホルダーを元に戻す
-			Object.keys(placeholders).forEach(key => {
-				text = text.replace(key, placeholders[key]);
-			});
+            // 裸のURLを自動リンク化（リンクのURL部分は除外済み）
+            text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
 
-			return text;
-		}
+            text = text.replace(/\n/g, '<br>'); // 改行
 
-		const textarea = document.getElementById("answer-content");
+            // インラインコード: `code`
+            text = text.replace(/\`(.*?)\`/g, (match, code) => {
+                return `<code>${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code>`;
+            });
 
-		document.getElementById("bold").addEventListener("click", (e) => {
-			e.preventDefault();
-			insertAtCursor(textarea, "**", "**", " ");
-		});
+            // プレースホルダーを元に戻す
+            Object.keys(placeholders).forEach(key => {
+                text = text.replace(key, placeholders[key]);
+            });
 
-		document.getElementById("italic").addEventListener("click", (e) => {
-			e.preventDefault();
-			insertAtCursor(textarea, "*", "*", " ");
-		});
+            return text;
+        }
 
-		document.getElementById("strikethrough").addEventListener("click", (e) => {
-			e.preventDefault();
-			insertAtCursor(textarea, "~~", "~~", " ");
-		});
+        const textarea = document.getElementById("answer-content");
 
-		document.getElementById("link").addEventListener("click", (e) => {
-			e.preventDefault();
-			// デフォルトで「リンクテキスト」を選択
-			insertAtCursor(textarea, "[", "](URL)", "リンクテキスト");
-		});
+        document.getElementById("bold").addEventListener("click", (e) => {
+            e.preventDefault();
+            insertAtCursor(textarea, "**", "**", " ");
+        });
 
-		function insertAtCursor(textarea, before, after, selectText = "") {
-			const start = textarea.selectionStart;
-			const end = textarea.selectionEnd;
+        document.getElementById("italic").addEventListener("click", (e) => {
+            e.preventDefault();
+            insertAtCursor(textarea, "*", "*", " ");
+        });
 
-			const text = textarea.value;
-			const selected = text.slice(start, end) || selectText;
+        document.getElementById("strikethrough").addEventListener("click", (e) => {
+            e.preventDefault();
+            insertAtCursor(textarea, "~~", "~~", " ");
+        });
 
-			// テキスト挿入
-			const newText = text.slice(0, start) + before + selected + after + text.slice(end);
-			textarea.value = newText;
+        document.getElementById("link").addEventListener("click", (e) => {
+            e.preventDefault();
+            // デフォルトで「リンクテキスト」を選択
+            insertAtCursor(textarea, "[", "](URL)", "リンクテキスト");
+        });
 
-			// 選択範囲設定
-			textarea.focus();
-			textarea.setSelectionRange(start + before.length, start + before.length + selected.length);
-		}
+        function insertAtCursor(textarea, before, after, selectText = "") {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
 
-		const previewArea = document.getElementById("preview");
+            const text = textarea.value;
+            const selected = text.slice(start, end) || selectText;
 
-		document.getElementById("answer-form").addEventListener("keyup", (e) => {
-			const username = parseMarkdown(document.getElementById("answer-username").value.trim());
-			const content = parseMarkdown(document.getElementById("answer-content").value.trim());
+            // テキスト挿入
+            const newText = text.slice(0, start) + before + selected + after + text.slice(end);
+            textarea.value = newText;
 
-			previewArea.innerHTML = `
+            // 選択範囲設定
+            textarea.focus();
+            textarea.setSelectionRange(start + before.length, start + before.length + selected.length);
+        }
+
+        const previewArea = document.getElementById("preview");
+
+        document.getElementById("answer-form").addEventListener("keyup", (e) => {
+            const username = parseMarkdown(document.getElementById("answer-username").value.trim());
+            const content = parseMarkdown(document.getElementById("answer-content").value.trim());
+
+            previewArea.innerHTML = `
                 <ul>
 					<li>
 						${content} - by ${username || "とある水戸一の名無し"}
@@ -303,22 +312,36 @@
 					</li>
 				</ul>
             `
-		})
+        })
 
-		window.addEventListener('beforeunload', function (event) {
-			if (document.getElementById('answer-content').value.trim() === '' && document.getElementById('answer-username').value.trim() === '') {
-				return; // フォームが空なら警告しない
-			}
-			event.preventDefault() // (1)
-			event.returnValue = '' // (2)
-		})
-	</script>
-	<script type="module" src="../../notice/notice.js" defer></script>
-	<script src="../../script/customAlert.js"></script>
-	<!--マニフェスト-->
-	<link rel="manifest" href="../../manifest.json">
-	<script src="../../script/verification.js"></script>
-	<script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+        let isFormDirty = false;
+
+        const formElements = [
+            document.getElementById('question-username'),
+            document.getElementById('question-title'),
+            document.getElementById('question-content'),
+            document.getElementById('faster')
+        ];
+
+        formElements.forEach(el => {
+            el.addEventListener('input', () => {
+                isFormDirty = true;
+            });
+        });
+
+        window.addEventListener('beforeunload', (event) => {
+            if (isFormDirty) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        });
+    </script>
+    <script type="module" src="../../notice/notice.js" defer></script>
+    <script src="../../script/customAlert.js"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../../manifest.json">
+    <script src="../../script/verification.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 
 </html>

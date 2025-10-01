@@ -43,7 +43,7 @@
     <!--safari-->
     <link rel="mask-icon" href="">
     <!--Android-->
-    <meta name="theme-color" content="#5787ff">
+    <meta name="theme-color" content="#3498db">
     <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
@@ -120,7 +120,7 @@
                     .from("BBS")
                     .select("*")
                     .eq("thread", thread)
-                    .order("created_at", { ascending: false });
+                    .order("created_at", { ascending: true });
 
                 if (error) { console.error(error); return; }
 
@@ -128,7 +128,7 @@
                     .filter(post => post.title)
                     .map((post, index) => `
                 <div>
-                    <span>${posts.length - index}. </span>
+                    <span>${index + 1}. </span>
                     <strong>${post.username.trim() || "とある水戸一の名無し"}</strong>
                     <small>${new Date(post.created_at).toLocaleString()}</small>
                     <br>
@@ -182,10 +182,19 @@
                 // 裸のURLを自動リンク化（リンクのURL部分は除外済み）
                 text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
 
+                text = text.replace(/\n/g, '<br>'); // 改行
+
+                // インラインコード: `code`
+                text = text.replace(/\`(.*?)\`/g, (match, code) => {
+                    return `<code>${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code>`;
+                });
+
                 // プレースホルダーを元に戻す
                 Object.keys(placeholders).forEach(key => {
                     text = text.replace(key, placeholders[key]);
                 });
+
+                console.log(text);
 
                 return text;
             }

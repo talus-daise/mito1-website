@@ -81,7 +81,7 @@ function checkVerification() {
     closeButton.innerText = "OK";
     Object.assign(closeButton.style, {
         padding: "5px 15px", cursor: "pointer", border: "1px solid #00134c",
-        background: "#5787ff", color: "#00134c", borderRadius: "5px",
+        background: "#3498db", color: "#00134c", borderRadius: "5px",
         boxShadow: "0px 0px 5px 1px rgba(0, 0, 0, 0.6)"
     });
     closeButton.onclick = () => {
