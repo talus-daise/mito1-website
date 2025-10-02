@@ -77,6 +77,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         <li><a href="/mito1-website/question/new_question/">新規質問投稿</a></li>
                     </ul>
                 </li>
+                <li id="troubleshooting" class="menu-item">
+                    <a href="/mito1-website/troubleshooting/">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>トラブルシューティング
+                    </a>
+                </li>
     `;
 
     linkListWrapper.appendChild(linkList);
