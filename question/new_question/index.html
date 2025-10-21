@@ -68,7 +68,6 @@
         <section>
             <h2>質問情報</h2>
             <form id="question-form">
-                <input type="text" id="question-username" placeholder="ユーザー名"><br>
                 <input type="text" id="question-title" placeholder="質問のタイトル" required><br>
                 <div class="format-buttons">
                     <button id="bold"><strong>B</strong></button>
@@ -95,25 +94,44 @@
     </footer>
 
     <script type="module">
-        // Supabase ライブラリをインポート
+        // Supabase クライアント作成
         import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-        const pd = createClient('https://mgsbwkidyxmicbacqeeh.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg');
+        const pd = createClient(
+            'https://mgsbwkidyxmicbacqeeh.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg'
+        );
 
         // 最後の投稿時刻を保存する変数
         let lastPostTime = localStorage.getItem('lastPostTime') || 0;
 
+        // 投稿処理
         async function postQuestion(event) {
             event.preventDefault();
             event.target.disabled = true;
 
+            // ログインユーザー情報取得
+            const { data: { user }, error: userError } = await pd.auth.getUser();
+            if (userError || !user) {
+                showCustomAlert('投稿するにはログインが必要です');
+                event.target.disabled = false;
+                return;
+            }
+
+            // 表示名取得（users テーブルから）
+            const { data: profile, error: profileError } = await pd
+                .from('users')
+                .select('display_name')
+                .eq('user_email', user.email)
+                .single();
+
+            const displayName = profile?.display_name || 'とある水戸一の名無し';
+
             const title = parseMarkdown(document.getElementById('question-title').value.trim());
             const content = parseMarkdown(document.getElementById('question-content').value.trim());
-            const username = parseMarkdown(document.getElementById('question-username').value.trim());
-            const fasterCheckbox = document.getElementById('faster');
-            const faster = fasterCheckbox.checked; // チェック状態を取得
+            const faster = document.getElementById('faster').checked;
 
-            // スパム対策: 入力チェック
+            // スパム対策
             if (!title || !content) {
                 showCustomAlert('すべてのフィールドを入力してください');
                 event.target.disabled = false;
@@ -125,7 +143,6 @@
                 return;
             }
 
-            // スパム対策: 投稿間隔制限（30秒）
             const now = Date.now();
             if (now - lastPostTime < 60000) {
                 showCustomAlert('短時間での連続投稿はできません。少し待ってから再度投稿してください');
@@ -133,28 +150,39 @@
                 return;
             }
 
-            isFormDirty = false; // フォームが送信されたので汚れていない状態にリセット
+            isFormDirty = false;
 
+            // 投稿内容とユーザー情報を一緒に保存
             const { error } = await pd
                 .from('questions')
-                .insert([{ title, content, username: username || 'とある水戸一の名無し', faster, created_at: new Date() }]);
+                .insert([{
+                    title,
+                    content,
+                    username: displayName,
+                    faster,
+                    created_at: new Date(),
+                    user_id: user.id,
+                    user_email: user.email
+                }]);
 
             if (error) {
                 console.error('Error posting question:', error);
                 showCustomAlert('質問の投稿に失敗しました');
             } else {
                 showCustomAlert('質問が投稿されました');
-                localStorage.setItem('lastPostTime', now); // 投稿時刻を保存
+                localStorage.setItem('lastPostTime', now);
                 window.location.href = "../../question/";
             }
+
+            event.target.disabled = false;
         }
 
+        // フォーム送信イベント
         document.getElementById('question-form').addEventListener('submit', postQuestion);
 
+        // 入力変更時の離脱警告
         let isFormDirty = false;
-
         const formElements = [
-            document.getElementById('question-username'),
             document.getElementById('question-title'),
             document.getElementById('question-content'),
             document.getElementById('faster')
@@ -173,98 +201,63 @@
             }
         });
 
+        // --- Markdown処理・プレビュー関連 ---
         function parseMarkdown(text) {
-            // 太字: **太字**
             text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-            // 斜体: *斜体*
             text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-            // 取り消し線: ~~取り消し~~
             text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
-
-            // プレースホルダー格納用
             const placeholders = {};
             let index = 0;
-
-            // リンク: [リンク文字](URL)
-            text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, label, url) => {
-                const key = `__URL_PLACEHOLDER_${index++}__`;
+            text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, label, url) => {
+                const key = `__URL_${index++}__`;
                 placeholders[key] = `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
                 return key;
             });
-
-            // 裸のURLを自動リンク化（リンクのURL部分は除外済み）
             text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-
-            text = text.replace(/\n/g, '<br>'); // 改行
-
-            // インラインコード: `code`
-            text = text.replace(/\`(.*?)\`/g, (match, code) => {
-                return `<code>${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code>`;
-            });
-
-            // プレースホルダーを元に戻す
-            Object.keys(placeholders).forEach(key => {
-                text = text.replace(key, placeholders[key]);
-            });
-
+            text = text.replace(/\n/g, '<br>');
+            text = text.replace(/\`(.*?)\`/g, (_, code) => `<code>${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code>`);
+            Object.keys(placeholders).forEach(k => text = text.replace(k, placeholders[k]));
             return text;
         }
 
+        // --- プレビュー更新 ---
         const textarea = document.getElementById("question-content");
-
-        document.getElementById("bold").addEventListener("click", (e) => {
-            e.preventDefault();
-            insertAtCursor(textarea, "**", "**", " ");
-        });
-
-        document.getElementById("italic").addEventListener("click", (e) => {
-            e.preventDefault();
-            insertAtCursor(textarea, "*", "*", " ");
-        });
-
-        document.getElementById("strikethrough").addEventListener("click", (e) => {
-            e.preventDefault();
-            insertAtCursor(textarea, "~~", "~~", " ");
-        });
-
-        document.getElementById("link").addEventListener("click", (e) => {
-            e.preventDefault();
-            // デフォルトで「リンクテキスト」を選択
-            insertAtCursor(textarea, "[", "](URL)", "リンクテキスト");
-        });
-
         function insertAtCursor(textarea, before, after, selectText = "") {
             const start = textarea.selectionStart;
             const end = textarea.selectionEnd;
-
             const text = textarea.value;
             const selected = text.slice(start, end) || selectText;
-
-            // テキスト挿入
             const newText = text.slice(0, start) + before + selected + after + text.slice(end);
             textarea.value = newText;
-
-            // 選択範囲設定
             textarea.focus();
             textarea.setSelectionRange(start + before.length, start + before.length + selected.length);
         }
 
-        const previewArea = document.getElementById("preview");
+        document.getElementById("bold").addEventListener("click", e => { e.preventDefault(); insertAtCursor(textarea, "**", "**", " "); });
+        document.getElementById("italic").addEventListener("click", e => { e.preventDefault(); insertAtCursor(textarea, "*", "*", " "); });
+        document.getElementById("strikethrough").addEventListener("click", e => { e.preventDefault(); insertAtCursor(textarea, "~~", "~~", " "); });
+        document.getElementById("link").addEventListener("click", e => { e.preventDefault(); insertAtCursor(textarea, "[", "](URL)", "リンクテキスト"); });
 
-        document.getElementById("question-form").addEventListener("keyup", (e) => {
-            const username = parseMarkdown(document.getElementById("question-username").value.trim());
+        const previewArea = document.getElementById("preview");
+        document.getElementById("question-form").addEventListener("keyup", async () => {
             const title = parseMarkdown(document.getElementById("question-title").value.trim());
             const content = parseMarkdown(document.getElementById("question-content").value.trim());
 
+            // 表示名をリアルタイムで取得（キャッシュ代わり）
+            const { data: { user } } = await pd.auth.getUser();
+            let displayName = "とある水戸一の名無し";
+            if (user) {
+                const { data: profile } = await pd.from("users").select("display_name").eq("user_email", user.email).single();
+                displayName = profile?.display_name || displayName;
+            }
+
             previewArea.innerHTML = `
-                <h2>${title}</h2>
-			<p>質問者: ${username}</p>
-			<p>${content}</p>
-			<small>${new Date().toLocaleString()}</small>
-            `
-        })
+        <h2>${title}</h2>
+        <p>質問者: ${displayName}</p>
+        <p>${content}</p>
+        <small>${new Date().toLocaleString()}</small>
+    `;
+        });
 
     </script>
     <script type="module" src="../../notice/notice.js"></script>

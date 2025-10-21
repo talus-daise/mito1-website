@@ -189,6 +189,21 @@ nav a:hover i {
     /* サブメニューの高さに応じて調整 */
 }
 
+.avatar {
+    background-color: #ffffff;
+    color: #0a2540;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+}
+
+.avatar img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
 
 /* レスポンシブ対応 */
 @media (max-width: 960px) {
@@ -207,7 +222,7 @@ nav a:hover i {
         padding: 1rem;
     }
 
-    #asideMenu.open{
+    #asideMenu.open {
         width: 100dvw;
     }
 

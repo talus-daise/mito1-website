@@ -113,6 +113,67 @@
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
         );
 
+        document.addEventListener("DOMContentLoaded", async () => {
+            const usernameInput = document.getElementById("username");
+
+            // === ログインユーザー情報を取得 ===
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session && session.user) {
+                const userId = session.user.id;
+
+                // ✅ 既存の表示名を取得
+                const { data: user } = await supabase
+                    .from("users")
+                    .select("display_name")
+                    .eq("id", userId)
+                    .single();
+
+                // === スレッド作成フォーム ===
+                document.getElementById("newThreadForm").addEventListener("submit", async (e) => {
+                    e.preventDefault();
+
+                    const thread = parseMarkdown(document.getElementById("threadName").value.trim());
+                    const username = parseMarkdown(user?.display_name?.trim() || "とある水戸一の名無し");
+                    const title = parseMarkdown(document.getElementById("title").value.trim());
+                    const content = parseMarkdown(document.getElementById("content").value.trim());
+
+                    if (!thread || !title || !content) {
+                        showCustomAlert("必須項目を入力してください！");
+                        return;
+                    }
+
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session || !session.user) {
+                        showCustomAlert("ログインしてから投稿してください。");
+                        return;
+                    }
+
+                    const userId = session.user.id;
+                    const userEmail = session.user.email;
+
+                    const { error } = await supabase
+                        .from("BBS")
+                        .insert([{
+                            thread,
+                            username: username || "とある水戸一の名無し",
+                            title,
+                            content,
+                            user_id: userId,
+                            user_email: userEmail,
+                        }]);
+
+                    if (error) {
+                        console.error(error);
+                        showCustomAlert("スレッド作成に失敗しました");
+                        return;
+                    }
+
+                    showCustomAlert("スレッド作成完了！");
+                    window.location.href = `../thread/index.html?thread=${encodeURIComponent(thread)}`;
+                });
+            }
+        });
+
         function loadThreads() {
             document.addEventListener("DOMContentLoaded", async () => {
                 const threadList = document.getElementById("threadList");
@@ -136,34 +197,6 @@
                 });
             });
         }
-
-        document.getElementById("newThreadForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            const thread = parseMarkdown(document.getElementById("threadName").value.trim());
-            const username = parseMarkdown(document.getElementById("username").value.trim());
-            const title = parseMarkdown(document.getElementById("title").value.trim());
-            const content = parseMarkdown(document.getElementById("content").value.trim());
-
-            if (!thread || !title || !content) {
-                showCustomAlert("必須項目を入力してください！");
-                return;
-            }
-
-            isFormDirty = false; // フォームが送信されたので汚れていない状態にリセット
-
-            const { error } = await supabase.from("BBS").insert([{ thread, username: username || "とある水戸一の名無し", title, content }]);
-
-            if (error) {
-                console.error("スレッド作成エラー:", error);
-                showCustomAlert("スレッド作成に失敗しました");
-                return;
-            }
-
-            showCustomAlert("スレッド作成完了！");
-            // 作成したスレッドページへ遷移
-            window.location.href = `../thread/index.html?thread=${encodeURIComponent(thread)}`;
-        });
 
         function parseMarkdown(text) {
             // 太字: **太字**

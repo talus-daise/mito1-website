@@ -74,7 +74,6 @@
         <section>
             <h2>新規投稿</h2>
             <form id="postForm">
-                <input type="text" id="username" placeholder="名前"><br>
                 <input type="text" id="title" placeholder="タイトル" required><br>
                 <div class="format-buttons">
                     <button id="bold"><strong>B</strong></button>
@@ -101,7 +100,10 @@
     <script type="module">
         import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-        const supabase = createClient("https://mgsbwkidyxmicbacqeeh.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg");
+        const supabase = createClient(
+            "https://mgsbwkidyxmicbacqeeh.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
+        );
 
         document.addEventListener("DOMContentLoaded", async () => {
             const params = new URLSearchParams(window.location.search);
@@ -109,12 +111,70 @@
             const listTitle = document.getElementById("listTitle");
             const postList = document.getElementById("postList");
             const postForm = document.getElementById("postForm");
+            const usernameInput = document.getElementById("username");
 
-            if (!thread) { listTitle.textContent = "スレッドが指定されていません"; return; }
+            if (!thread) {
+                listTitle.textContent = "スレッドが指定されていません";
+                return;
+            }
+
             listTitle.innerHTML = `スレッド: ${parseMarkdown(thread)}`;
             document.getElementById("threadTitle").innerHTML = parseMarkdown(thread);
 
-            // 投稿一覧表示
+            // === ログイン済みユーザー情報の取得 ===
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (session && session.user) {
+                const userId = session.user.id;
+                const userEmail = session.user.email;
+
+                // ✅ 表示名を取得
+                const { data: user } = await supabase
+                    .from("users")
+                    .select("display_name")
+                    .eq("user_id", userId)
+                    .single();
+
+                // === 投稿フォーム送信 ===
+                postForm.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+                    const username = parseMarkdown(user?.display_name?.trim() || "とある水戸一の名無し");
+                    const title = parseMarkdown(document.getElementById("title").value.trim());
+                    const content = parseMarkdown(document.getElementById("content").value.trim());
+
+                    if (!title || !content) {
+                        alert("タイトルと内容を入力してください。");
+                        return;
+                    }
+
+                    const { error } = await supabase.from("BBS").insert([{
+                        thread,
+                        username: username || "とある水戸一の名無し",
+                        title,
+                        content,
+                        user_id: userId,
+                        user_email: userEmail
+                    }]);
+
+                    if (error) {
+                        console.error(error);
+                        alert("投稿に失敗しました。");
+                        return;
+                    }
+
+                    postForm.reset();
+                    await loadPosts();
+                });
+            } else {
+                // 未ログイン時
+                usernameInput.placeholder = "ログインしていません";
+                postForm.addEventListener("submit", (e) => {
+                    e.preventDefault();
+                    alert("ログインしてから投稿してください。");
+                });
+            }
+
+            // === 投稿一覧表示 ===
             async function loadPosts() {
                 const { data: posts, error } = await supabase
                     .from("BBS")
@@ -122,17 +182,20 @@
                     .eq("thread", thread)
                     .order("created_at", { ascending: true });
 
-                if (error) { console.error(error); return; }
+                if (error) {
+                    console.error(error);
+                    return;
+                }
 
                 postList.innerHTML = posts
                     .filter(post => post.title)
                     .map((post, index) => `
                 <div>
                     <span>${index + 1}. </span>
-                    <strong>${post.username.trim() || "とある水戸一の名無し"}</strong>
+                    <strong>${post.username?.trim() || "とある水戸一の名無し"}</strong>
                     <small>${new Date(post.created_at).toLocaleString()}</small>
                     <br>
-                    <strong>${post.title.trim() || "無題"}</strong>
+                    <strong>${post.title?.trim() || "無題"}</strong>
                     <p>${post.content}</p>
                 </div>
                 <hr>
@@ -141,129 +204,85 @@
 
             await loadPosts();
 
-            // 投稿フォーム
-            postForm.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const username = document.getElementById("username").value;
-                const title = parseMarkdown(document.getElementById("title").value);
-                const content = parseMarkdown(document.getElementById("content").value);
-
-                const { error } = await supabase.from("BBS").insert([{ thread, username, title, content }]);
-                if (error) { console.error(error); return; }
-
-                // 投稿後フォームをクリア
-                postForm.reset();
-
-                // 投稿一覧を更新
-                await loadPosts();
-            });
-
+            // === マークダウン整形 ===
             function parseMarkdown(text) {
-                // 太字: **太字**
+                if (!text) return "";
                 text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-                // 斜体: *斜体*
                 text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-                // 取り消し線: ~~取り消し~~
                 text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
-
-                // プレースホルダー格納用
                 const placeholders = {};
                 let index = 0;
-
-                // リンク: [リンク文字](URL)
                 text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, label, url) => {
                     const key = `__URL_PLACEHOLDER_${index++}__`;
                     placeholders[key] = `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
                     return key;
                 });
-
-                // 裸のURLを自動リンク化（リンクのURL部分は除外済み）
                 text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-
-                text = text.replace(/\n/g, '<br>'); // 改行
-
-                // インラインコード: `code`
-                text = text.replace(/\`(.*?)\`/g, (match, code) => {
-                    return `<code>${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code>`;
-                });
-
-                // プレースホルダーを元に戻す
+                text = text.replace(/\n/g, '<br>');
+                text = text.replace(/\`(.*?)\`/g, (match, code) =>
+                    `<code>${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code>`
+                );
                 Object.keys(placeholders).forEach(key => {
                     text = text.replace(key, placeholders[key]);
                 });
-
-                console.log(text);
-
                 return text;
             }
 
+            // === 書式ボタン ===
             const textarea = document.getElementById("content");
+            const buttons = {
+                bold: ["**", "**", "太字"],
+                italic: ["*", "*", "斜体"],
+                strikethrough: ["~~", "~~", "取り消し線"],
+                link: ["[", "](URL)", "リンクテキスト"]
+            };
 
-            document.getElementById("bold").addEventListener("click", (e) => {
-                e.preventDefault();
-                insertAtCursor(textarea, "**", "**", " ");
-            });
-
-            document.getElementById("italic").addEventListener("click", (e) => {
-                e.preventDefault();
-                insertAtCursor(textarea, "*", "*", " ");
-            });
-
-            document.getElementById("strikethrough").addEventListener("click", (e) => {
-                e.preventDefault();
-                insertAtCursor(textarea, "~~", "~~", " ");
-            });
-
-            document.getElementById("link").addEventListener("click", (e) => {
-                e.preventDefault();
-                // デフォルトで「リンクテキスト」を選択
-                insertAtCursor(textarea, "[", "](URL)", "リンクテキスト");
+            Object.entries(buttons).forEach(([id, [before, after, placeholder]]) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        insertAtCursor(textarea, before, after, placeholder);
+                    });
+                }
             });
 
             function insertAtCursor(textarea, before, after, selectText = "") {
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
-
                 const text = textarea.value;
                 const selected = text.slice(start, end) || selectText;
-
-                // テキスト挿入
                 const newText = text.slice(0, start) + before + selected + after + text.slice(end);
                 textarea.value = newText;
-
-                // 選択範囲設定
                 textarea.focus();
                 textarea.setSelectionRange(start + before.length, start + before.length + selected.length);
             }
 
+            // === プレビュー更新 ===
             const previewArea = document.getElementById("preview");
-
-            document.getElementById("postForm").addEventListener("keyup", (e) => {
-                const username = parseMarkdown(document.getElementById("username").value.trim());
+            postForm.addEventListener("keyup", () => {
+                const username = parseMarkdown();
                 const title = parseMarkdown(document.getElementById("title").value.trim());
                 const content = parseMarkdown(document.getElementById("content").value.trim());
-
                 previewArea.innerHTML = `
-                <span>x. </span>
-                <strong>${username || "とある水戸一の名無し"}</strong> 
-                <small>${new Date().toLocaleString()}</small>
-                <br>
-                <strong>${title || "無題"}</strong>
-                <p>${content}</p>
-            `
-            })
+            <span>x. </span>
+            <strong>${username || "とある水戸一の名無し"}</strong>
+            <small>${new Date().toLocaleString()}</small>
+            <br>
+            <strong>${title || "無題"}</strong>
+            <p>${content}</p>
+        `;
+            });
+        });
 
-        })
-
-
-        window.addEventListener('beforeunload', function (event) {
-            if (document.getElementById('title').value.trim() === '' && document.getElementById('content').value.trim() === '' && document.getElementById('username').value.trim() === '') {
-                return; // フォームが空なら警告しない
-            }
-            event.preventDefault() // (1)
-            event.returnValue = '' // (2)
+        // === ページ離脱警告 ===
+        window.addEventListener('beforeunload', (event) => {
+            const title = document.getElementById('title').value.trim();
+            const content = document.getElementById('content').value.trim();
+            const username = document.getElementById('username').value.trim();
+            if (!title && !content && !username) return;
+            event.preventDefault();
+            event.returnValue = '';
         });
     </script>
 
