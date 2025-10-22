@@ -1,4 +1,4 @@
-function showCustomAlert(message, button) {
+function showCustomAlert(message, isShowCloseButton = true, isBackgroundBlack) {
     const existingAlert = document.getElementById("custom-alert");
     if (existingAlert) existingAlert.remove();
 
@@ -54,12 +54,39 @@ function showCustomAlert(message, button) {
         okButton.innerText = "×";
         okButton.onclick = () => {
             alertContainer.style.opacity = "0";
-            setTimeout(() => alertContainer.remove(), 500);
+            setTimeout(() => {
+                alertContainer.remove();
+                if (isBackgroundBlack) background.remove();
+            }, 500);
         };
     }
 
+    const background = document.createElement("div");
+
+    if (background) {
+        Object.assign(background.style, {
+            position: "fixed",
+            width: "100vw",
+            height: "100vh",
+            background: "#000000",
+            zIndex: "999",
+            top: "0",
+            left: "0"
+        });
+        background.id = "background-black";
+    }
+
+    if (isBackgroundBlack) {
+        document.body.appendChild(background);
+    }
+
     // 要素を組み立てて追加
-    alertContainer.append(messageElem, okButton);
+    alertContainer.appendChild(messageElem);
+
+    if (isShowCloseButton) {
+        alertContainer.appendChild(okButton)
+    }
+
     document.body.appendChild(alertContainer);
 
     // 少し遅れてフェードイン

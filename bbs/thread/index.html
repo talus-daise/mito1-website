@@ -108,6 +108,7 @@
         document.addEventListener("DOMContentLoaded", async () => {
             const params = new URLSearchParams(window.location.search);
             const thread = params.get("thread");
+            const postId = params.get("post_id");
             const listTitle = document.getElementById("listTitle");
             const postList = document.getElementById("postList");
             const postForm = document.getElementById("postForm");
@@ -200,6 +201,22 @@
                 </div>
                 <hr>
             `).join("");
+
+                // postId が指定されていれば該当投稿までスクロール
+                if (postId) {
+                    const idx = posts.findIndex(p => String(p.id) === String(postId));
+                    if (idx !== -1) {
+                        const postDivs = postList.querySelectorAll('div');
+                        const target = postDivs[idx];
+                        if (target) {
+                            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            // 簡単なハイライト
+                            const originalBg = target.style.backgroundColor;
+                            target.style.backgroundColor = '#fffbcc';
+                            setTimeout(() => { target.style.transition = 'background-color 1s'; target.style.backgroundColor = originalBg || ''; }, 500);
+                        }
+                    }
+                }
             }
 
             await loadPosts();
@@ -260,11 +277,23 @@
 
             // === プレビュー更新 ===
             const previewArea = document.getElementById("preview");
-            postForm.addEventListener("keyup", () => {
-                const username = parseMarkdown();
-                const title = parseMarkdown(document.getElementById("title").value.trim());
-                const content = parseMarkdown(document.getElementById("content").value.trim());
-                previewArea.innerHTML = `
+            postForm.addEventListener("keypress", async () => {
+                const { data: { session } } = await supabase.auth.getSession();
+
+                if (session && session.user) {
+                    const userId = session.user.id;
+                    const userEmail = session.user.email;
+
+                    const { data: user } = await supabase
+                        .from("users")
+                        .select("display_name")
+                        .eq("user_id", userId)
+                        .single();
+
+                    const username = parseMarkdown(user.display_name);
+                    const title = parseMarkdown(document.getElementById("title").value.trim());
+                    const content = parseMarkdown(document.getElementById("content").value.trim());
+                    previewArea.innerHTML = `
             <span>x. </span>
             <strong>${username || "とある水戸一の名無し"}</strong>
             <small>${new Date().toLocaleString()}</small>
@@ -272,6 +301,7 @@
             <strong>${title || "無題"}</strong>
             <p>${content}</p>
         `;
+                }
             });
         });
 

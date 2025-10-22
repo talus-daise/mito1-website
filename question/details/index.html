@@ -66,9 +66,9 @@
     <main>
         <section>
             <h2 id="question-title"></h2>
+            <small id="question-posted-at"></small> <!-- 質問の投稿日時表示 -->
             <p id="username"></p>
             <p id="question-content"></p>
-            <small id="question-posted-at"></small> <!-- 質問の投稿日時表示 -->
         </section>
 
         <section>
@@ -83,7 +83,6 @@
                     <button id="link" title="リンク"><i class="fa-solid fa-link"></i></button>
                 </div>
                 <textarea id="answer-content" placeholder="回答の内容" required></textarea><br>
-                <input type="text" id="answer-username" placeholder="ユーザー名"><br>
                 <button type="submit">回答</button>
             </form>
 
@@ -110,6 +109,7 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const questionId = urlParams.get("id");
+        const answerId = urlParams.get("answer_id");
 
         // 質問データの取得
         async function fetchQuestion() {
@@ -125,7 +125,7 @@
             }
 
             document.getElementById("question-title").innerHTML = question.title;
-            document.getElementById("username").innerHTML = "質問者：" + question.username;
+            document.getElementById("username").innerHTML = "質問者: " + question.username;
             document.getElementById("question-content").innerHTML = question.content;
 
             const postDate = new Date(question.created_at).toLocaleString();
@@ -162,6 +162,30 @@
             <small>(${answerDate})</small>`;
                 answerList.appendChild(li);
             });
+
+            if (answerId) {
+                // 対象の回答オブジェクトを探す
+                const target = answers.find((a) => String(a.id) === String(answerId));
+                if (target) {
+                    // テキスト比較用のHTML除去ヘルパー
+                    const stripHtml = (s) => (s || "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+                    const expected = `${stripHtml(target.content)} - by ${target.username} (${new Date(
+                        target.created_at
+                    ).toLocaleString()})`;
+
+                    // li を走査して一致する要素を探す
+                    const items = Array.from(document.querySelectorAll("#answer-list li"));
+                    const found = items.find((li) => stripHtml(li.textContent).includes(expected));
+
+                    if (found) {
+                        found.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // 簡単なハイライト
+                        const originalBg = found.style.backgroundColor;
+                        found.style.backgroundColor = '#fffbcc';
+                        setTimeout(() => { found.style.transition = 'background-color 1s'; found.style.backgroundColor = originalBg || ''; }, 500);
+                    }
+                }
+            }
         }
 
         // 回答投稿処理
@@ -179,8 +203,15 @@
 
             // 🌟 表示名を取得
             let displayName = "とある水戸一の名無し";
-            const { data: users } = await pd.from("users").select("display_name").eq("id", user.id).single();
-            if (users && users.display_name) displayName = users.display_name;
+            const { data: userRecord, error: userRecordError } = await pd
+                .from("users")
+                .select("display_name")
+                .eq("user_id", user.id)
+                .single();
+            if (!userRecordError && userRecord && userRecord.display_name) {
+                displayName = userRecord.display_name;
+            }
+            console.log(displayName);
 
             const content = parseMarkdown(document.getElementById("answer-content").value.trim());
 
@@ -293,15 +324,27 @@
 
         // --- プレビュー ---
         const previewArea = document.getElementById("preview");
-        document.getElementById("answer-form").addEventListener("keyup", (e) => {
-            const content = parseMarkdown(document.getElementById("answer-content").value.trim());
-            previewArea.innerHTML = `
+        document.getElementById("answer-form").addEventListener("keyup", async (e) => {
+            const { data: { session } } = await pd.auth.getSession();
+
+            if (session && session.user) {
+                const userId = session.user.id;
+                const userEmail = session.user.email;
+
+                const { data: user } = await pd
+                    .from("users")
+                    .select("display_name")
+                    .eq("user_id", userId)
+                    .single();
+                const content = parseMarkdown(document.getElementById("answer-content").value.trim());
+                previewArea.innerHTML = `
         <ul>
             <li>
-                ${content} - by <span id="preview-name">（あなたの表示名）</span>
+                ${content} - by <span id="preview-name">${user.display_name}</span>
                 <small>(${new Date().toLocaleString()})</small>
             </li>
         </ul>`;
+            }
         });
 
         // --- 未保存警告 ---

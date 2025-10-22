@@ -80,7 +80,6 @@
                 <input type="text" id="threadName" placeholder="スレッド名" required><br>
                 <hr>
                 <h3>最初の投稿</h3>
-                <input type="text" id="username" placeholder="名前"><br>
                 <input type="text" id="title" placeholder="タイトル" required><br>
                 <div class="format-buttons">
                     <button id="bold"><strong>B</strong></button>
@@ -114,18 +113,16 @@
         );
 
         document.addEventListener("DOMContentLoaded", async () => {
-            const usernameInput = document.getElementById("username");
-
             // === ログインユーザー情報を取得 ===
             const { data: { session } } = await supabase.auth.getSession();
             if (session && session.user) {
                 const userId = session.user.id;
 
-                // ✅ 既存の表示名を取得
-                const { data: user } = await supabase
+                // ✅ 既存の表示名を取得（カラム名を user_id に合わせ、レコードが無い場合を考慮）
+                const { data: userRecord } = await supabase
                     .from("users")
                     .select("display_name")
-                    .eq("id", userId)
+                    .eq("user_id", userId)
                     .single();
 
                 // === スレッド作成フォーム ===
@@ -133,7 +130,7 @@
                     e.preventDefault();
 
                     const thread = parseMarkdown(document.getElementById("threadName").value.trim());
-                    const username = parseMarkdown(user?.display_name?.trim() || "とある水戸一の名無し");
+                    const username = parseMarkdown((userRecord?.display_name || "とある水戸一の名無し").trim());
                     const title = parseMarkdown(document.getElementById("title").value.trim());
                     const content = parseMarkdown(document.getElementById("content").value.trim());
 
@@ -280,12 +277,25 @@
 
         const previewArea = document.getElementById("preview");
 
-        document.getElementById("newThreadForm").addEventListener("keyup", (e) => {
-            const username = document.getElementById("username").value.trim();
-            const title = parseMarkdown(document.getElementById("title").value.trim());
-            const content = parseMarkdown(document.getElementById("content").value.trim());
+        document.getElementById("newThreadForm").addEventListener("keypress", async (e) => {
+            // === ログイン済みユーザー情報の取得 ===
+            const { data: { session } } = await supabase.auth.getSession();
 
-            previewArea.innerHTML = `
+            if (session && session.user) {
+                const userId = session.user.id;
+                const userEmail = session.user.email;
+                
+                const { data: user } = await supabase
+                    .from("users")
+                    .select("display_name")
+                    .eq("user_id", userId)
+                    .single();
+
+                const username = parseMarkdown((user?.display_name || "とある水戸一の名無し").trim());
+                const title = parseMarkdown(document.getElementById("title").value.trim());
+                const content = parseMarkdown(document.getElementById("content").value.trim());
+
+                previewArea.innerHTML = `
                 <span>1. </span>
                 <strong>${username || "とある水戸一の名無し"}</strong> 
                 <small>${new Date().toLocaleString()}</small>
@@ -293,15 +303,15 @@
                 <strong>${title || "無題"}</strong>
                 <p>${content}</p>
             `
+            }
         })
 
         let isFormDirty = false;
 
         const formElements = [
-            document.getElementById('question-username'),
-            document.getElementById('question-title'),
-            document.getElementById('question-content'),
-            document.getElementById('faster')
+            document.getElementById('threadName'),
+            document.getElementById('title'),
+            document.getElementById('content'),
         ];
 
         formElements.forEach(el => {

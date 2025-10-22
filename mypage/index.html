@@ -46,10 +46,12 @@
             <h2>ユーザー情報</h2>
             <div class="user-info">
                 <img id="user-avatar" alt="ユーザーアイコン" width="50" height="50">
+                <p>学籍番号: <span id="student-id">0X00</span></p>
                 <p>ユーザー名: <span id="user-name">とある水戸一の名無し</span></p>
                 <p>表示名: <span id="display-name">とある水戸一の名無し</span><button id="edit-display-name">編集</button></p>
                 <p>メールアドレス: <span id="user-email">guest@example.com</span></p>
             </div>
+            <button id="logout-button">ログアウト</button>
         </section>
         <section>
             <h2>ユーザー統計</h2>
@@ -81,6 +83,15 @@
             "https://mgsbwkidyxmicbacqeeh.supabase.co",
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
         );
+
+        let isLoading = true;
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            await new Promise(resolve => {
+                showCustomAlert("読み込み中です", false);
+                resolve();
+            });
+        });
 
         // Googleログインしているユーザーを取得
         const { data: { user } } = await supabase.auth.getUser();
@@ -115,6 +126,46 @@
             .eq("user_email", userEmail)
             .single();
 
+        const logoutBtn = document.getElementById("logout-button");
+
+        // --- ログアウト ---
+        logoutBtn.addEventListener("click", async () => {
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                console.error(error);
+                alert("ログアウトに失敗しました。");
+                return;
+            }
+            alert("ログアウトしました。");
+            window.location.href = "../";
+        });
+
+        // --- 学籍番号取得 ---
+        fetch("../names.json")
+            .then(response => response.json())
+            .then(data => {
+                const classes = Object.keys(data);
+                let studentId = "0A0000";
+
+                for (const cls of classes) {
+                    const index = data[cls].indexOf(user.user_metadata.full_name);
+                    console.log("Checking class:", cls, "Index:", index);
+                    console.log(updatedUser.user_name);
+                    if (index !== -1) {
+                        const classCode = cls;
+                        const attendanceNumber = (index + 1).toString().padStart(2, '0');
+                        studentId = classCode + attendanceNumber;
+                        console.log("Found student ID:", studentId);
+                        break;
+                    }
+                }
+
+                document.getElementById("student-id").textContent = studentId;
+            })
+            .catch(error => {
+                console.error("Error fetching names.json:", error);
+            });
+
         document.getElementById("user-avatar").src = user.user_metadata.avatar_url || "../img/default-avatar.png";
         document.getElementById("user-name").textContent = user.user_metadata.full_name || "ゲスト";
         document.getElementById("user-email").textContent = textMosaic(userEmail);
@@ -132,37 +183,40 @@
         const qList = document.getElementById("question-list");
         questions?.forEach(q => {
             const li = document.createElement("li");
-            li.innerHTML = `<a href="/mito1-website/question/detail/?id=${q.id}">${q.title}</a>`;
+            li.innerHTML = `<a href="/mito1-website/question/details/?id=${q.id}">${q.title}</a>`;
             qList.appendChild(li);
         });
 
-        // --- スレッド一覧を取得 ---
+        // --- 掲示板の投稿一覧を取得 ---
         const { data: threads } = await supabase
             .from("BBS")
-            .select("thread, title")
+            .select("id, thread, title")
             .eq("user_email", userEmail)
             .order("created_at", { ascending: false });
 
         const tList = document.getElementById("thread-list");
         threads?.forEach(t => {
             const li = document.createElement("li");
-            li.innerHTML = `<a href="/mito1-website/bbs/thread/?thread=${encodeURIComponent(t.thread)}">${t.title} - ${t.thread}</a>`;
+            li.innerHTML = `<a href="/mito1-website/bbs/thread/?thread=${encodeURIComponent(t.thread)}&post_id=${encodeURIComponent(t.id)}">${t.title} - ${t.thread}</a>`;
             tList.appendChild(li);
         });
 
         // --- 回答一覧を取得 ---
         const { data: answers } = await supabase
             .from("answers")
-            .select("question_id, content")
+            .select("id, question_id, content")
             .eq("user_email", userEmail)
             .order("created_at", { ascending: false });
 
         const aList = document.getElementById("answer-list");
         answers?.forEach(a => {
             const li = document.createElement("li");
-            li.innerHTML = `<a href="/mito1-website/question/detail/?id=${a.question_id}">${a.content.slice(0, 20)}...</a>`;
+            li.innerHTML = `<a href="/mito1-website/question/details/?id=${a.question_id}&answer_id=${a.id}">${a.content.slice(0, 20)}...</a>`;
             aList.appendChild(li);
         });
+
+        isLoading = false;
+        document.getElementById('custom-alert').remove();
 
         document.getElementById("edit-display-name").addEventListener("click", async () => {
             let newDisplayName = prompt("新しい表示名を入力してください（20文字以内）:");
