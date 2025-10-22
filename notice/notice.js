@@ -46,6 +46,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }, { once: true });
     });
 
+    document.addEventListener("click", (e) => {
+        const target = e.target;
+        // サイドバー内やメニュー・閉じるボタンへのクリックは無視
+        if (asideMenu.contains(target) || menuButton.contains(target) || closeButton.contains(target)) return;
+        if (asideMenu.classList.contains("open")) {
+            asideMenu.classList.remove("open");
+            asideMenu.classList.add("closing");
+            menuButton.classList.remove("open");
+            closeButton.classList.remove("open");
+            document.body.classList.remove("no-scroll");
+
+            asideMenu.addEventListener("transitionend", () => {
+                asideMenu.classList.remove("closing");
+            }, { once: true });
+        }
+    });
+
     /* =========================================================
      *  ログイン・ログアウト機能
      * ========================================================= */
@@ -140,13 +157,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const linkListWrapper = document.createElement("nav");
     linkListWrapper.innerHTML = `
         <ul>
-            <li id="myPage" class="menu-item">
-                <a href="/mito1-website/mypage/">
-                    <i class="fa-solid fa-circle-user"></i>マイページ
-                </a>
-            </li>
-        </ul>
-        <ul>
             <li id="home" class="menu-item">
                 <a href="/mito1-website/">
                     <i class="fa-solid fa-house"></i>トップページ
@@ -166,17 +176,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 <a href="/mito1-website/bbs/">
                     <i class="fa-solid fa-chalkboard"></i>掲示板
                 </a>
-                <ul class="submenu">
-                    <li><a href="/mito1-website/bbs/new_post/">新規スレッド作成</a></li>
-                </ul>
             </li>
             <li id="question" class="menu-item">
                 <a href="/mito1-website/question/">
                     <i class="fa-solid fa-circle-question"></i>みとい知恵袋
                 </a>
-                <ul class="submenu">
-                    <li><a href="/mito1-website/question/new_question/">新規質問投稿</a></li>
-                </ul>
             </li>
             <li id="troubleshooting" class="menu-item">
                 <a href="/mito1-website/troubleshooting/">
@@ -184,71 +188,78 @@ document.addEventListener("DOMContentLoaded", () => {
                 </a>
             </li>
         </ul>
+        <ul>
+            <li id="myPage" class="menu-item">
+                <a href="/mito1-website/mypage/">
+                    <i class="fa-solid fa-circle-user"></i>マイページ
+                </a>
+            </li>
+        </ul>
     `;
     asideMenu.appendChild(linkListWrapper);
 
-    /* =========================================================
-     *  お知らせ欄
-     * ========================================================= */
+    // /* =========================================================
+    //  *  お知らせ欄
+    //  * ========================================================= */
 
-    asideMenu.appendChild(document.createElement("hr"));
-    asideMenu.insertAdjacentHTML("beforeend", `
-        <h2>更新内容</h2>
-        <h3 id="client-page"></h3>
-        <div id="notice-container"></div>
-    `);
+    // asideMenu.appendChild(document.createElement("hr"));
+    // asideMenu.insertAdjacentHTML("beforeend", `
+    //     <h2>更新内容</h2>
+    //     <h3 id="client-page"></h3>
+    //     <div id="notice-container"></div>
+    // `);
 
-    // --- ページタイトル取得 ---
-    let h1Content = "";
-    let query = pd.from("notice").select("id, date, content, page").order("date", { ascending: false });
+    // // --- ページタイトル取得 ---
+    // let h1Content = "";
+    // let query = pd.from("notice").select("id, date, content, page").order("date", { ascending: false });
 
-    if (document.querySelectorAll("h1")[1]) {
-        h1Content = document.querySelectorAll("h1")[1].textContent;
-        document.getElementById("client-page").textContent = h1Content;
-        query = query.eq("page", h1Content);
-    } else {
-        document.getElementById("client-page").textContent = "一覧";
-    }
+    // if (document.querySelectorAll("h1")[1]) {
+    //     h1Content = document.querySelectorAll("h1")[1].textContent;
+    //     document.getElementById("client-page").textContent = h1Content;
+    //     query = query.eq("page", h1Content);
+    // } else {
+    //     document.getElementById("client-page").textContent = "一覧";
+    // }
 
-    // --- お知らせ読み込み ---
-    async function loadNotice() {
-        const { data, error } = await query;
-        if (error) {
-            console.error("エラー:", error);
-            return;
-        }
+    // // --- お知らせ読み込み ---
+    // async function loadNotice() {
+    //     const { data, error } = await query;
+    //     if (error) {
+    //         console.error("エラー:", error);
+    //         return;
+    //     }
 
-        const noticeContainer = document.getElementById("notice-container");
-        noticeContainer.innerHTML = "";
+    //     const noticeContainer = document.getElementById("notice-container");
+    //     noticeContainer.innerHTML = "";
 
-        // 日付ごとにグループ化
-        const grouped = data.reduce((acc, item) => {
-            (acc[item.date] ||= []).push(item);
-            return acc;
-        }, {});
+    //     // 日付ごとにグループ化
+    //     const grouped = data.reduce((acc, item) => {
+    //         (acc[item.date] ||= []).push(item);
+    //         return acc;
+    //     }, {});
 
-        Object.entries(grouped).forEach(([date, items]) => {
-            const group = document.createElement("div");
-            group.classList.add("notice-group");
+    //     Object.entries(grouped).forEach(([date, items]) => {
+    //         const group = document.createElement("div");
+    //         group.classList.add("notice-group");
 
-            const dateHeader = document.createElement("h4");
-            dateHeader.textContent = date;
-            group.appendChild(dateHeader);
+    //         const dateHeader = document.createElement("h4");
+    //         dateHeader.textContent = date;
+    //         group.appendChild(dateHeader);
 
-            const ul = document.createElement("ul");
-            ul.classList.add("notice-item");
-            items.forEach(i => {
-                const li = document.createElement("li");
-                li.textContent = i.content;
-                ul.appendChild(li);
-            });
+    //         const ul = document.createElement("ul");
+    //         ul.classList.add("notice-item");
+    //         items.forEach(i => {
+    //             const li = document.createElement("li");
+    //             li.textContent = i.content;
+    //             ul.appendChild(li);
+    //         });
 
-            group.appendChild(ul);
-            noticeContainer.appendChild(group);
-        });
-    }
+    //         group.appendChild(ul);
+    //         noticeContainer.appendChild(group);
+    //     });
+    // }
 
-    loadNotice();
+    // loadNotice();
 
     /* =========================================================
      *  サブメニュー表示制御（PC対応）

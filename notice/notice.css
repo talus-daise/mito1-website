@@ -125,16 +125,7 @@ nav ul {
 }
 
 nav li {
-    display: flex;
     width: 100%;
-}
-
-nav li ul li {
-    width: 100%;
-}
-
-nav li ul li a::before {
-    content: '　\25B6';
 }
 
 /* 各リンクのスタイル */
@@ -152,6 +143,8 @@ nav a {
 nav i {
     color: #ffffff;
     transition: color 0.3s ease;
+    margin: 0.5rem;
+    text-align: center;
 }
 
 /* ホバー時のリンクとアイコン */
@@ -164,30 +157,6 @@ nav a:hover i {
     color: #ffffff;
 }
 
-/* サブメニュー非表示 */
-.menu-item .submenu {
-    opacity: 0;
-    max-height: 0;
-    overflow: hidden;
-    transition: opacity 0.3s ease, max-height 0.3s ease;
-    pointer-events: none;
-    /* hover 判定されないように */
-}
-
-.menu-item:hover .submenu {
-    opacity: 1;
-    max-height: 500px;
-    /* サブメニューの高さに合わせて調整 */
-    pointer-events: auto;
-    /* クリック可能にする */
-}
-
-/* 表示状態 */
-.submenu.show {
-    opacity: 1;
-    max-height: 200px;
-    /* サブメニューの高さに応じて調整 */
-}
 
 .avatar {
     background-color: #ffffff;

@@ -93,5 +93,62 @@ function showCustomAlert(message, isShowCloseButton = true, isBackgroundBlack) {
     setTimeout(() => alertContainer.style.opacity = "1", 10);
 }
 
+/** 時間制限処理 */
+document.addEventListener("DOMContentLoaded", () => {
+    /** 現在時刻の判定関数 */
+    function isRestrictedTime() {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const current = hours * 60 + minutes;
+
+        // 分単位で範囲を設定
+        const ranges = [
+            [8 * 60 + 25, 11 * 60 + 30],  // 8:25〜11:30
+            [13 * 60 + 5, 15 * 60 + 55]   // 13:05〜15:55
+        ];
+
+        return ranges.some(([start, end]) => current >= start && current <= end);
+    }
+
+    /** 暗転処理 */
+    function blackoutScreen() {
+        const blackout = document.createElement("div");
+        Object.assign(blackout.style, {
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.9)",
+            zIndex: "999",
+        });
+        document.body.appendChild(blackout);
+
+        // カスタムアラートを表示
+        showCustomAlert("現在は利用できない時間です。");
+
+        // OKボタン（×ボタン）クリック時にウィンドウを閉じる処理を追加
+        blackout.addEventListener("click", () => {
+            window.close();
+        });
+
+        // showCustomAlertの×ボタンにも閉じるイベントを追加
+        const observer = new MutationObserver(() => {
+            const closeButton = document.querySelector("#custom-alert button");
+            if (closeButton) {
+                closeButton.addEventListener("click", () => window.close());
+                observer.disconnect();
+            }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
+
+    /** 時間判定と動作 */
+    if (isRestrictedTime()) {
+        blackoutScreen();
+    }
+});
+
 // **グローバルスコープに登録**
 window.showCustomAlert = showCustomAlert;
