@@ -183,7 +183,11 @@
                 }
 
                 // 名簿表示関数
-                function displayRoster(filteredStudents) {
+                async function displayRoster(filteredStudents) {
+                    const { data: users, error} = await supabase
+                        .from("users")
+                        .select("full_name, user_id");
+                    
                     rosterBody.innerHTML = '';
                     filteredStudents.forEach(student => {
                         const row = document.createElement('tr');
@@ -192,6 +196,19 @@
 
                         numberCell.textContent = student.number;
                         nameCell.textContent = student.name;
+
+                        if (student.name === session.user.user_metadata.full_name) {
+                            row.style.backgroundColor = '#fffbcc'; // ハイライト色
+                        }
+
+                        const user = users.find(u => u.full_name === student.name);
+                        if (user) {
+                            const userLink = document.createElement('a');
+                            userLink.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(user.user_id)}`;
+                            userLink.textContent = student.name;
+                            nameCell.innerHTML = ''; // Clear the cell
+                            nameCell.appendChild(userLink);
+                        }
 
                         row.appendChild(numberCell);
                         row.appendChild(nameCell);

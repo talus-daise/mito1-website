@@ -58,6 +58,7 @@
             <button id="logout-button">ログアウト</button>
             <hr>
             <p>名前変更の際は、<a href="../faq.html">よくある質問</a>をよく読んだ上で変更してください。</p>
+            <p><a id="my-page-link" href="#">公開中のマイページへ</a></p>
         </section>
         <section>
             <h2>ユーザー統計</h2>
@@ -117,12 +118,12 @@
 
         if (!existingUser) {
             // 新規ユーザーなら登録
-            await supabase.from("users").insert([{ user_id: user.id, user_email: userEmail, visit_count: 1 }]);
+            await supabase.from("users").insert([{ user_id: user.id, user_email: userEmail, visit_count: 1 , avatar_url: user.user_metadata.avatar_url, full_name: user.user_metadata.full_name }]);
         } else {
             // 訪問回数を+1
             await supabase
                 .from("users")
-                .update({ visit_count: existingUser.visit_count + 1 })
+                .update({ visit_count: existingUser.visit_count + 1, avatar_url: user.user_metadata.avatar_url, full_name: user.user_metadata.full_name })
                 .eq("user_email", userEmail);
         }
 
@@ -132,6 +133,8 @@
             .select("*")
             .eq("user_email", userEmail)
             .single();
+
+        document.title = `${updatedUser.display_name || "とある水戸一の名無し"} のマイページ | 水戸一高附属中総合ウェブサイト`;
 
         const logoutBtn = document.getElementById("logout-button");
 
@@ -180,6 +183,7 @@
         document.getElementById("user-role").textContent = updatedUser.is_admin ? "管理者" : "一般ユーザー";
         document.getElementById("visit-count").textContent = updatedUser.visit_count;
         document.getElementById("post-count").textContent = updatedUser.post_count;
+        document.getElementById("my-page-link").href = `./other/?user_id=${encodeURIComponent(updatedUser.user_id)}`;
 
         document.getElementById("user-role").addEventListener("click", () => {
             if (updatedUser.is_admin) {
@@ -272,7 +276,7 @@
         });
 
         function textMosaic(str) {
-            return str.slice(0, 3) + "*".repeat(10) + str.slice(-5);
+            return str.slice(0, 5) + "*".repeat(10) + str.slice(-5);
         }
     </script>
     <script type="module" src="../notice/notice.js"></script>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>マイページ | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../../notice/notice.css">
+    <style>
+        .user-info {
+            display: inline-flex;
+            flex-direction: row;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .user-info p {
+            display: block;
+            width: calc(100% - 120px);
+        }
+
+        .user-info .user-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .user-info img {
+            border-radius: 50%;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+        }
+    </style>
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="../../img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#3498db">
+    <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../../script/customAlert.js" type="module"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../../manifest.json">
+</head>
+
+<body>
+    <header>
+        <h1>とある水戸一の名無し のマイページ</h1>
+    </header>
+    <main>
+        <a href="../../">トップページに戻る</a>
+        <section>
+            <h2>ユーザー情報</h2>
+            <div class="user-info">
+                <img id="user-avatar" alt="ユーザーアイコン" width="50" height="50"><p class="user-name"><span id="user-name">とある水戸一の名無し</span></p>
+                <p class="student-id">学籍番号: <span id="student-id">0X00</span></p>
+                <p class="user-email">メールアドレス: <span id="user-email">guest@example.com</span></p>
+            </div>
+        </section>
+        <section>
+            <h2>ユーザー統計</h2>
+            <div class="stats">
+                <p><i class="fa-solid fa-door-open" title="訪問回数"></i> <span id="visit-count">0</span></p>
+                <p><i class="fa-solid fa-pencil" title="投稿回数"></i> <span id="post-count">0</span></p>
+                <p>(2025年10月22日以降)</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>掲示板の投稿一覧</h2>
+            <ul id="thread-list"></ul>
+        </section>
+
+        <section>
+            <h2>投稿した質問一覧</h2>
+            <ul id="question-list"></ul>
+        </section>
+
+        <section>
+            <h2>投稿した回答一覧</h2>
+            <ul id="answer-list"></ul>
+        </section>
+    </main>
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const supabase = createClient(
+            "https://mgsbwkidyxmicbacqeeh.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
+        );
+
+        let isLoading = true;
+
+        const requiredUser = new URLSearchParams(window.location.search).get("user_id");
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            await new Promise(resolve => {
+                showCustomAlert("読み込み中です", false);
+                resolve();
+            });
+        });
+
+        // 最新ユーザーデータ再取得
+        const { data: user } = await supabase
+            .from("users")
+            .select("*")
+            .eq("user_id", requiredUser)
+            .single();
+
+        document.title = `${user.display_name || "とある水戸一の名無し"} のマイページ | 水戸一高附属中総合ウェブサイト`;
+
+        const logoutBtn = document.getElementById("logout-button");
+
+        // --- 学籍番号取得 ---
+        fetch("../../names.json")
+            .then(response => response.json())
+            .then(data => {
+                const classes = Object.keys(data);
+                let studentId = "0A00";
+
+                for (const cls of classes) {
+                    const index = data[cls].indexOf(user.full_name);
+                    console.log("Checking class:", cls, "Index:", index);
+                    console.log(user.user_name);
+                    if (index !== -1) {
+                        const classCode = cls;
+                        const attendanceNumber = (index + 1).toString().padStart(2, '0');
+                        studentId = classCode + attendanceNumber;
+                        console.log("Found student ID:", studentId);
+                        break;
+                    }
+                }
+
+                document.getElementById("student-id").textContent = studentId;
+            })
+            .catch(error => {
+                console.error("Error fetching names.json:", error);
+            });
+
+        document.querySelector("h1").textContent = `${user.display_name || "とある水戸一の名無し"} のマイページ`;
+        document.getElementById("user-avatar").src = user.avatar_url || "../../img/default-avatar.png";
+        document.getElementById("user-name").textContent = user.display_name || "ゲスト";
+        document.getElementById("user-email").textContent = textMosaic(user.user_email);
+        document.getElementById("visit-count").textContent = user.visit_count;
+        document.getElementById("post-count").textContent = user.post_count;
+
+        // --- 質問一覧を取得 ---
+        const { data: questions } = await supabase
+            .from("questions")
+            .select("id, title")
+            .eq("user_email", user.user_email)
+            .order("created_at", { ascending: false });
+
+        const qList = document.getElementById("question-list");
+        questions?.forEach(q => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="/mito1-website/question/details/?id=${q.id}">${q.title}</a>`;
+            qList.appendChild(li);
+        });
+
+        // --- 掲示板の投稿一覧を取得 ---
+        const { data: threads } = await supabase
+            .from("BBS")
+            .select("id, thread, title")
+            .eq("user_email", user.user_email)
+            .order("created_at", { ascending: false });
+
+        const tList = document.getElementById("thread-list");
+        threads?.forEach(t => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="/mito1-website/bbs/thread/?thread=${encodeURIComponent(t.thread)}&post_id=${encodeURIComponent(t.id)}">${t.title} - ${t.thread}</a>`;
+            tList.appendChild(li);
+        });
+
+        // --- 回答一覧を取得 ---
+        const { data: answers } = await supabase
+            .from("answers")
+            .select("id, question_id, content")
+            .eq("user_email", user.user_email)
+            .order("created_at", { ascending: false });
+
+        const aList = document.getElementById("answer-list");
+        answers?.forEach(a => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="/mito1-website/question/details/?id=${a.question_id}&answer_id=${a.id}">${a.content.slice(0, 20)}...</a>`;
+            aList.appendChild(li);
+        });
+
+        isLoading = false;
+        document.getElementById('custom-alert').remove();
+
+        function textMosaic(str) {
+            return str.slice(0, 5) + "*".repeat(10) + str.slice(-5);
+        }
+    </script>
+    <script type="module" src="../../notice/notice.js"></script>
+    <script src="../../script/customAlert.js" type="module"></script>
+    <script src="../../script/verification.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+
+</html>

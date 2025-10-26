@@ -120,7 +120,7 @@
                 const li = document.createElement("li");
                 const answerDate = new Date(q.created_at).toLocaleString();
                 li.innerHTML = `<a href="details/?id=${q.id}">${q.title}</a>
-                <small>- ${q.username} (${answerDate})</small>`;
+                <small>- <span class="username" data-user-id="${q.user_id}">${q.username}</span> (${answerDate})</small>`;
 
                 if (q.answered) {
                     answeredList.appendChild(li);
@@ -131,6 +131,14 @@
 
                     unansweredList.appendChild(li);
                 }
+            });
+
+            document.querySelectorAll('.username').forEach(span => {
+                span.style.cursor = 'pointer';
+                span.addEventListener('click', () => {
+                    const userId = span.getAttribute('data-user-id');
+                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}`;
+                });
             });
         }
 

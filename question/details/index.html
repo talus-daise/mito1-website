@@ -67,7 +67,7 @@
         <section>
             <h2 id="question-title"></h2>
             <small id="question-posted-at"></small> <!-- 質問の投稿日時表示 -->
-            <p id="username"></p>
+            <p class="username" id="question-username"></p>
             <p id="question-content"></p>
         </section>
 
@@ -125,7 +125,8 @@
             }
 
             document.getElementById("question-title").innerHTML = question.title;
-            document.getElementById("username").innerHTML = "質問者: " + question.username;
+            document.getElementById("question-username").innerHTML = "質問者: " + question.username;
+            document.getElementById("question-username").setAttribute("data-user-id", question.user_id);
             document.getElementById("question-content").innerHTML = question.content;
 
             const postDate = new Date(question.created_at).toLocaleString();
@@ -158,7 +159,7 @@
                 const li = document.createElement("li");
                 const answerDate = new Date(answer.created_at).toLocaleString();
                 li.innerHTML = `
-            ${answer.content} - by ${answer.username}
+            ${answer.content} - by <span class="username" data-user-id="${answer.user_id}">${answer.username}</span>
             <small>(${answerDate})</small>`;
                 answerList.appendChild(li);
             });
@@ -186,6 +187,14 @@
                     }
                 }
             }
+
+            document.querySelectorAll(".username").forEach((element) => {
+                element.style.cursor = 'pointer';
+                element.addEventListener("click", () => {
+                    const userId = element.getAttribute("data-user-id");
+                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}`;
+                });
+            });
         }
 
         // 回答投稿処理
@@ -272,7 +281,17 @@
 
         fetchQuestion();
 
-        // --- Markdown関連 ---
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll(".username").forEach((element) => {
+                element.style.cursor = 'pointer';
+                element.addEventListener("click", () => {
+                    const userId = element.getAttribute("data-user-id");
+                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}`;
+                });
+            });
+        });
+
+        fetchQuestion();
         function parseMarkdown(text) {
             text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
             text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
@@ -340,7 +359,7 @@
                 previewArea.innerHTML = `
         <ul>
             <li>
-                ${content} - by <span id="preview-name">${user.display_name}</span>
+                ${content} - by <span class="username" data-user-id="${userId}">${user.display_name}</span>
                 <small>(${new Date().toLocaleString()})</small>
             </li>
         </ul>`;

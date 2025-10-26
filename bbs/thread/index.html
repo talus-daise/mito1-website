@@ -193,7 +193,7 @@
                     .map((post, index) => `
                 <div>
                     <span>${index + 1}. </span>
-                    <strong>${post.username?.trim() || "とある水戸一の名無し"}</strong>
+                    <strong class="username" data-user-id="${post.user_id}">${post.username?.trim() || "とある水戸一の名無し"}</strong>
                     <small>${new Date(post.created_at).toLocaleString()}</small>
                     <br>
                     <strong>${post.title?.trim() || "無題"}</strong>
@@ -201,6 +201,14 @@
                 </div>
                 <hr>
             `).join("");
+
+                document.querySelectorAll(".username").forEach((element) => {
+                    element.style.cursor = 'pointer';
+                    element.addEventListener("click", () => {
+                        const userId = element.getAttribute("data-user-id");
+                        window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}`;
+                    });
+                });
 
                 // postId が指定されていれば該当投稿までスクロール
                 if (postId) {

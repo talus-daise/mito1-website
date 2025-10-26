@@ -297,12 +297,18 @@
 
                 previewArea.innerHTML = `
                 <span>1. </span>
-                <strong>${username || "とある水戸一の名無し"}</strong> 
+                <strong class="username" data-user-id="${userId}">${username || "とある水戸一の名無し"}</strong> 
                 <small>${new Date().toLocaleString()}</small>
                 <br>
                 <strong>${title || "無題"}</strong>
                 <p>${content}</p>
             `
+
+                document.querySelector(".username").style.cursor = 'pointer';
+                document.querySelector(".username").addEventListener("click", () => {
+                    const userId = document.querySelector(".username").getAttribute("data-user-id");
+                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}`;
+                });
             }
         })
 

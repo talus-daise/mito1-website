@@ -253,17 +253,19 @@
 
             previewArea.innerHTML = `
         <h2>${title}</h2>
-        <p>質問者: ${displayName}</p>
+        <p>質問者: <span id="user-name">${displayName}</span></p>
         <p>${content}</p>
         <small>${new Date().toLocaleString()}</small>
     `;
+
+            document.getElementById("user-name").addEventListener("click", () => {
+                window.location.href = `/mito1-website/mypage/other/?user=${encodeURIComponent(displayName)}`;
+            });
         });
 
     </script>
     <script type="module" src="../../notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
-    <!--マニフェスト-->
-    <link rel="manifest" href="../../manifest.json">
     <script src="../../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
