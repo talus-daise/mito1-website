@@ -3,8 +3,9 @@ let names = [];
 fetch("/mito1-website/names.json")
     .then(response => response.json())
     .then(data => {
-        names = data;
-        checkVerification(); // Call the verification function after names are loaded
+        // dataがオブジェクトの場合、全クラスを統合
+        names = Array.isArray(data) ? data : Object.values(data).flat();
+        checkVerification();
     })
     .catch(error => {
         console.error("Failed to fetch names:", error);
@@ -37,7 +38,7 @@ function checkVerification() {
     messageHead.innerText = "認証";
 
     const messageElem = document.createElement("p");
-    messageElem.innerText = "プライバシーの面から名前の入力をお願いします\n一度入力した場合は、もう一度入力してもらい、連絡していただけると助かります。\nなお、違う端末で開いた場合は再度入力になることがあります\n※名前は間に空白を開けず漢字で入力してください。";
+    messageElem.innerText = "プライバシーの面から名前の入力をお願いします<br>一度入力した場合は、もう一度入力してもらい、連絡していただけると助かります。<br>なお、違う端末で開いた場合は再度入力になることがあります<br>※名前は間に空白を開けず漢字で入力してください。";
     messageElem.style.marginBottom = "15px";
 
     const nameBox = document.createElement("input");
@@ -59,7 +60,7 @@ function checkVerification() {
         localStorage.setItem(verificationKey, isValid);
         setTimeout(() => alertBackground.remove(), 500);
         let clientUrl = window.location.pathname;
-        window.location.pathname = isValid ? clientUrl : "caution.html";
+        window.location.pathname = isValid ? clientUrl : "/mito1-website/caution.html";
     };
 
     alertContainer.append(messageHead, messageElem, nameBox, closeButton);

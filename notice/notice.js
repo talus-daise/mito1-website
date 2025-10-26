@@ -102,10 +102,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- Googleログイン ---
     loginBtn.addEventListener("click", async () => {
-        const { error } = await pd.auth.signInWithOAuth({ 
+        const { error } = await pd.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: window.location.origin + window.location.pathname
+                redirectTo: `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`
             }
         });
         if (error) {

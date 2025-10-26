@@ -34,7 +34,7 @@
     <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    <script src="../script/customAlert.js"></script>
+    <script src="../script/customAlert.js" type="module"></script>
     <!--マニフェスト-->
     <link rel="manifest" href="../manifest.json">
 </head>
@@ -61,6 +61,9 @@
                 <li><a href="#electronic-blackboard">電子黒板関係</a></li>
                 <li><a href="#tablet">タブレット関係</a></li>
             </ul>
+            <hr>
+            <label for="search-box">検索：<input type="text" id="search-box" placeholder="検索..."></label>
+            <button id="search-btn">検索</button>
         </section>
         <section id="electronic-blackboard">
             <h2>電子黒板関係</h2>
@@ -79,10 +82,13 @@
             <p>・設定→デバイス→ディスプレイの「画面をミラーリングする」が有効か確認してください。</p>
             <p>・接続している線を踏んでいないか確認してください。</p>
             <p>・届くギリギリのラインでコードを接続していないか確認してください。</p>
+            <h3>つないだけど背景だけが映る</h3>
+            <p>・設定→デバイス→ディスプレイの「画面をミラーリングする」が有効か確認してください。</p>
         </section>
+        
         <section id="tablet">
             <h2>タブレット関係</h2>
-            <h3></h3>タブレットがつかない</h3>
+            <h3>タブレットがつかない</h3>
             <p>・充電が十分にあることを確認してください。赤い電池に！が表示されていると、充電がありません。</p>
             <p>・充電用のジャックの近くにある電源ランプが点いているか確認してください。</p>
             <p>・画面が黒い画面のままフリーズしている可能性があります。「フリーズしてしまった」を参照してください。</p>
@@ -119,9 +125,11 @@
             <h3>閲覧しかできない</h3>
             <p>・ファイルのオーナーが閲覧しかできないように設定している可能性があります。</p>
             <p>・Google Classroomで課題を提出してしまっている可能性があります。再度編集したい場合は提出を取り消ししてください。</p>
+        </section>
 
-            <h3>その他</h3>
-            <p>恐竜ゲームができない</p>
+        <section>
+            <h2>その他</h2>
+            <h3>恐竜ゲームができない</h3>
             <p>・仕様です</p>
         </section>
     </main>
@@ -132,8 +140,23 @@
         <p><a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
         </p>
     </footer>
+    <script>
+        document.getElementById("search-btn").addEventListener("click", () => {
+            const query = document.getElementById("search-box").value.toLowerCase();
+            const sections = document.querySelectorAll("main section h3, main section h4, main section p");
+            sections.forEach(section => {
+                if (section.textContent.toLowerCase().includes(query)) {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // 簡単なハイライト
+                    const originalBg = section.style.backgroundColor;
+                    section.style.backgroundColor = '#fffbcc';
+                    setTimeout(() => { section.style.transition = 'background-color 1s'; section.style.backgroundColor = originalBg || ''; }, 500);
+                }
+            });
+        })
+    </script>
     <script type="module" src="../notice/notice.js"></script>
-    <script src="../script/customAlert.js"></script>
+    <script src="../script/customAlert.js" type="module"></script>
     <script src="../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

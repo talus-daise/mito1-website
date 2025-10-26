@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>ユーザー管理 | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../../notice/notice.css">
+    <style>
+        .user-list {
+            display: grid;
+            ;
+            grid-template-columns: 100%;
+            gap: 10px;
+        }
+
+        .user-item {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="../../img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#3498db">
+    <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../../script/customAlert.js" type="module"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../../manifest.json">
+</head>
+
+<body>
+    <header>
+        <h1>管理者用ページ</h1>
+    </header>
+    <main>
+        <section>
+            <h2>ユーザー管理</h2>
+            <div id="user-list" class="user-list"></div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const supabase = createClient(
+            "https://mgsbwkidyxmicbacqeeh.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
+        );
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            // 直前のページ（リファラ）が存在しない場合
+            if (!document.referrer.includes("/mito1-website/admin/")) {
+                window.location.href = "../"; // リダイレクト先
+            }
+
+            const { data, error } = await supabase.from("users").select("*");
+
+            if (error) {
+                console.error("Error fetching users:", error);
+                return;
+            }
+            const userList = document.getElementById("user-list");
+
+            if (data.length === 0) {
+                userList.innerHTML = "<p>ユーザーが見つかりません。</p>";
+                return;
+            }
+
+            data.forEach(user => {
+                const userItem = document.createElement("div");
+                userItem.className = "user-item";
+                userItem.innerHTML = `
+                    <p><strong>メール:</strong> ${user.user_email}</p>
+                    <p><strong>名前:</strong> ${user.display_name}</p>
+                    <p><strong>ユーザーID:</strong> ${user.user_id}</p>
+                    <p><strong>管理者:</strong> <input type="checkbox" ${user.is_admin ? "checked" : ""} disabled></p>
+                    <button data-user-id="${user.user_id}" class="stop-user-btn" style="width: fit-content;">ユーザー停止</button>
+                    <button data-user-id="${user.user_id}" class="delete-user-btn" style="width: fit-content;">ユーザー削除</button>
+                `;
+
+                const stopBtn = userItem.querySelector(".stop-user-btn");
+                stopBtn.addEventListener("click", async () => {
+                    const userId = stopBtn.getAttribute("data-user-id");
+                    const { error: stopError } = await supabase
+                        .from("users")
+                        .update({ is_stopped: true })
+                        .eq("user_id", userId);
+                    if (stopError) {
+                        console.error("Error stopping user:", stopError);
+                        return;
+                    }
+                    showCustomAlert("ユーザーを停止しました。");
+                });
+
+                const deleteBtn = userItem.querySelector(".delete-user-btn");
+                deleteBtn.addEventListener("click", async () => {
+                    const userId = deleteBtn.getAttribute("data-user-id");
+                    const { error: deleteError } = await supabase
+                        .from("users")
+                        .delete()
+                        .eq("user_id", userId);
+
+                    if (deleteError) {
+                        console.error("Error deleting user:", deleteError);
+                        return;
+                    }
+
+                    userItem.remove();
+                });
+
+                userList.appendChild(userItem);
+            });
+        });
+    </script>
+    <script type="module" src="../../notice/notice.js"></script>
+    <script src="../../script/customAlert.js" type="module"></script>
+    <script src="../../script/verification.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>

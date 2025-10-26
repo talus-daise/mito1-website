@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>コンテンツ管理 | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../../notice/notice.css">
+    <style>
+        .content-list {
+            display: grid;
+            grid-template-columns: 100%;
+            gap: 10px;
+        }
+
+        .content-item {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="../../img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#3498db">
+    <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../../script/customAlert.js" type="module"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../../manifest.json">
+</head>
+
+<body>
+    <header>
+        <h1>管理者用ページ</h1>
+    </header>
+    <main>
+        <section>
+            <h2>コンテンツ管理</h2>
+
+            <h3>目次</h3>
+            <a href="#question-list">質問一覧</a>
+            <a href="#answer-list">回答一覧</a>
+            <a href="#post-list">投稿一覧</a>
+            <hr>
+
+            <div id="content-list" class="content-list">
+                <div id="question-list" class="content-list">
+                    <h3>質問一覧</h3>
+                </div>
+                <div id="answer-list" class="content-list">
+                    <h3>回答一覧</h3>
+                </div>
+                <div id="post-list" class="content-list">
+                    <h3>投稿一覧</h3>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        const supabase = createClient(
+            "https://mgsbwkidyxmicbacqeeh.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
+        );
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            // 直前のページ（リファラ）が存在しない場合
+            if (!document.referrer.includes("/mito1-website/admin/")) {
+                window.location.href = "../"; // リダイレクト先
+            }
+
+            const { data: questions, error: questionError } = await supabase.from("questions").select("*").order("created_at", { ascending: false });
+            const { data: answers, error: answerError } = await supabase.from("answers").select("*").order("created_at", { ascending: false });
+            const { data: posts, error: postError } = await supabase.from("BBS").select("*").order("created_at", { ascending: false });
+
+            if (questionError) {
+                console.error("Error fetching questions:", questionError);
+                return;
+            }
+
+            if (answerError) {
+                console.error("Error fetching answers:", answerError);
+                return;
+            }
+
+            if (postError) {
+                console.error("Error fetching posts:", postError);
+                return;
+            }
+
+            const questionList = document.getElementById("question-list");
+            const answerList = document.getElementById("answer-list");
+            const postList = document.getElementById("post-list");
+
+            questions.forEach(question => {
+                const questionItem = document.createElement("div");
+                questionItem.className = "content-item";
+                questionItem.innerHTML = `
+                    <p><strong>ID:</strong> ${question.id}</p>
+                    <p><strong>作成者:</strong> ${question.username}</p>
+                    <p><strong>タイトル:</strong> ${question.title}</p>
+                    <p><strong>内容:</strong> ${question.content}</p>
+                    <p><strong>作成日時:</strong> ${question.created_at}</p>
+                    <button data-question-id="${question.id}" class="delete-question-btn" style="width: fit-content;">質問削除</button>
+                `;
+                questionList.appendChild(questionItem);
+
+                questionItem.addEventListener("click", () => {
+                    window.location.href = `../../question/details/?id=${question.id}`;
+                })
+
+                questionItem.querySelector(".delete-question-btn").addEventListener("click", async () => {
+                    const questionId = questionItem.querySelector(".delete-question-btn").getAttribute("data-question-id");
+                    const { error: deleteError } = await supabase
+                        .from("questions")
+                        .delete()
+                        .eq("id", questionId);
+                    if (deleteError) {
+                        console.error("Error deleting question:", deleteError);
+                        return;
+                    }
+                    showCustomAlert("質問を削除しました。");
+                    questionItem.remove();
+                });
+            });
+
+            answers.forEach(answer => {
+                const answerItem = document.createElement("div");
+                answerItem.className = "content-item";
+                answerItem.innerHTML = `
+                    <p><strong>ID:</strong> ${answer.id}</p>
+                    <p><strong>作成者:</strong> ${answer.username}</p>
+                    <p><strong>質問ID:</strong> ${answer.question_id}</p>
+                    <p><strong>内容:</strong> ${answer.content}</p>
+                    <p><strong>作成日時:</strong> ${answer.created_at}</p>
+                    <button data-answer-id="${answer.id}" class="delete-answer-btn" style="width: fit-content;">回答削除</button>
+                `;
+                answerList.appendChild(answerItem);
+
+                answerItem.addEventListener("click", () => {
+                    window.location.href = `../../question/details/?id=${answer.question_id}`;
+                });
+
+                answerItem.querySelector(".delete-answer-btn").addEventListener("click", async () => {
+                    const answerId = answerItem.querySelector(".delete-answer-btn").getAttribute("data-answer-id");
+                    const { error: deleteError } = await supabase
+                        .from("answers")
+                        .delete()
+                        .eq("id", answerId);
+                    if (deleteError) {
+                        console.error("Error deleting answer:", deleteError);
+                        return;
+                    }
+                    showCustomAlert("回答を削除しました。");
+                    answerItem.remove();
+                });
+            });
+
+            posts.forEach(post => {
+                const postItem = document.createElement("div");
+                postItem.className = "content-item";
+                postItem.innerHTML = `
+                    <p><strong>ID:</strong> ${post.id}</p>
+                    <p><strong>作成者:</strong> ${post.username}</p>
+                    <p><strong>タイトル:</strong> ${post.title}</p>
+                    <p><strong>内容:</strong> ${post.content}</p>
+                    <p><strong>作成日時:</strong> ${post.created_at}</p>
+                    <button data-post-id="${post.id}" class="delete-post-btn" style="width: fit-content;">投稿削除</button>
+                `;
+                postList.appendChild(postItem);
+
+                postItem.addEventListener("click", () => {
+                    window.location.href = `../../bbs/thread/?thread=${encodeURIComponent(post.thread)}`;
+                });
+
+                postItem.querySelector(".delete-post-btn").addEventListener("click", async () => {
+                    const postId = postItem.querySelector(".delete-post-btn").getAttribute("data-post-id");
+                    const { error: deleteError } = await supabase
+                        .from("BBS")
+                        .delete()
+                        .eq("id", postId);
+                    if (deleteError) {
+                        console.error("Error deleting post:", deleteError);
+                        return;
+                    }
+                    showCustomAlert("投稿を削除しました。");
+                    postItem.remove();
+                });
+            });
+        });
+    </script>
+    <script type="module" src="../../notice/notice.js"></script>
+    <script src="../../script/customAlert.js" type="module"></script>
+    <script src="../../script/verification.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>

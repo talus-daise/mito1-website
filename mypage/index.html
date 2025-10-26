@@ -34,7 +34,7 @@
     <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    <script src="../script/customAlert.js"></script>
+    <script src="../script/customAlert.js" type="module"></script>
     <!--マニフェスト-->
     <link rel="manifest" href="../manifest.json">
 </head>
@@ -51,10 +51,13 @@
                 <img id="user-avatar" alt="ユーザーアイコン" width="50" height="50">
                 <p>学籍番号: <span id="student-id">0X00</span></p>
                 <p>ユーザー名: <span id="user-name">とある水戸一の名無し</span></p>
-                <p>表示名: <span id="display-name">とある水戸一の名無し</span><button id="edit-display-name">編集</button></p>
+                <p>表示名: <span id="display-name">とある水戸一の名無し</span><button id="edit-display-name" style="margin: 0 0 0 1rem;">編集</button></p>
                 <p>メールアドレス: <span id="user-email">guest@example.com</span></p>
+                <p>ロール: <span id="user-role">ゲスト</span></p>
             </div>
             <button id="logout-button">ログアウト</button>
+            <hr>
+            <p>名前変更の際は、<a href="../faq.html">よくある質問</a>をよく読んだ上で変更してください。</p>
         </section>
         <section>
             <h2>ユーザー統計</h2>
@@ -174,8 +177,15 @@
         document.getElementById("user-name").textContent = user.user_metadata.full_name || "ゲスト";
         document.getElementById("user-email").textContent = textMosaic(userEmail);
         document.getElementById("display-name").textContent = updatedUser.display_name || "とある水戸一の名無し";
+        document.getElementById("user-role").textContent = updatedUser.is_admin ? "管理者" : "一般ユーザー";
         document.getElementById("visit-count").textContent = updatedUser.visit_count;
         document.getElementById("post-count").textContent = updatedUser.post_count;
+
+        document.getElementById("user-role").addEventListener("click", () => {
+            if (updatedUser.is_admin) {
+                window.location.href = "../admin/";
+            }
+        });
 
         // --- 質問一覧を取得 ---
         const { data: questions } = await supabase
@@ -266,7 +276,7 @@
         }
     </script>
     <script type="module" src="../notice/notice.js"></script>
-    <script src="../script/customAlert.js"></script>
+    <script src="../script/customAlert.js" type="module"></script>
     <script src="../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
