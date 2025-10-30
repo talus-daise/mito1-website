@@ -98,7 +98,7 @@
                     <p><strong>メール:</strong> ${user.user_email}</p>
                     <p><strong>名前:</strong> ${user.display_name}</p>
                     <p><strong>ユーザーID:</strong> ${user.user_id}</p>
-                    <p><strong>管理者:</strong> <input type="checkbox" ${user.is_admin ? "checked" : ""} disabled></p>
+                    <p><strong>管理者:</strong> ${user.role}</p>
                     <button data-user-id="${user.user_id}" class="stop-user-btn" style="width: fit-content;">ユーザー停止</button>
                     <button data-user-id="${user.user_id}" class="delete-user-btn" style="width: fit-content;">ユーザー削除</button>
                 `;

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title id="page-title">リクエスト曲 | R7年度2学年総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../../notice/notice.css">
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中四期生向けの総合ウェブサイトです。附属中向けのテストの情報などを配信しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/two-grade-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="../../img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#3498db">
+    <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../../script/customAlert.js" type="module"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../../manifest.json">
+</head>
+
+<body>
+    <header>
+        <h1><a href="../../">R7年度2学年総合ウェブサイト</a></h1>
+        <p class="header__breadcrumb">
+            <a href="../../"><i class="fa-solid fa-house"></i>トップページ</a>
+            <a href="../"><i class="fa-solid fa-music"></i>リクエスト曲一覧</a>
+            <span id="musicDate"></span>
+        </p>
+    </header>
+
+    <main>
+        <h1>リクエスト曲一覧</h1>
+        <section>
+            <h2 id="h2"></h2>
+        <div id="videoContainer"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 talus</p>
+        <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意ください。</p>
+        <p><a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
+        </p>
+    </footer>
+
+    <script type="module" src="../../notice/notice.js"></script>
+    <script src="../../script/customAlert.js" type="module"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../../manifest.json">
+    <script src="../../script/verification.js"></script>
+    <script>
+        const data = [
+            { date: "2024-12-18", url: "https://drive.google.com/file/d/1epkCbP-_6_fNGotn4MU8GsMRd5dNKkHw/preview" },
+            { date: "2025-01-08", url: "https://drive.google.com/file/d/14xnMzr6YlHTM6NBHp_AZfEUjQgoGcVm5/preview" },
+            { date: "2025-01-09", url: "https://drive.google.com/file/d/153w1uJTOjw7iei930GxQWrFbIy_goBAh/preview" },
+            { date: "2025-01-17", url: "https://drive.google.com/file/d/157XrAnKb6o9fUSSH7yspiWnCCPlGam-R/preview" },
+            { date: "2025-01-23", url: "https://drive.google.com/file/d/1LGW8kA6rM1bMQpqNtJ7-sDkspyVMG9A1/preview" },
+            { date: "2025-01-24", url: "https://drive.google.com/file/d/15SIm_kroAqwZgV32_w7D7OZ2foqob-Oa/preview" },
+            { date: "2025-01-27", url: "https://drive.google.com/file/d/1Pph4GUMjCP4UedjNJOvv9--FZCeyIfjO/preview" },
+            { date: "2025-01-29", url: "https://drive.google.com/file/d/15jL3AIy610HNm0zHrWT7lGBZb-O3hWaT/preview" },
+            { date: "2025-01-31", url: "https://drive.google.com/file/d/15ZstaWGZO01pudYfhXz_gGDglphl3q5P/preview" },
+            { date: "2025-02-05", url: "https://drive.google.com/file/d/16xdjtGjgCjdVhLdo-KofMJjnljAx54oQ/preview" },
+            { date: "2025-02-06", url: "https://drive.google.com/file/d/15jL3AIy610HNm0zHrWT7lGBZb-O3hWaT/preview" },
+            { date: "2025-02-06-1", url: "https://drive.google.com/file/d/15pln-iJY2ASqOLuPcgaJ5OevBGOzrde0/preview" },
+            { date: "2025-02-07", url: "https://drive.google.com/file/d/16uiuxC0lZYeX9CYFxY2IENnsL7HC-DHI/preview" },
+            { date: "2025-02-10", url: "https://drive.google.com/file/d/15sDU5Lbc9FYHOia2LenN3oXyepVhRcsK/preview" },
+            { date: "2025-02-12", url: "https://drive.google.com/file/d/16oLVRK0WrNLURrA68aZsaiUu7X1U8unX/preview" },
+            { date: "2025-02-14", url: "https://drive.google.com/file/d/16qT7lu_sCtjDsDEIqKmfbyHJv1sFcg4p/preview" },
+            { date: "2025-02-17", url: "https://drive.google.com/file/d/16uiuxC0lZYeX9CYFxY2IENnsL7HC-DHI/preview" },
+            { date: "2025-02-19", url: "https://drive.google.com/file/d/16vsDG3NjrcVVza_kdI3igVHIoehBz6xV/preview" },
+            { date: "2025-02-21", url: "https://drive.google.com/file/d/16xvsuSNdxiSEv4i18pPEUnlDphbycecB/preview" },
+            { date: "2025-03-05", url: "https://drive.google.com/file/d/1716zc0OVMmDMc9yxx3HJjk89d7i0zqv8/preview" },
+            { date: "2025-03-07", url: "https://drive.google.com/file/d/170TJn1zAdupi-2GQqkJEUChCYmC_MdgI/preview" },
+            { date: "2025-03-12", url: "https://drive.google.com/file/d/173ZdAulPMw8FZeydyE08iGkBrQe8wH64/preview" },
+            { date: "2025-03-14", url: "https://drive.google.com/file/d/16zpllHG9KzwkIx46NKMQY0rfoyuQtBkL/preview" }
+        ];
+
+        let video = new URLSearchParams(window.location.search).get("date");
+
+        let url = data.find(item => item.date === video)?.url;
+
+        document.getElementById("page-title").textContent = `${video} - リクエスト曲 | R7年度2学年総合ウェブサイト`;
+        document.getElementById("musicDate").innerHTML = `<a href="?date=${video}"><i class="fa-solid fa-calendar-days"></i>${video}</a>`;
+        document.getElementById("h2").innerHTML = video;
+        document.getElementById("videoContainer").innerHTML = `<iframe src="${url}"></iframe>`;
+    </script>
+    <script data-goatcounter="https://talus.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+
+</html>

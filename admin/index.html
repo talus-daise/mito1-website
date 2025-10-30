@@ -65,7 +65,7 @@
             if (user.data.user) {
                 const { data: users, error } = await supabase
                     .from("users")
-                    .select("is_admin")
+                    .select("role")
                     .eq("user_id", user.data.user.id)
                     .single();
 
@@ -75,7 +75,7 @@
                     return;
                 }
 
-                if (users.is_admin) {
+                if (users.role === "admin" || users.role === "master") {
                     authStatus.textContent = "管理者として認証されました。";
                     // 管理者用機能を表示するコードをここに追加
                     const adminFeatures = document.createElement("section");

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>リクエスト曲 | R7年度2学年総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../notice/notice.css">
+    <style>
+        .show {
+            display: block;
+        }
+
+        .hide {
+            display: none;
+        }
+    </style>
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中四期生向けの総合ウェブサイトです。附属中向けのテストの情報などを配信しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/two-grade-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="../img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#3498db">
+    <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../script/customAlert.js" type="module"></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="../manifest.json">
+</head>
+
+<body>
+    <header>
+        <h1><a href="../">R7年度2学年総合ウェブサイト</a></h1>
+        <p class="header__breadcrumb">
+            <a href="../"><i class="fa-solid fa-house"></i>トップページ</a>
+            <a href="./"><i class="fa-solid fa-music"></i>リクエスト曲一覧</a>
+        </p>
+    </header>
+
+    <main>
+        <h1>リクエスト曲一覧</h1>
+        <section>
+            <h2>曲応募</h2>
+            <form id="sendRequest">
+                <label for="student-ID">学籍番号: </label><input type="text" name="student-ID" id="studentId"><br>
+                <label for="music-name">曲名: </label><input type="text" name="music-name" id="musicName"><br>
+                <label for="url">曲のURL: </label><input type="url" name="url" id="musicUrl"><br>
+                <label for="description">おすすめポイントなど(空欄でもOK): </label><input type="text" name="description"
+                    id="description"><br>
+                <input type="submit" value="送信">
+            </form>
+        </section>
+        <section>
+            <h2>今日流す予定の曲</h2>
+            <div id="container">
+                <button id="randomMusic">ランダム選曲</button>
+                <div id="selectedMusic"></div>
+
+                <p id="openMusic">▼ ネタバレ防止(クリックで開きます)</p>
+                <div id="todayMusic"></div>
+            </div>
+        </section>
+        <section>
+            <h2>曲一覧</h2>
+            <p>これまでに<b>1B</b>で放送したリクエスト曲一覧です。</p>
+            <ul>
+                <li><a href="detail/?date=2024-12-18">2024-12-18</a></li>
+                <li><a href="detail/?date=2025-01-08">2025-01-08</a></li>
+                <li><a href="detail/?date=2025-01-09">2025-01-09</a></li>
+                <li><a href="detail/?date=2025-01-17">2025-01-17</a></li>
+                <li><a href="detail/?date=2025-01-23">2025-01-23</a></li>
+                <li><a href="detail/?date=2025-01-24">2025-01-24</a></li>
+                <li><a href="detail/?date=2025-01-27">2025-01-27</a></li>
+                <li><a href="detail/?date=2025-01-29">2025-01-29</a></li>
+                <li><a href="detail/?date=2025-02-05">2025-02-05</a></li>
+                <li><a href="detail/?date=2025-02-06-1">2025-02-06-1</a></li>
+                <li><a href="detail/?date=2025-02-06">2025-02-06</a></li>
+                <li><a href="detail/?date=2025-02-07">2025-02-07</a></li>
+                <li><a href="detail/?date=2025-02-10">2025-02-10</a></li>
+                <li><a href="detail/?date=2025-02-12">2025-02-12</a></li>
+                <li><a href="detail/?date=2025-02-14">2025-02-14</a></li>
+                <li><a href="detail/?date=2025-02-17">2025-02-17</a></li>
+                <li><a href="detail/?date=2025-02-19">2025-02-19</a></li>
+                <li><a href="detail/?date=2025-02-21">2025-02-21</a></li>
+                <li><a href="detail/?date=2025-03-05">2025-03-05</a></li>
+                <li><a href="detail/?date=2025-03-07">2025-03-07</a></li>
+                <li><a href="detail/?date=2025-03-12">2025-03-12</a></li>
+                <li><a href="detail/?date=2025-03-14">2025-03-14</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 talus</p>
+        <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意ください。</p>
+        <p><a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
+        </p>
+    </footer>
+
+    <script src="../script/customAlert.js" type="module"></script>
+    <script src="../script/verification.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    <script type="module">
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+        // ===== Supabase 初期化 =====
+        const supabaseUrl = "https://mgsbwkidyxmicbacqeeh.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg";
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // ===== 要素参照 =====
+        const sendForm = document.getElementById("sendRequest");
+        const openMusicBtn = document.getElementById("openMusic");
+        const randomMusicBtn = document.getElementById("randomMusic");
+        const todayMusic = document.getElementById("todayMusic");
+        const todayMusicList = document.createElement("div");
+
+        let musicData = [];
+
+        // ===== 楽曲送信 =====
+        sendForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            if (localStorage.getItem("lastRequestMusicDate")) {
+                const lastDate = new Date(localStorage.getItem("lastRequestMusicDate"));
+                const now = new Date();
+                const lastMonday = new Date(now);
+                lastMonday.setDate(now.getDate() - now.getDay() + 1); // 月曜始まりの週の月曜日を取得
+
+                if (lastDate < lastMonday) {
+                    localStorage.setItem("weekofRequestMusicNumber", "0");
+                }
+            }
+
+            if (localStorage.getItem("weekofRequestMusicNumber") >= "5") {
+                showCustomAlert("今週のリクエスト曲の上限に達しました。");
+                return;
+            }
+
+            const studentId = document.getElementById("studentId").value.trim();
+            const musicName = document.getElementById("musicName").value.trim();
+            const url = document.getElementById("musicUrl").value.trim();
+            const desc = document.getElementById("description").value.trim();
+
+            if (!studentId || !musicName || !url) {
+                showCustomAlert("正しく入力してください");
+                return;
+            }
+
+            if (!(url.includes("watch?v=") || url.includes("youtu.be/"))) {
+                showCustomAlert("正しく入力してください");
+                return;
+            }
+            // 存在確認
+            const { data: existingData, error: existingError } = await supabase
+                .from("request-music")
+                .select("*")
+                .or(`musicName.eq.${musicName},url.eq.${url}`);
+
+            if (existingError) {
+                showCustomAlert("確認中にエラーが発生しました：" + existingError.message);
+                console.error(existingError);
+                return;
+            }
+
+            if (existingData && existingData.length > 0) {
+                showCustomAlert("この曲はすでにリクエストされています。");
+                return;
+            }
+            // Supabase に送信
+            const { error } = await supabase.from("request-music").insert([
+                { studentId, musicName, url, desc }
+            ]);
+
+            if (error) {
+                showCustomAlert("送信に失敗しました：" + error.message);
+                console.error(error);
+            } else {
+                showCustomAlert("送信しました！");
+                sendForm.reset();
+                getTodayMusic();
+                localStorage.setItem("weekofRequestMusicNumber", String(Number(localStorage.getItem("weekofRequestMusicNumber") || "0") + 1));
+                localStorage.setItem("lastRequestMusicDate", new Date().toISOString());
+            }
+        });
+
+        // ===== 今日の楽曲を取得 =====
+        async function getTodayMusic() {
+            const { data, error } = await supabase
+                .from("request-music")
+                .select("*")
+                .order("musicName", { ascending: true })
+                .eq("isplayed", false);
+
+            if (error) {
+                showCustomAlert("データの取得に失敗しました。");
+                console.error(error);
+                return;
+            }
+
+            musicData = data;
+            todayMusicList.innerHTML = "";
+
+            data.forEach(({ musicName, url, desc }) => {
+                todayMusicList.appendChild(createMusicItem(musicName, url, desc));
+            });
+        }
+
+        // ===== YouTubeリンク → 埋め込みリンク変換 =====
+        function convertEmbedLink(link) {
+            let videoId = "";
+            if (link.includes("watch?v=")) {
+                const url = new URL(link);
+                videoId = url.searchParams.get("v");
+            } else if (link.includes("youtu.be/")) {
+                videoId = link.split("youtu.be/")[1].split("?")[0];
+            }
+            return videoId ? `https://www.youtube.com/embed/${videoId}` : "";
+        }
+
+        // ===== 楽曲アイテム生成 =====
+        function createMusicItem(musicName, url, desc, isOpened = false, isToggleable = false) {
+            const div = document.createElement("div");
+
+            // タイトル
+            const title = document.createElement("h3");
+            title.textContent = musicName;
+
+            // 説明文
+            const description = document.createElement("p");
+            description.textContent = desc;
+
+            // 動画表示ブロック
+            const videoContainer = document.createElement("div");
+            const toggleText = document.createElement("p");
+            toggleText.textContent = "▼クリックで開く";
+            videoContainer.appendChild(toggleText);
+
+            const iframe = document.createElement("iframe");
+            iframe.src = convertEmbedLink(url);
+            iframe.setAttribute("frameborder", "0");
+            iframe.setAttribute("allowfullscreen", "");
+            iframe.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen");
+
+            videoContainer.addEventListener("click", () => {
+                const opened = videoContainer.classList.toggle("show");
+                videoContainer.innerHTML = "";
+                const newText = document.createElement("p");
+                newText.textContent = opened ? "▼クリックで閉じる" : "▼クリックで開く";
+                videoContainer.appendChild(newText);
+                if (opened) videoContainer.appendChild(iframe);
+            });
+
+            // チェックボックス
+            const label = document.createElement("label");
+            label.textContent = "再生済み: ";
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = false;
+            if (!isToggleable) {
+                checkbox.disabled = true;
+            }
+            label.appendChild(checkbox);
+
+            checkbox.addEventListener("change", async () => {
+                const { error } = await supabase
+                    .from("request-music")
+                    .update({ isplayed: checkbox.checked })
+                    .eq("musicName", musicName)
+                    .eq("url", url);
+
+                if (error) {
+                    showCustomAlert("更新に失敗しました：" + error.message);
+                    console.error(error);
+                } else {
+                    showCustomAlert("更新しました！");
+                }
+            });
+
+            // 区切り線
+            const hr = document.createElement("hr");
+
+            // 要素まとめ
+            div.appendChild(title);
+            div.appendChild(videoContainer);
+            div.appendChild(description);
+            div.appendChild(label);
+            div.appendChild(hr);
+
+            if (isOpened) {
+                videoContainer.click();
+            }
+
+            return div;
+        }
+
+        // ===== 「今日の曲」開閉 =====
+        openMusicBtn.addEventListener("click", () => {
+            const isOpen = todayMusic.classList.toggle("open");
+            if (isOpen) {
+                todayMusic.appendChild(todayMusicList);
+            } else {
+                if (todayMusic.contains(todayMusicList)) todayMusic.removeChild(todayMusicList);
+            }
+        });
+
+        // ===== ランダム再生 =====
+        randomMusicBtn.addEventListener("click", () => {
+            const selectedMusic = document.getElementById("selectedMusic");
+            if (musicData.length === 0) {
+                showCustomAlert("データがありません。");
+                return;
+            }
+
+            const random = Math.floor(Math.random() * musicData.length);
+            const { musicName, url, desc } = musicData[random];
+
+            selectedMusic.innerHTML = "";
+            selectedMusic.appendChild(createMusicItem(musicName, url, desc, true, true));
+            selectedMusic.classList.add("open");
+        });
+
+        // 初回読み込み
+        getTodayMusic();
+    </script>
+</body>
+
+</html>
