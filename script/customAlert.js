@@ -1,4 +1,4 @@
-function showCustomAlert(message, isShowCloseButton = true, isBackgroundBlack = false) {
+async function showCustomAlert(message, isShowCloseButton = true, isBackgroundBlack = false) {
     const existingAlert = document.getElementById("custom-alert");
     if (existingAlert) existingAlert.remove();
 
@@ -132,8 +132,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // 分単位で範囲を設定
         const ranges = [
-            [8 * 60 + 25, 11 * 60 + 30],  // 8:25〜11:30
-            [13 * 60 + 5, 15 * 60 + 55]   // 13:05〜15:55
+            [8 * 60 + 25, 11 * 60 + 29],  // 8:25〜11:30
+            [13 * 60 + 5, 15 * 60 + 54]   // 13:05〜15:55
         ];
 
         if (day === 0 || day === 6 || (data && data.is_allow)) return false;
@@ -168,6 +168,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (isRestrictedTime() && !window.location.href.includes("admin")) {
         blackoutScreen();
     }
+
+    document.body.style.display = "block";
 
     setInterval(() => {
         /** 時間判定と動作 */

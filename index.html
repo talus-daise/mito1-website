@@ -35,6 +35,7 @@
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
     <script src="./script/customAlert.js" type="module"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!--マニフェスト-->
     <link rel="manifest" href="manifest.json">
 </head>
@@ -48,9 +49,11 @@
     <main>
         <section class="main__classlist">
             <h2>時間割</h2>
-            <iframe src="https://docs.google.com/spreadsheets/d/1fdSGqT1s2kit91TcQV_mjcuvOawGAU6JZ_5N684bH3U/htmlview"
-                title="時間割">
-            </iframe>
+            <img src="" alt="時間割画像" id="timetable">
+            <a href="timetable/">過去の時間割など</a>
+            <hr>
+            <p style="color: red;">もし、画像が表示されない場合は、一度<a
+                    href="https://rebecka-unchilled-lisandra.ngrok-free.dev/">こちら</a>にアクセスしてください。</p>
         </section>
         <section>
             <h2>サイト概要</h2>
@@ -81,13 +84,160 @@
         </p>
     </footer>
 
+    <script>
+        // 要素取得
+        const imgEl = document.getElementById('timetable');
+
+        // ファイル名パターン：年月日-時分秒-インデックス.jpg
+        const FILENAME_RE = /(\d{6,8})-(\d{6})-(\d+)\.jpg$/i;
+
+        /**
+         * ファイル名から Date とインデックスを抽出
+         */
+        function parseFilename(filename) {
+            const m = filename.match(FILENAME_RE);
+            if (!m) return null;
+
+            let [, datePart, timePart, indexPart] = m;
+            if (datePart.length === 6) datePart = '20' + datePart; // YYMMDD → YYYYMMDD 補正
+
+            const y = datePart.slice(0, 4);
+            const mo = datePart.slice(4, 6);
+            const d = datePart.slice(6, 8);
+            const hh = timePart.slice(0, 2);
+            const mm = timePart.slice(2, 4);
+            const ss = timePart.slice(4, 6);
+
+            const date = new Date(`${y}-${mo}-${d}T${hh}:${mm}:${ss}Z`);
+            if (isNaN(date.getTime())) return null;
+
+            return { date, index: Number(indexPart) };
+        }
+
+        /**
+         * Basic認証＋ngrokスキップヘッダー付きfetch
+         */
+        function makeHeaders(user, pass) {
+            const token = btoa(`${user}:${pass}`);
+            return {
+                Authorization: `Basic ${token}`,
+                'ngrok-skip-browser-warning': 'true',
+                'User-Agent': 'CustomClient/1.0',
+            };
+        }
+
+        async function updateLatestImage(baseUrl = 'https://rebecka-unchilled-lisandra.ngrok-free.dev/') {
+            const imgEl = document.getElementById('timetable');
+
+            try {
+                const res = await fetch(baseUrl, {
+                    cache: 'no-store',
+                    headers: makeHeaders('talus', 'talus'),
+                });
+
+                if (!res.ok) throw new Error(`一覧取得失敗: ${res.status}`);
+
+                const text = await res.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const anchors = Array.from(doc.querySelectorAll('a[href]'));
+
+                const candidates = anchors
+                    .map(a => {
+                        const href = a.getAttribute('href');
+                        if (!href) return null;
+                        const filename = href.split('/').pop();
+                        const m = filename.match(FILENAME_RE);
+                        if (!m) return null;
+                        const [, datePartRaw, timePart, indexPart] = m;
+                        const datePart = datePartRaw.length === 6 ? '20' + datePartRaw : datePartRaw;
+                        const y = datePart.slice(0, 4);
+                        const mo = datePart.slice(4, 6);
+                        const d = datePart.slice(6, 8);
+                        const hh = timePart.slice(0, 2);
+                        const mm = timePart.slice(2, 4);
+                        const ss = timePart.slice(4, 6);
+                        const date = new Date(`${y}-${mo}-${d}T${hh}:${mm}:${ss}Z`);
+                        return { url: new URL(href, baseUrl).href, filename, date, index: Number(indexPart) };
+                    })
+                    .filter(Boolean)
+                    .sort((a, b) => b.date - a.date || b.index - a.index);
+
+                if (candidates.length === 0) throw new Error('jpgファイルが見つかりませんでした。');
+
+                const latest = candidates[0];
+                const imgRes = await fetch(latest.url, { headers: makeHeaders('talus', 'talus') });
+                if (!imgRes.ok) throw new Error(`画像取得失敗: ${imgRes.status}`);
+
+                const blob = await imgRes.blob();
+                imgEl.src = URL.createObjectURL(blob);
+                imgEl.alt = latest.filename;
+
+                // 親コンテナを作成（画像の見える範囲を制限）
+                const wrapper = document.createElement('div');
+                imgEl.parentNode.insertBefore(wrapper, imgEl);
+                wrapper.appendChild(imgEl);
+
+                // 親コンテナ側の設定（ここが表示範囲になる）
+                wrapper.style.width = "50vw";      // 横の半分（=左上1/4用）
+                wrapper.style.height = "50vh";     // 縦の半分
+                wrapper.style.overflow = "hidden";
+                wrapper.style.position = "relative";
+                wrapper.style.borderRadius = "8px";
+
+                // 画像側の設定
+                imgEl.style.width = "100vw";
+                imgEl.style.height = "100vh";
+                imgEl.style.objectFit = "cover";
+                imgEl.style.objectPosition = "left top";
+                imgEl.style.display = "block";
+                imgEl.style.cursor = "pointer";
+
+                console.info('最新画像を更新:', latest.filename);
+
+            } catch (err) {
+                console.error('画像更新エラー:', err);
+            }
+        }
+
+        // ページ読み込み時に1回実行
+        updateLatestImage();
+
+        // ★ クリックで全体表示する処理
+        imgEl.addEventListener('click', () => {
+            const fullView = document.createElement('div');
+            fullView.style.position = 'fixed';
+            fullView.style.top = 0;
+            fullView.style.left = 0;
+            fullView.style.width = '100vw';
+            fullView.style.height = '100vh';
+            fullView.style.backgroundColor = 'rgba(0,0,0,0.8)';
+            fullView.style.display = 'flex';
+            fullView.style.alignItems = 'center';
+            fullView.style.justifyContent = 'center';
+            fullView.style.zIndex = 9999;
+
+            const img = document.createElement('img');
+            img.src = imgEl.src;
+            img.alt = imgEl.alt;
+            img.style.maxWidth = '90vw';
+            img.style.maxHeight = '90vh';
+            img.style.borderRadius = '8px';
+            img.style.boxShadow = '0 0 20px rgba(0,0,0,0.5)';
+
+            fullView.appendChild(img);
+            document.body.appendChild(fullView);
+
+            // クリックで閉じる
+            fullView.addEventListener('click', () => {
+                fullView.remove();
+            });
+        });
+    </script>
     <script type="module" src="./notice/notice.js"></script>
     <script src="./script/customAlert.js" type="module"></script>
-    <!--マニフェスト-->
-    <link rel="manifest" href="manifest.json">
     <script src="./script/verification.js"></script>
-    <script data-goatcounter="https://talus.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 
 </html>

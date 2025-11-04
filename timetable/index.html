@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>トップぺージ | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
+    <link rel="stylesheet" href="../notice/notice.css">
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/mito1-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="../img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#3498db">
+    <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="../script/customAlert.js" type="module"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!--マニフェスト-->
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+    <header>
+        <h1><a href="../">水戸一高附属中総合ウェブサイト</a></h1>
+        <p class="header__breadcrumb">
+            <a href="../"><i class="fa-solid fa-house"></i>トップページ</a>
+            <a href="../timetable/"><i class="fa-solid fa-table"></i>時間割一覧</a>
+        </p>
+    </header>
+
+    <main>
+        <section class="main__classlist">
+            <h2>時間割スプレッドシート</h2>
+            <iframe src="https://docs.google.com/spreadsheets/d/1fdSGqT1s2kit91TcQV_mjcuvOawGAU6JZ_5N684bH3U/htmlview"
+                title="時間割">
+            </iframe>
+            <br>
+            <a href="https://drive.google.com/drive/u/0/folders/1vCjJklOsTeYBcyQ7P4eJNBuCE1VvzvF8" target="_blank"
+                rel="noopener noreferrer">Google Driveで過去の時間割を見る</a>
+        </section>
+        <section>
+            <h2>過去の時間割一覧</h2>
+            <div id="past-timetable"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 talus</p>
+        <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意ください。</p>
+        <p>
+            <a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
+        </p>
+    </footer>
+    <script>
+        (async () => {
+            const container = document.getElementById("past-timetable");
+            const baseURL = "https://rebecka-unchilled-lisandra.ngrok-free.dev/";
+
+            function makeHeaders(user, pass) {
+                const token = btoa(`${user}:${pass}`);
+                return {
+                    Authorization: `Basic ${token}`,
+                    'ngrok-skip-browser-warning': 'true',
+                    'User-Agent': 'CustomClient/1.0', // 任意のUA（標準ブラウザUAではない文字列）
+                };
+            }
+
+            try {
+                const response = await fetch(baseURL, {
+                    headers: makeHeaders("talus", "talus"),
+                    cache: "no-store"
+                });
+
+                if (!response.ok) throw new Error(`HTTPエラー: ${response.status}`);
+
+                const html = await response.text();
+
+                // HTMLをパース
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, "text/html");
+
+                // .jpgファイルを抽出
+                const links = [...doc.querySelectorAll("a[href$='.jpg']")];
+                if (links.length === 0) {
+                    container.textContent = "画像が見つかりません。";
+                    return;
+                }
+
+                // ファイル名で降順ソート（新しい順）
+                const files = links.map(a => a.getAttribute("href")).sort().reverse();
+
+                const list = document.createElement("div");
+
+                files.forEach(file => {
+                    const li = document.createElement("div");
+                    const url = baseURL + file.replace(/^\//, "");
+
+                    // ファイル名（テキスト部分）
+                    const name = document.createElement("div");
+                    name.textContent = file;
+                    name.style.fontWeight = "bold";
+                    name.style.marginBottom = "4px";
+
+                    // 画像リンク
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                    link.title = file;
+
+                    const img = document.createElement("img");
+                    img.src = url;
+                    img.alt = file;
+                    img.loading = "lazy";
+                    img.style.maxWidth = "300px";
+                    img.style.display = "block";
+                    img.style.borderRadius = "8px";
+                    img.style.marginBottom = "12px";
+                    img.style.cursor = "pointer";
+
+                    // 構造を整える
+                    link.appendChild(img);
+                    li.appendChild(name);
+                    li.appendChild(link);
+                    list.appendChild(li);
+                });
+
+                container.appendChild(list);
+
+            } catch (err) {
+                console.error("画像一覧取得エラー:", err);
+                container.textContent = "画像一覧の取得に失敗しました。";
+            }
+        })();
+    </script>
+    <script type="module" src="../notice/notice.js"></script>
+    <script src="../script/customAlert.js" type="module"></script>
+    <script src="../script/verification.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+
+</html>

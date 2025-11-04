@@ -72,6 +72,7 @@
     </header>
     <main>
         <a href="../../">トップページに戻る</a>
+        <div id="error-message" style="color: red; font-weight: bold;"></div>
         <section>
             <h2>ユーザー情報</h2>
             <div class="user-info">
@@ -115,105 +116,119 @@
         let isLoading = true;
 
         const requiredUser = new URLSearchParams(window.location.search).get("user_id");
+        const errorDiv = document.getElementById("error-message");
 
-        document.addEventListener("DOMContentLoaded", async () => {
-            await new Promise(resolve => {
-                showCustomAlert("読み込み中です", false);
-                resolve();
-            });
-        });
+        if (!requiredUser) {
+            errorDiv.textContent = "ユーザーが指定されていません。URLにuser_idパラメータを付与してください。";
+            document.querySelector("main").style.display = "block";
+            document.querySelector("h1").textContent = "マイページ";
+            document.getElementById('custom-alert')?.remove();
+            // 以降の処理は実行しない
+        } else {
+            document.addEventListener("DOMContentLoaded", async () => {
+                await new Promise(resolve => {
+                    showCustomAlert("読み込み中です", false);
+                    resolve();
+                });
 
-        // 最新ユーザーデータ再取得
-        const { data: user } = await supabase
-            .from("users")
-            .select("*")
-            .eq("user_id", requiredUser)
-            .single();
+                // 最新ユーザーデータ再取得
+                const { data: user } = await supabase
+                    .from("users")
+                    .select("*")
+                    .eq("user_id", requiredUser)
+                    .single();
 
-        document.title = `${user.display_name || "とある水戸一の名無し"} のマイページ | 水戸一高附属中総合ウェブサイト`;
+                if (!user) {
+                    errorDiv.textContent = "ユーザーが存在しません。もしくはアップデート前に投稿されたものです。";
+                    document.querySelector("main").style.display = "block";
+                    document.querySelector("h1").textContent = "マイページ";
+                    document.getElementById('custom-alert').remove();
+                } else {
+                    document.title = `${user.display_name || "とある水戸一の名無し"} のマイページ | 水戸一高附属中総合ウェブサイト`;
 
-        const logoutBtn = document.getElementById("logout-button");
+                    // --- 学籍番号取得 ---
+                    fetch("../../names.json")
+                        .then(response => response.json())
+                        .then(data => {
+                            const classes = Object.keys(data);
+                            let studentId = "0A00";
 
-        // --- 学籍番号取得 ---
-        fetch("../../names.json")
-            .then(response => response.json())
-            .then(data => {
-                const classes = Object.keys(data);
-                let studentId = "0A00";
+                            for (const cls of classes) {
+                                const index = data[cls].indexOf(user.full_name);
+                                console.log("Checking class:", cls, "Index:", index);
+                                console.log(user.user_name);
+                                if (index !== -1) {
+                                    const classCode = cls;
+                                    const attendanceNumber = (index + 1).toString().padStart(2, '0');
+                                    studentId = classCode + attendanceNumber;
+                                    console.log("Found student ID:", studentId);
+                                    break;
+                                }
+                            }
 
-                for (const cls of classes) {
-                    const index = data[cls].indexOf(user.full_name);
-                    console.log("Checking class:", cls, "Index:", index);
-                    console.log(user.user_name);
-                    if (index !== -1) {
-                        const classCode = cls;
-                        const attendanceNumber = (index + 1).toString().padStart(2, '0');
-                        studentId = classCode + attendanceNumber;
-                        console.log("Found student ID:", studentId);
-                        break;
+                            document.getElementById("student-id").textContent = studentId;
+                        })
+                        .catch(error => {
+                            console.error("Error fetching names.json:", error);
+                        });
+
+                    document.querySelector("h1").textContent = `${user.display_name || "とある水戸一の名無し"} のマイページ`;
+                    document.getElementById("user-avatar").src = user.avatar_url || "../../img/default-avatar.png";
+                    document.getElementById("user-name").textContent = user.display_name || "ゲスト";
+                    document.getElementById("user-email").textContent = textMosaic(user.user_email);
+                    document.getElementById("visit-count").textContent = user.visit_count;
+                    document.getElementById("post-count").textContent = user.post_count;
+
+                    // --- 質問一覧を取得 ---
+                    const { data: questions } = await supabase
+                        .from("questions")
+                        .select("id, title")
+                        .eq("user_email", user.user_email)
+                        .order("created_at", { ascending: false });
+
+                    const qList = document.getElementById("question-list");
+                    questions?.forEach(q => {
+                        const li = document.createElement("li");
+                        li.innerHTML = `<a href="/mito1-website/question/details/?id=${q.id}">${q.title}</a>`;
+                        qList.appendChild(li);
+                    });
+
+                    // --- 掲示板の投稿一覧を取得 ---
+                    const { data: threads } = await supabase
+                        .from("BBS")
+                        .select("id, thread, title")
+                        .eq("user_email", user.user_email)
+                        .order("created_at", { ascending: false });
+
+                    const tList = document.getElementById("thread-list");
+                    threads?.forEach(t => {
+                        const li = document.createElement("li");
+                        li.innerHTML = `<a href="/mito1-website/bbs/thread/?thread=${encodeURIComponent(t.thread)}&post_id=${encodeURIComponent(t.id)}">${t.title} - ${t.thread}</a>`;
+                        tList.appendChild(li);
+                    });
+
+                    // --- 回答一覧を取得 ---
+                    const { data: answers } = await supabase
+                        .from("answers")
+                        .select("id, question_id, content")
+                        .eq("user_email", user.user_email)
+                        .order("created_at", { ascending: false });
+
+                    const aList = document.getElementById("answer-list");
+                    answers?.forEach(a => {
+                        const li = document.createElement("li");
+                        li.innerHTML = `<a href="/mito1-website/question/details/?id=${a.question_id}&answer_id=${a.id}">${a.content.slice(0, 20)}...</a>`;
+                        aList.appendChild(li);
+                    });
+
+                    isLoading = false;
+                    document.getElementById('custom-alert').remove();
+
+                    function textMosaic(str) {
+                        return str.slice(0, 5) + "*".repeat(10) + str.slice(-5);
                     }
                 }
-
-                document.getElementById("student-id").textContent = studentId;
-            })
-            .catch(error => {
-                console.error("Error fetching names.json:", error);
             });
-
-        document.querySelector("h1").textContent = `${user.display_name || "とある水戸一の名無し"} のマイページ`;
-        document.getElementById("user-avatar").src = user.avatar_url || "../../img/default-avatar.png";
-        document.getElementById("user-name").textContent = user.display_name || "ゲスト";
-        document.getElementById("user-email").textContent = textMosaic(user.user_email);
-        document.getElementById("visit-count").textContent = user.visit_count;
-        document.getElementById("post-count").textContent = user.post_count;
-
-        // --- 質問一覧を取得 ---
-        const { data: questions } = await supabase
-            .from("questions")
-            .select("id, title")
-            .eq("user_email", user.user_email)
-            .order("created_at", { ascending: false });
-
-        const qList = document.getElementById("question-list");
-        questions?.forEach(q => {
-            const li = document.createElement("li");
-            li.innerHTML = `<a href="/mito1-website/question/details/?id=${q.id}">${q.title}</a>`;
-            qList.appendChild(li);
-        });
-
-        // --- 掲示板の投稿一覧を取得 ---
-        const { data: threads } = await supabase
-            .from("BBS")
-            .select("id, thread, title")
-            .eq("user_email", user.user_email)
-            .order("created_at", { ascending: false });
-
-        const tList = document.getElementById("thread-list");
-        threads?.forEach(t => {
-            const li = document.createElement("li");
-            li.innerHTML = `<a href="/mito1-website/bbs/thread/?thread=${encodeURIComponent(t.thread)}&post_id=${encodeURIComponent(t.id)}">${t.title} - ${t.thread}</a>`;
-            tList.appendChild(li);
-        });
-
-        // --- 回答一覧を取得 ---
-        const { data: answers } = await supabase
-            .from("answers")
-            .select("id, question_id, content")
-            .eq("user_email", user.user_email)
-            .order("created_at", { ascending: false });
-
-        const aList = document.getElementById("answer-list");
-        answers?.forEach(a => {
-            const li = document.createElement("li");
-            li.innerHTML = `<a href="/mito1-website/question/details/?id=${a.question_id}&answer_id=${a.id}">${a.content.slice(0, 20)}...</a>`;
-            aList.appendChild(li);
-        });
-
-        isLoading = false;
-        document.getElementById('custom-alert').remove();
-
-        function textMosaic(str) {
-            return str.slice(0, 5) + "*".repeat(10) + str.slice(-5);
         }
     </script>
     <script type="module" src="../../notice/notice.js"></script>
