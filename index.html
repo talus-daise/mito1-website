@@ -180,14 +180,13 @@
 
                 // 親コンテナ側の設定（ここが表示範囲になる）
                 wrapper.style.width = "50vw";      // 横の半分（=左上1/4用）
-                wrapper.style.height = "50vh";     // 縦の半分
+                wrapper.style.aspectRatio = "4 / 3"; // 4:3比率固定
                 wrapper.style.overflow = "hidden";
                 wrapper.style.position = "relative";
                 wrapper.style.borderRadius = "8px";
 
                 // 画像側の設定
                 imgEl.style.width = "100vw";
-                imgEl.style.height = "100vh";
                 imgEl.style.objectFit = "cover";
                 imgEl.style.objectPosition = "left top";
                 imgEl.style.display = "block";
