@@ -36,6 +36,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
     <script src="../script/customAlert.js" type="module"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!--マニフェスト-->
     <link rel="manifest" href="manifest.json">
 </head>
@@ -50,6 +51,11 @@
     </header>
 
     <main>
+        <section>
+            <h2>現在の時間割画像</h2>
+            <img src="" alt="時間割画像" id="timetable">
+            <p>※もし画像が表示されない場合は、一度<a href="https://rebecka-unchilled-lisandra.ngrok-free.dev/">こちら</a>にアクセスしてください。</p>
+        </section>
         <section class="main__classlist">
             <h2>時間割スプレッドシート</h2>
             <iframe src="https://docs.google.com/spreadsheets/d/1fdSGqT1s2kit91TcQV_mjcuvOawGAU6JZ_5N684bH3U/htmlview"
@@ -82,72 +88,178 @@
                 return {
                     Authorization: `Basic ${token}`,
                     'ngrok-skip-browser-warning': 'true',
-                    'User-Agent': 'CustomClient/1.0', // 任意のUA（標準ブラウザUAではない文字列）
+                    'User-Agent': 'CustomClient/1.0',
                 };
+            }
+
+            async function extractDateFromImage(blob) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        img.onload = async () => {
+                            const canvas = document.createElement("canvas");
+                            const ctx = canvas.getContext("2d");
+
+                            // 左上 3.2×2cm （28×21cm全体に対して）
+                            const ratioX = 3.2 / 28;
+                            const ratioY = 2 / 21;
+                            const cropWidth = img.width * ratioX;
+                            const cropHeight = img.height * ratioY;
+
+                            // クロップ領域を一旦切り出し
+                            const cropCanvas = document.createElement("canvas");
+                            cropCanvas.width = cropWidth;
+                            cropCanvas.height = cropHeight;
+                            const cropCtx = cropCanvas.getContext("2d");
+                            cropCtx.drawImage(img, 0, 0, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+                            // ★ 横方向を1.5倍に拡大
+                            const stretchX = 1.5;
+                            const stretchY = 1.1;
+                            canvas.width = cropWidth * stretchX;
+                            canvas.height = cropHeight * stretchY;
+                            ctx.drawImage(cropCanvas, 0, 0, canvas.width, canvas.height);
+
+                            // 白黒化処理（OCR前処理）
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const data = imageData.data;
+                            for (let i = 0; i < data.length; i += 4) {
+                                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                                const value = avg > 170 ? 255 : 0; // 明暗しきい値
+                                data[i] = data[i + 1] = data[i + 2] = value;
+                            }
+                            ctx.putImageData(imageData, 0, 0);
+
+                            // ★ 白黒化結果をBlobとして出力
+                            const processedBlob = await new Promise((res) => canvas.toBlob(res, "image/png"));
+                            const processedURL = URL.createObjectURL(processedBlob);
+
+                            // // ★ プレビュー表示（必要なら削除可）
+                            // const preview = document.createElement("img");
+                            // preview.src = processedURL;
+                            // preview.alt = "OCR対象領域（横1.3倍拡大済み）";
+                            // preview.style.display = "block";
+                            // preview.style.border = "1px solid #ccc";
+                            // preview.style.margin = "8px 0";
+                            // preview.style.maxWidth = "300px";
+                            // document.body.appendChild(preview);
+
+                            // OCR実行
+                            const { createWorker } = Tesseract;
+                            const worker = await createWorker("jpn");
+                            const { data: { text } } = await worker.recognize(canvas);
+                            await worker.terminate();
+
+                            // 日付＋曜日形式のみ抽出
+                            const match = text.match(
+                                /(\d{1,2})\s*[\/\.．－‐ー−―]\s*(\d{1,2})\s*[\(（]\s*[日月火水木金土]\s*[\)）]/
+                            );
+
+                            resolve({
+                                text: match ? match[0].replace(/\s+/g, "") : text.trim() || "日付不明",
+                                processedURL,
+                            });
+                        };
+                        img.src = reader.result;
+                    };
+                    reader.readAsDataURL(blob);
+                });
             }
 
             try {
                 const response = await fetch(baseURL, {
                     headers: makeHeaders("talus", "talus"),
-                    cache: "no-store"
+                    cache: "no-store",
                 });
 
                 if (!response.ok) throw new Error(`HTTPエラー: ${response.status}`);
 
                 const html = await response.text();
 
-                // HTMLをパース
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, "text/html");
 
-                // .jpgファイルを抽出
                 const links = [...doc.querySelectorAll("a[href$='.jpg']")];
                 if (links.length === 0) {
                     container.textContent = "画像が見つかりません。";
                     return;
                 }
 
-                // ファイル名で降順ソート（新しい順）
                 const files = links.map(a => a.getAttribute("href")).sort().reverse();
+
+                const timetable = document.getElementById("timetable");
+                timetable.style.maxWidth = "calc(100% - 2rem)";
+                const latestFile = files[0];
+                const latestFileURL = baseURL + latestFile.replace(/^\//, "");
+                const latestFileBlobResponse = await fetch(latestFileURL, {
+                    headers: makeHeaders("talus", "talus"),
+                    cache: "no-store",
+                });
+                if (latestFileBlobResponse.ok) {
+                    const latestBlob = await latestFileBlobResponse.blob();
+                    const latestBlobURL = URL.createObjectURL(latestBlob);
+                    timetable.src = latestBlobURL;
+                    timetable.alt = `最新の時間割画像 (${latestFile})`;
+                } else {
+                    console.warn(`最新画像の取得に失敗しました: ${latestFileBlobResponse.status}`);
+                    timetable.alt = "最新の時間割画像を取得できませんでした。";
+                }
 
                 const list = document.createElement("div");
 
-                files.forEach(file => {
+                // 最新以外を処理
+                for (const file of files.slice(1)) {
                     const li = document.createElement("div");
                     const url = baseURL + file.replace(/^\//, "");
 
-                    // ファイル名（テキスト部分）
-                    const name = document.createElement("div");
-                    name.textContent = file;
-                    name.style.fontWeight = "bold";
-                    name.style.marginBottom = "4px";
+                    // blob経由で画像を取得
+                    try {
+                        const imgResponse = await fetch(url, {
+                            headers: makeHeaders("talus", "talus"),
+                            cache: "no-store",
+                        });
+                        if (!imgResponse.ok) throw new Error(`画像取得エラー: ${imgResponse.status}`);
+                        const blob = await imgResponse.blob();
+                        const blobURL = URL.createObjectURL(blob);
 
-                    // 画像リンク
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.target = "_blank";
-                    link.rel = "noopener noreferrer";
-                    link.title = file;
+                        // OCRで日付取得
+                        const { text: dateText, processedURL } = await extractDateFromImage(blob);
 
-                    const img = document.createElement("img");
-                    img.src = url;
-                    img.alt = file;
-                    img.loading = "lazy";
-                    img.style.maxWidth = "300px";
-                    img.style.display = "block";
-                    img.style.borderRadius = "8px";
-                    img.style.marginBottom = "12px";
-                    img.style.cursor = "pointer";
+                        // 日付表示
+                        const name = document.createElement("div");
+                        name.textContent = dateText;
+                        name.style.fontWeight = "bold";
+                        name.style.marginBottom = "4px";
 
-                    // 構造を整える
-                    link.appendChild(img);
-                    li.appendChild(name);
-                    li.appendChild(link);
-                    list.appendChild(li);
-                });
+                        // 表示用リンクと画像
+                        const link = document.createElement("a");
+                        link.href = blobURL;
+                        link.target = "_blank";
+                        link.rel = "noopener noreferrer";
+                        link.title = file;
+
+                        const img = document.createElement("img");
+                        img.src = blobURL;
+                        img.alt = file;
+                        img.loading = "lazy";
+                        img.style.maxWidth = "300px";
+                        img.style.display = "block";
+                        img.style.borderRadius = "8px";
+                        img.style.marginBottom = "12px";
+                        img.style.cursor = "pointer";
+
+                        // 組み立て
+                        link.appendChild(img);
+                        li.appendChild(name);
+                        li.appendChild(link);
+                        list.appendChild(li);
+                    } catch (e) {
+                        console.warn(`${file} の画像取得に失敗しました:`, e);
+                    }
+                }
 
                 container.appendChild(list);
-
             } catch (err) {
                 console.error("画像一覧取得エラー:", err);
                 container.textContent = "画像一覧の取得に失敗しました。";

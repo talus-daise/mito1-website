@@ -13,8 +13,9 @@ async function showCustomAlert(message, isShowCloseButton = true, isBackgroundBl
         borderRadius: "1rem",
         textAlign: "center",
         opacity: "0",
-        transition: "opacity 0.5s ease-in-out"
+        transition: "opacity 0.5s ease-in-out",
     });
+    alertContainer.style.setProperty("display", "block", "important");
     alertContainer.id = "custom-alert";
 
     // メッセージ表示用要素
@@ -77,7 +78,7 @@ async function showCustomAlert(message, isShowCloseButton = true, isBackgroundBl
     }
 
     if (isBackgroundBlack) {
-        document.body.appendChild(background);
+        document.documentElement.appendChild(background);
     }
 
     // 要素を組み立てて追加
@@ -87,7 +88,7 @@ async function showCustomAlert(message, isShowCloseButton = true, isBackgroundBl
         alertContainer.appendChild(okButton)
     }
 
-    document.body.appendChild(alertContainer);
+    document.documentElement.appendChild(alertContainer);
 
     // 少し遅れてフェードイン
     setTimeout(() => alertContainer.style.opacity = "1", 10);
@@ -164,17 +165,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    /** 時間判定と動作 */
-    if (isRestrictedTime() && !window.location.href.includes("admin")) {
-        blackoutScreen();
+    function isAllowPage() {
+        return window.location.href.includes("admin") || window.location.href.includes("caution") || window.location.href.includes("timetable");
     }
 
-    document.body.style.display = "block";
+    /** 時間判定と動作 */
+    if (isRestrictedTime() && !isAllowPage()) {
+        document.body.style.display = "none"
+        blackoutScreen();
+    } else {
+        document.body.style.display = "block"
+    }
 
     setInterval(() => {
         /** 時間判定と動作 */
-        if (isRestrictedTime() && !window.location.href.includes("admin")) {
+        if (isRestrictedTime() && !isAllowPage()) {
+            document.body.style.display = "none"
             blackoutScreen();
+        } else {
+            document.body.style.display = "block"
         }
     }, 1000);
 });

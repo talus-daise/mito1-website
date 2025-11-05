@@ -53,7 +53,7 @@
             <a href="timetable/">過去の時間割など</a>
             <hr>
             <p style="color: red;">もし、画像が表示されない場合は、一度<a
-                    href="https://rebecka-unchilled-lisandra.ngrok-free.dev/">こちら</a>にアクセスしてください。</p>
+                    href="https://rebecka-unchilled-lisandra.ngrok-free.dev/">こちら</a>にアクセスして<code>Yes, I visit</code>を押してください。</p>
         </section>
         <section>
             <h2>サイト概要</h2>
@@ -179,14 +179,14 @@
                 wrapper.appendChild(imgEl);
 
                 // 親コンテナ側の設定（ここが表示範囲になる）
-                wrapper.style.width = "50vw";      // 横の半分（=左上1/4用）
+                wrapper.style.width = "calc(100% - 2rem)";      // 横の半分（=左上1/4用）
                 wrapper.style.aspectRatio = "4 / 3"; // 4:3比率固定
                 wrapper.style.overflow = "hidden";
                 wrapper.style.position = "relative";
                 wrapper.style.borderRadius = "8px";
 
                 // 画像側の設定
-                imgEl.style.width = "100vw";
+                imgEl.style.width = "calc(200% + 20px)";
                 imgEl.style.objectFit = "cover";
                 imgEl.style.objectPosition = "left top";
                 imgEl.style.display = "block";
