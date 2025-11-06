@@ -64,6 +64,9 @@
             <a href="#question-list">質問一覧</a>
             <a href="#answer-list">回答一覧</a>
             <a href="#post-list">投稿一覧</a>
+
+            <label for="search-box">検索：<input type="text" id="search-box" placeholder="コンテンツを検索..."></label>
+            <button id="search-btn">検索</button>
             <hr>
 
             <div id="content-list" class="content-list">
@@ -212,6 +215,27 @@
                     postItem.remove();
                 });
             });
+        });
+
+        document.getElementById("search-btn").addEventListener("click", filterContents);
+        function filterContents() {
+            const keyword = document.getElementById("search-box").value.toLowerCase();
+            const contentItems = document.querySelectorAll(".content-item");
+
+            contentItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(keyword)) {
+                    item.style.display = "";
+                } else {
+                    item.style.display = "none";
+                }
+            });
+        }
+
+        document.getElementById("search-box").addEventListener("keydown", (event) => {
+            if (event.key === "Enter" && document.activeElement === document.getElementById("search-box")) {
+                filterContents();
+            }
         });
     </script>
     <script type="module" src="../../notice/notice.js"></script>

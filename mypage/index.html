@@ -53,7 +53,7 @@
                 <p>ユーザー名: <span id="user-name">とある水戸一の名無し</span></p>
                 <p>表示名: <span id="display-name">とある水戸一の名無し</span><button id="edit-display-name" style="margin: 0 0 0 1rem;">編集</button></p>
                 <p>メールアドレス: <span id="user-email">guest@example.com</span></p>
-                <p>ロール: <span id="user-role">ゲスト</span></p>
+                <p>権限: <span id="user-role">ゲスト</span></p>
             </div>
             <button id="logout-button">ログアウト</button>
             <hr>
@@ -180,13 +180,13 @@
         document.getElementById("user-name").textContent = user.user_metadata.full_name || "ゲスト";
         document.getElementById("user-email").textContent = textMosaic(userEmail);
         document.getElementById("display-name").textContent = updatedUser.display_name || "とある水戸一の名無し";
-        document.getElementById("user-role").textContent = updatedUser.is_admin ? "管理者" : "一般ユーザー";
+        document.getElementById("user-role").textContent = updatedUser.role;
         document.getElementById("visit-count").textContent = updatedUser.visit_count;
         document.getElementById("post-count").textContent = updatedUser.post_count;
         document.getElementById("my-page-link").href = `./other/?user_id=${encodeURIComponent(updatedUser.user_id)}`;
 
         document.getElementById("user-role").addEventListener("click", () => {
-            if (updatedUser.is_admin) {
+            if (!(updatedUser.role === "")) {
                 window.location.href = "../admin/";
             }
         });

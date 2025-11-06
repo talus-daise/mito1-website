@@ -146,7 +146,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const mailBody = encodeURIComponent('ウェブサイトの利用許可をしてください。\n\nーーーーーーーーーーーーーーー\n\n以下のリンクは触らないでください。\n\nhttps://talus-daise.github.io/mito1-website/admin/');
 
         // カスタムアラートを表示
-        if (!document.getElementById("custom-alert")) showCustomAlert(`現在は利用できない時間です。<br>平日の8:25~11:30, 13:05~15:55は使用が制限されます。<br>もし祝日の場合や、誤って表示された場合は、<a href='mailto:yamamoto.yuujirou@mito1-h.ibk.ed.jp?subject=ウェブサイトの利用について&body=${mailBody}' id='contact-admin'>管理者までご連絡ください。</a>`, false, true);
+        if (!document.getElementById("custom-alert")) showCustomAlert(`現在は利用できない時間です。<br><a href='https://talus-daise.github.io/mito1-website/timetable/'>時間割</a>は見ることができます。<br>平日の8:25~11:30, 13:05~15:55は使用が制限されます。<br>もし祝日の場合や、誤って表示された場合は、<a href='mailto:yamamoto.yuujirou@mito1-h.ibk.ed.jp?subject=ウェブサイトの利用について&body=${mailBody}' id='contact-admin'>管理者までご連絡ください。</a>`, false, true);
 
         const contactLink = document.getElementById("contact-admin");
         if (localStorage.getItem("lastContactedAdmin") && Date.now() - parseInt(localStorage.getItem("lastContactedAdmin")) < 120000) {
@@ -169,12 +169,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         return window.location.href.includes("admin") || window.location.href.includes("caution") || window.location.href.includes("timetable");
     }
 
+    function removeBlackout() {
+        const existingAlert = document.getElementById("background-black");
+        const customAlert = document.getElementById("custom-alert");
+        if (customAlert) customAlert.remove();
+        if (existingAlert) existingAlert.remove();
+    }
+
     /** 時間判定と動作 */
     if (isRestrictedTime() && !isAllowPage()) {
         document.body.style.display = "none"
         blackoutScreen();
     } else {
         document.body.style.display = "block"
+        removeBlackout();
     }
 
     setInterval(() => {
@@ -184,6 +192,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             blackoutScreen();
         } else {
             document.body.style.display = "block"
+            removeBlackout();
         }
     }, 1000);
 });

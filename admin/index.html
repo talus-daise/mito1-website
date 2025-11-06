@@ -85,9 +85,21 @@
                             <li><a href="./user_manage/">ユーザー管理</a></li>
                             <li><a href="./content_manage/">コンテンツ管理</a></li>
                             <li><a href="./website_allow/">ウェブサイト許可管理</a></li>
+                            <li><a href="./request_music/">リクエスト曲管理</a></li>
                         </ul>
                     `;
                     document.querySelector("main").appendChild(adminFeatures);
+                } else if (users.role === "request_music_manager") {
+                    authStatus.textContent = "リクエスト曲管理者として認証されました。";
+                    // リクエスト曲管理者用機能を表示するコードをここに追加
+                    const musicManagerFeatures = document.createElement("section");
+                    musicManagerFeatures.innerHTML = `
+                        <h2>リクエスト曲管理者用機能</h2>
+                        <ul>
+                            <li><a href="./request_music/">リクエスト曲管理</a></li>
+                        </ul>
+                    `;
+                    document.querySelector("main").appendChild(musicManagerFeatures);
                 } else {
                     authStatus.textContent = "管理者権限がありません。";
                 }

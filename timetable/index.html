@@ -67,7 +67,9 @@
         </section>
         <section>
             <h2>過去の時間割一覧</h2>
-            <div id="past-timetable"></div>
+            <label for="search-box">検索：<input type="text" id="search-box" placeholder="時間割を検索..."></label>
+            <button id="search-btn">検索</button>
+            <div id="past-timetable">読み込み中…</div>
         </section>
     </main>
 
@@ -101,22 +103,24 @@
                             const canvas = document.createElement("canvas");
                             const ctx = canvas.getContext("2d");
 
-                            // 左上 3.2×2cm （28×21cm全体に対して）
-                            const ratioX = 3.2 / 28;
-                            const ratioY = 2 / 21;
+                            // 左上 2.5×1cm （28×21cm全体に対して）
+                            const ratioX = 2.5 / 28;
+                            const ratioY = 1 / 21;
                             const cropWidth = img.width * ratioX;
                             const cropHeight = img.height * ratioY;
+                            const startX = img.width / 2 + 10;
+                            const startY = 10;
 
                             // クロップ領域を一旦切り出し
                             const cropCanvas = document.createElement("canvas");
                             cropCanvas.width = cropWidth;
                             cropCanvas.height = cropHeight;
                             const cropCtx = cropCanvas.getContext("2d");
-                            cropCtx.drawImage(img, 0, 0, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+                            cropCtx.drawImage(img, startX, startY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
 
-                            // ★ 横方向を1.5倍に拡大
-                            const stretchX = 1.5;
-                            const stretchY = 1.1;
+                            // ★ 横方向を2.0倍に拡大
+                            const stretchX = 3.0;
+                            const stretchY = 2.0;
                             canvas.width = cropWidth * stretchX;
                             canvas.height = cropHeight * stretchY;
                             ctx.drawImage(cropCanvas, 0, 0, canvas.width, canvas.height);
@@ -126,7 +130,7 @@
                             const data = imageData.data;
                             for (let i = 0; i < data.length; i += 4) {
                                 const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                                const value = avg > 170 ? 255 : 0; // 明暗しきい値
+                                const value = avg > 140 ? 255 : 0; // 明暗しきい値
                                 data[i] = data[i + 1] = data[i + 2] = value;
                             }
                             ctx.putImageData(imageData, 0, 0);
@@ -259,12 +263,34 @@
                     }
                 }
 
+                container.innerHTML = "";
                 container.appendChild(list);
             } catch (err) {
                 console.error("画像一覧取得エラー:", err);
                 container.textContent = "画像一覧の取得に失敗しました。";
             }
         })();
+
+        document.getElementById("search-btn").addEventListener("click", () => {
+            const query = document.getElementById("search-box").value.trim().toLowerCase();
+            const pastTimetable = document.getElementById("past-timetable");
+            const items = pastTimetable.querySelectorAll("div > div:first-child");
+
+            items.forEach(item => {
+                const text = item.textContent.trim().toLowerCase();
+                if (text.includes(query)) {
+                    item.parentElement.style.display = "";
+                } else {
+                    item.parentElement.style.display = "none";
+                }
+            });
+        });
+
+        document.getElementById("search-box").addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                document.getElementById("search-btn").click();
+            }
+        });
     </script>
     <script type="module" src="../notice/notice.js"></script>
     <script src="../script/customAlert.js" type="module"></script>
