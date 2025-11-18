@@ -69,6 +69,8 @@
             <h2>過去の時間割一覧</h2>
             <label for="search-box">検索：<input type="text" id="search-box" placeholder="時間割を検索..."></label>
             <button id="search-btn">検索</button>
+            <button id="search-help" class="help-button"><i class="fa-solid fa-circle-question"></i></button>
+            <p>※自動生成のため、実際とは違う日付になっている可能性があります。現在修正中ですので少々お待ちください。</p>
             <div id="past-timetable">読み込み中…</div>
         </section>
     </main>
@@ -231,7 +233,7 @@
                         const { text: dateText, processedURL } = await extractDateFromImage(blob);
 
                         // 日付表示
-                        const name = document.createElement("div");
+                        const name = document.createElement("span");
                         name.textContent = dateText;
                         name.style.fontWeight = "bold";
                         name.style.marginBottom = "4px";
@@ -274,14 +276,14 @@
         document.getElementById("search-btn").addEventListener("click", () => {
             const query = document.getElementById("search-box").value.trim().toLowerCase();
             const pastTimetable = document.getElementById("past-timetable");
-            const items = pastTimetable.querySelectorAll("div > div:first-child");
+            const items = pastTimetable.querySelectorAll("div > div");
 
             items.forEach(item => {
-                const text = item.textContent.trim().toLowerCase();
+                const text = item.innerHTML.trim().toLowerCase();
                 if (text.includes(query)) {
-                    item.parentElement.style.display = "";
+                    item.style.display = "";
                 } else {
-                    item.parentElement.style.display = "none";
+                    item.style.display = "none";
                 }
             });
         });
@@ -290,6 +292,17 @@
             if (event.key === "Enter") {
                 document.getElementById("search-btn").click();
             }
+        });
+
+        document.getElementById("search-help").addEventListener("click", () => {
+            showCustomAlert(
+                "<b>検索機能のヒント</b><br>" +
+                "・キーワードは部分一致で検索されます。<br>" +
+                "・時間割画像は前日に更新されることが多いです。<br>" +
+                "・ファイル名は更新日時なので、一日前や、月曜日だったら金曜日の日にちで検索してみてもいいでしょう。<br>" +
+                "・ファイル名の形式はYYYYMMDD-hhmmss-index.jpgです。<br>例: 20240219-123129-1.jpg<br>" +
+                "・以上の形式で検索すると見つかるかもしれません。"
+            );
         });
     </script>
     <script type="module" src="../notice/notice.js"></script>

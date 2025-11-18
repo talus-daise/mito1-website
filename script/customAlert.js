@@ -142,11 +142,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /** 暗転処理 */
-    function blackoutScreen() {
+    function blackoutScreen(alertMessage) {
         const mailBody = encodeURIComponent('ウェブサイトの利用許可をしてください。\n\nーーーーーーーーーーーーーーー\n\n以下のリンクは触らないでください。\n\nhttps://talus-daise.github.io/mito1-website/admin/');
 
         // カスタムアラートを表示
-        if (!document.getElementById("custom-alert")) showCustomAlert(`現在は利用できない時間です。<br><a href='https://talus-daise.github.io/mito1-website/timetable/'>時間割</a>は見ることができます。<br>平日の8:25~11:30, 13:05~15:55は使用が制限されます。<br>もし祝日の場合や、誤って表示された場合は、<a href='mailto:yamamoto.yuujirou@mito1-h.ibk.ed.jp?subject=ウェブサイトの利用について&body=${mailBody}' id='contact-admin'>管理者までご連絡ください。</a>`, false, true);
+        if (!document.getElementById("custom-alert")) showCustomAlert(alertMessage || `現在は利用できない時間です。<br><a href='https://talus-daise.github.io/mito1-website/timetable/'>時間割</a>は見ることができます。<br>平日の8:25~11:30, 13:05~15:55は使用が制限されます。<br>もし祝日の場合や、誤って表示された場合は、<a href='mailto:yamamoto.yuujirou@mito1-h.ibk.ed.jp?subject=ウェブサイトの利用について&body=${mailBody}' id='contact-admin'>管理者までご連絡ください。</a>`, false, true);
 
         const contactLink = document.getElementById("contact-admin");
         if (localStorage.getItem("lastContactedAdmin") && Date.now() - parseInt(localStorage.getItem("lastContactedAdmin")) < 120000) {
@@ -175,26 +175,51 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (customAlert) customAlert.remove();
         if (existingAlert) existingAlert.remove();
     }
+    
+    const intervalId = setInterval(() => {
+        /** 時間判定と動作 */
+        if (isRestrictedTime() && !isAllowPage()) {
+            document.
+            body.
+            style.
+            display
+             = 
+             "none"
+            
+            document.
+            body.
+            remove(
+                true
+            )
+            blackoutScreen();
+        } else {
+            blackoutScreen('ページを再読込してください。制限時間外になりました。');
+            document.body.style.display = "block"
+        }
+    }, 1000);
 
     /** 時間判定と動作 */
     if (isRestrictedTime() && !isAllowPage()) {
-        document.body.style.display = "none"
+        if (true) {
+            for (let i = 0; i < 10; i++) {
+                document.
+                body.
+                style.
+                display
+                 = 
+                 "none"
+            }
+            document.
+            body.
+            remove(
+                true
+            )
+        }
         blackoutScreen();
     } else {
         document.body.style.display = "block"
-        removeBlackout();
+        clearInterval(intervalId);
     }
-
-    setInterval(() => {
-        /** 時間判定と動作 */
-        if (isRestrictedTime() && !isAllowPage()) {
-            document.body.style.display = "none"
-            blackoutScreen();
-        } else {
-            document.body.style.display = "block"
-            removeBlackout();
-        }
-    }, 1000);
 });
 
 // **グローバルスコープに登録**
