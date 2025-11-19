@@ -11,18 +11,32 @@
     <!--css-->
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
-    <link rel="stylesheet" href="../../notice/notice.css">
+    <link rel="stylesheet" href="../../script/notice/notice.css">
     <style>
         .content-list {
             display: grid;
-            grid-template-columns: 100%;
+            grid-template-columns: calc(200px * 6 + 2rem);
             gap: 10px;
+            overflow-x: auto;
         }
 
         .content-item {
+            display: grid;
+            grid-template-columns: 2rem repeat(auto-fill, minmax(200px, 1fr));
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            gap: 10px;
+        }
+
+        .content-item input[type="checkbox"]{
+            height: 1rem;
+            margin-top: 5px;
+            background: transparent;
+        }
+
+        .content-item button {
+            height: 1.5rem;
         }
     </style>
     <!--web情報-->
@@ -60,10 +74,17 @@
         <section>
             <h2>リクエスト曲管理</h2>
 
-            <label for="search-box">検索：<input type="text" id="search-box" placeholder="質問を検索..."></label>
+            <label for="search-box">検索：<input type="text" id="search-box" placeholder="リクエスト曲を検索..."></label>
             <button id="search-btn">検索</button>
             <div class="content-list" id="request-music-list">
-                読み込み中…
+                <div class="content-item">
+                    <p><strong>I/O</strong></p>
+                    <p><strong>曲名</strong></p>
+                    <p><strong>リクエスト日時</strong></p>
+                    <p><strong>学籍番号</strong></p>
+                    <p><strong>動画リンク</strong></p>
+                    <p><strong>操作</strong></p>
+                </div>
             </div>
         </section>
     </main>
@@ -94,20 +115,10 @@
                 if (error) throw error;
 
                 // 取得したリクエスト曲を表示
-                listContainer.innerHTML = "";
                 musicRequests.forEach(request => {
                     const item = document.createElement("div");
                     item.className = "content-item";
-
-                    const title = document.createElement("p");
-                    title.insertAdjacentHTML("beforeend", `<strong>曲名:</strong> ${request.musicName}`);
-
-                    const date = document.createElement("p");
-                    date.insertAdjacentHTML("beforeend", `<strong>リクエスト日時:</strong> ${new Date(request.created_at).toLocaleString()}`);
-
-                    const studentId = document.createElement("p");
-                    studentId.insertAdjacentHTML("beforeend", `<strong>学籍番号:</strong> ${request.studentId}`);
-
+                    
                     const isPlayed = document.createElement("input");
                     isPlayed.type = "checkbox";
                     isPlayed.checked = request.isplayed;
@@ -125,12 +136,21 @@
                         }
                     });
 
+                    const title = document.createElement("p");
+                    title.insertAdjacentHTML("beforeend", `${request.musicName}`);
+
+                    const date = document.createElement("p");
+                    date.insertAdjacentHTML("beforeend", `${new Date(request.created_at).toLocaleString().slice(0, 10)}`);
+
+                    const studentId = document.createElement("p");
+                    studentId.insertAdjacentHTML("beforeend", `${request.studentId}`);
+
                     const videoLink = document.createElement("a");
                     videoLink.href = request.url;
                     videoLink.target = "_blank";
                     videoLink.rel = "noopener noreferrer";
                     videoLink.textContent = "動画リンク";
-                    
+
                     const deleteButton = document.createElement("button");
                     deleteButton.textContent = "削除";
                     deleteButton.addEventListener("click", async () => {
@@ -146,12 +166,11 @@
                             item.remove();
                         }
                     });
+                    item.appendChild(isPlayed);
                     item.appendChild(title);
                     item.appendChild(date);
                     item.appendChild(studentId);
                     item.appendChild(videoLink);
-                    item.insertAdjacentHTML("beforeend", "<br>");
-                    item.appendChild(isPlayed);
                     item.appendChild(deleteButton);
                     listContainer.appendChild(item);
                 });
@@ -178,7 +197,7 @@
             }
         });
     </script>
-    <script type="module" src="../../notice/notice.js"></script>
+    <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
     <script src="../../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>

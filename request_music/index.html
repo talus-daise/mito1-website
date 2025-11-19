@@ -11,7 +11,7 @@
     <!--css-->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
-    <link rel="stylesheet" href="../notice/notice.css">
+    <link rel="stylesheet" href="../script/notice/notice.css">
     <style>
         .show {
             display: block;
@@ -324,7 +324,6 @@
             }
         });
 
-        // ===== ランダム再生 =====
         randomMusicBtn.addEventListener("click", () => {
             const selectedMusic = document.getElementById("selectedMusic");
             if (musicData.length === 0) {
@@ -332,17 +331,134 @@
                 return;
             }
 
-            const random = Math.floor(Math.random() * musicData.length);
-            const { musicName, url, desc } = musicData[random];
+            let count = 0;
+            const intervalId = setInterval(() => {
+                const random = Math.floor(Math.random() * musicData.length);
+                const { musicName, url, desc } = musicData[random];
 
-            selectedMusic.innerHTML = "";
-            selectedMusic.appendChild(createMusicItem(musicName, url, desc, true, true));
-            selectedMusic.classList.add("open");
+                selectedMusic.innerHTML = "";
+                selectedMusic.classList.add("open");
+                selectedMusic.appendChild(createMusicItem(musicName, url, desc, true, true));
+
+                count++;
+                if (count >= 20) {
+                    clearInterval(intervalId);
+
+                    const iframe = selectedMusic.querySelector("iframe");
+                    if (iframe) {
+                        // 初期サイズ
+                        Object.assign(iframe.style, {
+                            position: "fixed",
+                            top: "50%",
+                            left: "50%",
+                            width: "200px",
+                            height: "150px",
+                            transform: "translate(-50%, -50%)",
+                            zIndex: "9999",
+                            border: "none"
+                        });
+
+                        // 拡大アニメーション
+                        const startTime = performance.now();
+                        const duration = 500; // 500msで全画面化
+                        const startWidth = 200;
+                        const startHeight = 150;
+                        const targetWidth = window.innerWidth;
+                        const targetHeight = window.innerHeight;
+
+                        function expandAnimation(now) {
+                            const elapsed = now - startTime;
+                            const progress = Math.min(elapsed / duration, 1); // 0〜1
+                            const ease = progress < 0.5
+                                ? 2 * progress * progress
+                                : -1 + (4 - 2 * progress) * progress; // イーズインアウト
+
+                            iframe.style.width = `${startWidth + (targetWidth - startWidth) * ease}px`;
+                            iframe.style.height = `${startHeight + (targetHeight - startHeight) * ease}px`;
+                            iframe.style.top = "50%";
+                            iframe.style.left = "50%";
+                            iframe.style.transform = "translate(-50%, -50%)";
+
+                            if (progress < 1) {
+                                requestAnimationFrame(expandAnimation);
+                            } else {
+                                // 完全に全画面化
+                                Object.assign(iframe.style, {
+                                    top: "0",
+                                    left: "0",
+                                    width: "100vw",
+                                    height: "100vh",
+                                    transform: "none"
+                                });
+                            }
+                        }
+                        requestAnimationFrame(expandAnimation);
+
+                        // 閉じるボタン
+                        const closeBtn = document.createElement("button");
+                        closeBtn.textContent = "✖";
+                        Object.assign(closeBtn.style, {
+                            position: "fixed",
+                            top: "10px",
+                            right: "10px",
+                            zIndex: "10000",
+                            fontSize: "24px",
+                            background: "rgba(0,0,0,0.5)",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "5px",
+                            padding: "5px 10px",
+                            cursor: "pointer"
+                        });
+                        document.body.appendChild(closeBtn);
+
+                        closeBtn.addEventListener("click", () => {
+                            // 縮小アニメーション
+                            const shrinkStart = performance.now();
+                            const shrinkDuration = 300;
+
+                            function shrinkAnimation(now) {
+                                const elapsed = now - shrinkStart;
+                                const progress = Math.min(elapsed / shrinkDuration, 1);
+                                const ease = 1 - (1 - progress) * (1 - progress); // イーズアウト
+
+                                iframe.style.width = `${targetWidth - (targetWidth - startWidth) * ease}px`;
+                                iframe.style.height = `${targetHeight - (targetHeight - startHeight) * ease}px`;
+                                iframe.style.top = "50%";
+                                iframe.style.left = "50%";
+                                iframe.style.transform = "translate(-50%, -50%)";
+
+                                if (progress < 1) {
+                                    requestAnimationFrame(shrinkAnimation);
+                                } else {
+                                    // 元の状態に戻す
+                                    iframe.style.position = "";
+                                    iframe.style.top = "";
+                                    iframe.style.left = "";
+                                    iframe.style.width = "";
+                                    iframe.style.height = "";
+                                    iframe.style.transform = "";
+                                    iframe.style.zIndex = "";
+                                    iframe.style.border = "";
+                                    closeBtn.remove();
+                                }
+                            }
+                            requestAnimationFrame(shrinkAnimation);
+                        });
+                    }
+                }
+            }, 50);
         });
 
         // 初回読み込み
         getTodayMusic();
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"></script>
+    <script type="module" src="../script/notice/notice.js"></script>
+    <script src="../script/customAlert.js" type="module"></script>
+    <script src="../script/verification.js"></script>
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 
 </html>

@@ -11,7 +11,8 @@
     <!--css-->
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
-    <link rel="stylesheet" href="../../notice/notice.css">
+    <link rel="stylesheet" href="../../script/notice/notice.css">
+    <link rel="stylesheet" href="../../script/contentManager/contentManager.css">
     <style>
         .content-list {
             display: grid;
@@ -124,95 +125,128 @@
                 const questionItem = document.createElement("div");
                 questionItem.className = "content-item";
                 questionItem.innerHTML = `
-                    <p><strong>ID:</strong> ${question.id}</p>
-                    <p><strong>作成者:</strong> ${question.username}</p>
-                    <p><strong>タイトル:</strong> ${question.title}</p>
-                    <p><strong>内容:</strong> ${question.content}</p>
-                    <p><strong>作成日時:</strong> ${question.created_at}</p>
-                    <button data-question-id="${question.id}" class="delete-question-btn" style="width: fit-content;">質問削除</button>
+                    <strong>ID: </strong><span>${question.id}</span><br>
+                    <strong>作成者: </strong><span>${question.username}</span><br>
+                    <strong>タイトル: </strong><span>${question.title}</span><br>
+                    <strong>内容: </strong><span>${question.content}</span><br>
+                    <strong>作成日時: </strong><span>${question.created_at}</span><br>
+                    <button data-question-id="${question.id}" class="edit-entry" style="width: fit-content;">質問編集</button>
+                    <button data-question-id="${question.id}" class="delete-entry" style="width: fit-content;">質問削除</button>
+                    <button data-question-id="${question.id}" class="view-entry" style="width: fit-content;">質問表示</button>
                 `;
                 questionList.appendChild(questionItem);
-
-                questionItem.addEventListener("click", () => {
-                    window.location.href = `../../question/details/?id=${question.id}`;
-                })
-
-                questionItem.querySelector(".delete-question-btn").addEventListener("click", async () => {
-                    const questionId = questionItem.querySelector(".delete-question-btn").getAttribute("data-question-id");
-                    const { error: deleteError } = await supabase
-                        .from("questions")
-                        .delete()
-                        .eq("id", questionId);
-                    if (deleteError) {
-                        console.error("Error deleting question:", deleteError);
-                        return;
-                    }
-                    showCustomAlert("質問を削除しました。");
-                    questionItem.remove();
-                });
             });
 
             answers.forEach(answer => {
                 const answerItem = document.createElement("div");
                 answerItem.className = "content-item";
                 answerItem.innerHTML = `
-                    <p><strong>ID:</strong> ${answer.id}</p>
-                    <p><strong>作成者:</strong> ${answer.username}</p>
-                    <p><strong>質問ID:</strong> ${answer.question_id}</p>
-                    <p><strong>内容:</strong> ${answer.content}</p>
-                    <p><strong>作成日時:</strong> ${answer.created_at}</p>
-                    <button data-answer-id="${answer.id}" class="delete-answer-btn" style="width: fit-content;">回答削除</button>
+                    <strong>ID: </strong><span>${answer.id}</span><br>
+                    <strong>作成者: </strong><span>${answer.username}</span><br>
+                    <strong>質問ID: </strong><span>${answer.question_id}</span><br>
+                    <strong>内容: </strong><span>${answer.content}</span><br>
+                    <strong>作成日時: </strong><span>${answer.created_at}</span><br>
+                    <button data-answer-id="${answer.id}" class="edit-entry" style="width: fit-content;">回答編集</button>
+                    <button data-answer-id="${answer.id}" class="delete-entry" style="width: fit-content;">回答削除</button>
+                    <button data-answer-id="${answer.id}" class="view-entry" style="width: fit-content;">回答表示</button>
                 `;
                 answerList.appendChild(answerItem);
-
-                answerItem.addEventListener("click", () => {
-                    window.location.href = `../../question/details/?id=${answer.question_id}`;
-                });
-
-                answerItem.querySelector(".delete-answer-btn").addEventListener("click", async () => {
-                    const answerId = answerItem.querySelector(".delete-answer-btn").getAttribute("data-answer-id");
-                    const { error: deleteError } = await supabase
-                        .from("answers")
-                        .delete()
-                        .eq("id", answerId);
-                    if (deleteError) {
-                        console.error("Error deleting answer:", deleteError);
-                        return;
-                    }
-                    showCustomAlert("回答を削除しました。");
-                    answerItem.remove();
-                });
             });
 
             posts.forEach(post => {
                 const postItem = document.createElement("div");
                 postItem.className = "content-item";
                 postItem.innerHTML = `
-                    <p><strong>ID:</strong> ${post.id}</p>
-                    <p><strong>作成者:</strong> ${post.username}</p>
-                    <p><strong>タイトル:</strong> ${post.title}</p>
-                    <p><strong>内容:</strong> ${post.content}</p>
-                    <p><strong>作成日時:</strong> ${post.created_at}</p>
-                    <button data-post-id="${post.id}" class="delete-post-btn" style="width: fit-content;">投稿削除</button>
+                    <strong>ID: </strong><span>${post.id}</span><br>
+                    <strong>作成者: </strong><span>${post.username}</span><br>
+                    <strong>タイトル: </strong><span>${post.title}</span><br>
+                    <strong>内容: </strong><span>${post.content}</span><br>
+                    <strong>作成日時: </strong><span>${post.created_at}</span><br>
+                    <button data-post-id="${post.id}" class="edit-entry" style="width: fit-content;">投稿編集</button>
+                    <button data-post-id="${post.id}" class="delete-entry" style="width: fit-content;">投稿削除</button>
+                    <button data-post-id="${post.id}" class="view-entry" style="width: fit-content;">投稿表示</button>
                 `;
                 postList.appendChild(postItem);
+            });
 
-                postItem.addEventListener("click", () => {
-                    window.location.href = `../../bbs/thread/?thread=${encodeURIComponent(post.thread)}`;
+            function enableEdit(card) {
+                if (card.classList.contains("editing")) {
+                    card.classList.remove("editing")
+                    card.style.border = "1px solid #ccc";
+                    card.querySelectorAll(":not(strong)").forEach(text => {
+                        text.contentEditable = false;
+                    });
+                    return;
+                }; // すでに編集モードの場合は無視
+                card.classList.add("editing");
+                card.style.border = "2px solid #4a90e2";
+                card.querySelectorAll(":not(strong)").forEach(text => {
+                    if (text.previousElementSibling && text.previousElementSibling.textContent.includes("ID" || "作成日時")) return; // 作成日時は編集不可
+                    text.contentEditable = true;
                 });
+            }
 
-                postItem.querySelector(".delete-post-btn").addEventListener("click", async () => {
-                    const postId = postItem.querySelector(".delete-post-btn").getAttribute("data-post-id");
-                    const { error: deleteError } = await supabase
-                        .from("BBS")
-                        .delete()
-                        .eq("id", postId);
-                    if (deleteError) {
-                        console.error("Error deleting post:", deleteError);
-                        return;
+            document.querySelectorAll(".edit-entry").forEach(button => {
+                button.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    enableEdit(event.target.closest(".content-item"));
+                });
+            });
+
+            document.querySelectorAll(".delete-entry").forEach(button => {
+                button.addEventListener("click", async (event) => {
+                    event.stopPropagation();
+                    const id = button.getAttribute("data-question-id") || button.getAttribute("data-answer-id") || button.getAttribute("data-post-id");
+                    let type = "";
+                    if (button.hasAttribute("data-question-id")) type = "questions";
+                    else if (button.hasAttribute("data-answer-id")) type = "answers";
+                    else if (button.hasAttribute("data-post-id")) type = "BBS";
+
+                    if (confirm("本当に削除しますか？この操作は元に戻せません。")) {
+                        const { error } = await supabase.from(type).delete().eq("id", id);
+                        if (error) {
+                            showCustomAlert("削除中にエラーが発生しました。");
+                            console.error("削除エラー:", error);
+                        } else {
+                            showCustomAlert("コンテンツを削除しました。");
+                            location.reload();
+                        }
                     }
-                    showCustomAlert("投稿を削除しました。");
-                    postItem.remove();
+                });
+            });
+
+            document.querySelectorAll(".view-entry").forEach(button => {
+                button.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    const id = button.getAttribute("data-question-id") || button.getAttribute("data-answer-id") || button.getAttribute("data-post-id");
+                    let type = "";
+                    if (button.hasAttribute("data-question-id")) type = "question";
+                    else if (button.hasAttribute("data-answer-id")) type = "answer";
+                    else if (button.hasAttribute("data-post-id")) type = "post";
+
+                    if (type === "question") {
+                        window.location.href = `../../question/details/?id=${id}`;
+                    } else if (type === "answer") {
+                        // 回答の場合、関連する質問ページへリダイレクト
+                        supabase.from("answers").select("question_id").eq("id", id).then(({ data, error }) => {
+                            if (error) {
+                                showCustomAlert("エラーが発生しました。");
+                                console.error("取得エラー:", error);
+                            } else if (data.length > 0) {
+                                window.location.href = `../../question/details/?id=${data[0].question_id}`;
+                            }
+                        });
+                    } else if (type === "post") {
+                        supabase.from("BBS").select("thread").eq("id", id).then(({ data, error }) => {
+                            if (error) {
+                                showCustomAlert("エラーが発生しました。");
+                                console.error("取得エラー:", error);
+                            } else if (data.length > 0) {
+                                window.location.href = `../../bbs/thread/?thread=${encodeURIComponent(data[0].thread)}`;
+                            }
+                        });
+                    }
                 });
             });
         });
@@ -238,7 +272,8 @@
             }
         });
     </script>
-    <script type="module" src="../../notice/notice.js"></script>
+    <script type="module" src="../../script/notice/notice.js"></script>
+    <script type="module" src="../../script/contentManager/contentManager.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
     <script src="../../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>

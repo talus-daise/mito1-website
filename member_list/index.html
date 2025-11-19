@@ -11,7 +11,7 @@
     <!--css-->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
-    <link rel="stylesheet" href="../notice/notice.css">
+    <link rel="stylesheet" href="../script/notice/notice.css">
     <!--web情報-->
     <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
     <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
@@ -70,7 +70,7 @@
                 <tbody id="roster"></tbody>
             </table>
         </section>
-        <section>
+        <section id="teachers">
             <h2>先生方</h2>
             <h3>1学年担任</h3>
             <p>主任 綿引利弘</p>
@@ -91,22 +91,26 @@
             <p>担任 石田竜祐</p>
             <hr>
             <h3>英語</h3>
+            <p>1A ????</p>
+            <p>1B ????</p>
             <p>Super 白石拓史</p>
             <p>Advance 鳴井柚紀</p>
             <p>Basic 浅野玲子</p>
             <p>E2 Andres Gonzales</p>
             <hr>
             <h3>数学</h3>
+            <p>1A ????</p>
+            <p>1B ????</p>
             <p>発展 平塚祐二</p>
             <p>応用 羽成文江</p>
             <p>基礎 綿引利弘</p>
             <hr>
             <h3>国語</h3>
-            <p>A 阿内文弘</p>
-            <p>B 矢崎寛子</p>
+            <p>1A,1B,2A 阿内文弘</p>
+            <p>2B,3A,3B 矢崎寛子</p>
             <hr>
             <h3>理科</h3>
-            <p>R1 木村由佳</p>
+            <p>R1 藤田忠弘(木村由佳)</p>
             <p>R2 藤田忠弘</p>
             <hr>
             <h3>社会</h3>
@@ -141,7 +145,7 @@
         </p>
     </footer>
 
-    <script type="module" src="../notice/notice.js"></script>
+    <script type="module" src="../script/notice/notice.js"></script>
     <script src="../script/customAlert.js" type="module"></script>
     <!--マニフェスト-->
     <link rel="manifest" href="../manifest.json">
@@ -155,7 +159,19 @@
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
         );
 
-        fetch('../names.json')
+        function makeHeaders(user, pass) {
+            const token = btoa(`${user}:${pass}`);
+            return {
+                Authorization: `Basic ${token}`,
+                'ngrok-skip-browser-warning': 'true',
+                'User-Agent': 'CustomClient/1.0',
+            };
+        }
+
+        fetch('https://rebecka-unchilled-lisandra.ngrok-free.dev/files/names.json', {
+            headers: makeHeaders("talus", "talus"),
+            cache: "no-store",
+        })
             .then(response => response.json())
             .then(async data => {
                 const rosterBody = document.getElementById('roster');
@@ -166,6 +182,7 @@
 
                 if (!session || !session.user) {
                     showCustomAlert("名簿を見るにはログインが必要です。");
+                    document.getElementById("teachers").style.display = "none";
                     return;
                 }
 
@@ -175,19 +192,21 @@
                 for (const className in data) {
                     const names = data[className];
                     names.forEach((name, index) => {
-                        students.push({
-                            number: `${className}${String(index + 1).padStart(2, '0')}`,
-                            name: name
-                        });
+                        if (name !== "teacher") {
+                            students.push({
+                                number: `${className}${String(index + 1).padStart(2, '0')}`,
+                                name: name
+                            });
+                        }
                     });
                 }
 
                 // 名簿表示関数
                 async function displayRoster(filteredStudents) {
-                    const { data: users, error} = await supabase
+                    const { data: users, error } = await supabase
                         .from("users")
                         .select("full_name, user_id");
-                    
+
                     rosterBody.innerHTML = '';
                     filteredStudents.forEach(student => {
                         const row = document.createElement('tr');

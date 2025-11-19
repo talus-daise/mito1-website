@@ -89,7 +89,7 @@ function checkVerification() {
     });
 
     const namePrompt = document.createElement("p");
-    namePrompt.innerText = "名前を入力してください:";
+    namePrompt.innerText = "名前を入力してください(漢字で間を空けずに):";
     namePrompt.style.margin = "10px 0 6px 0";
 
     const nameBox = document.createElement("input");
