@@ -85,13 +85,13 @@
     <script>
         (async () => {
             const container = document.getElementById("past-timetable");
-            const baseURL = "https://rebecka-unchilled-lisandra.ngrok-free.dev/";
+            const baseURL = "https://mito1-website.loca.lt/";
 
             function makeHeaders(user, pass) {
                 const token = btoa(`${user}:${pass}`);
                 return {
                     Authorization: `Basic ${token}`,
-                    'ngrok-skip-browser-warning': 'true',
+                    'bypass-tunnel-reminder': 'true',
                     'User-Agent': 'CustomClient/1.0',
                 };
             }
