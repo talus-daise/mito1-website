@@ -29,7 +29,7 @@
             gap: 10px;
         }
 
-        .content-item input[type="checkbox"]{
+        .content-item input[type="checkbox"] {
             height: 1rem;
             margin-top: 5px;
             background: transparent;
@@ -37,6 +37,24 @@
 
         .content-item button {
             height: 1.5rem;
+        }
+
+        .content-item a {
+            padding: 0.5rem 1rem;
+        }
+
+        .table-header {
+            display: block;
+            font-weight: bold;
+            padding-bottom: 5px;
+            text-align: left;
+            width: auto;
+            border-radius: 5px;
+            user-select: none;
+        }
+
+        .table-header:hover {
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
         }
     </style>
     <!--web情報-->
@@ -78,12 +96,12 @@
             <button id="search-btn">検索</button>
             <div class="content-list" id="request-music-list">
                 <div class="content-item">
-                    <p><strong>I/O</strong></p>
-                    <p><strong>曲名</strong></p>
-                    <p><strong>リクエスト日時</strong></p>
-                    <p><strong>学籍番号</strong></p>
-                    <p><strong>動画リンク</strong></p>
-                    <p><strong>操作</strong></p>
+                    <p class="table-header"><strong>I/O</strong></p>
+                    <p class="table-header" id="sort-by-songname"><strong>曲名</strong></p>
+                    <p class="table-header" id="sort-by-date"><strong>リクエスト日時</strong></p>
+                    <p class="table-header" id="sort-by-studentid"><strong>学籍番号</strong></p>
+                    <p class="table-header"><strong>動画リンク</strong></p>
+                    <p class="table-header"><strong>操作</strong></p>
                 </div>
             </div>
         </section>
@@ -118,7 +136,7 @@
                 musicRequests.forEach(request => {
                     const item = document.createElement("div");
                     item.className = "content-item";
-                    
+
                     const isPlayed = document.createElement("input");
                     isPlayed.type = "checkbox";
                     isPlayed.checked = request.isplayed;
@@ -155,7 +173,7 @@
                     deleteButton.textContent = "削除";
                     deleteButton.addEventListener("click", async () => {
                         const { error: deleteError } = await supabase
-                            .from("request_music")
+                            .from("request-music")
                             .delete()
                             .eq("id", request.id);
                         if (deleteError) {
@@ -184,10 +202,10 @@
 
         searchBtn.addEventListener("click", () => {
             const query = searchBox.value.trim().toLowerCase();
-            const items = document.getElementsByClassName("content-item");
+            const items = document.querySelectorAll(".content-item:not(:first-child)");
             Array.from(items).forEach(item => {
-                const title = item.querySelector("p strong").nextSibling.textContent.toLowerCase();
-                item.style.display = title.includes(query) ? "block" : "none";
+                const title = item.textContent.toLowerCase();
+                item.style.display = title.includes(query) ? "grid" : "none";
             });
         });
 
@@ -196,6 +214,58 @@
                 searchBtn.click();
             }
         });
+
+        // 昇順・降順の状態を列ごとに記録
+        const sortState = {
+            1: "normal",
+            2: "normal",
+            3: "normal"
+        };
+
+        document.getElementById("sort-by-songname").addEventListener("click", () => {
+            sortContentList(1);
+        });
+        document.getElementById("sort-by-date").addEventListener("click", () => {
+            sortContentList(2);
+        });
+        document.getElementById("sort-by-studentid").addEventListener("click", () => {
+            sortContentList(3);
+        });
+
+        function sortContentList(columnIndex) {
+            const listContainer = document.getElementById("request-music-list");
+
+            // 順序のトグル
+            const current = sortState[columnIndex];
+            const next = current === "asc" ? "desc" : "asc";
+            for (const key in sortState) {
+                if (key != columnIndex) sortState[key] = "normal";
+            }
+            const allTitle = listContainer.querySelectorAll(".table-header strong");
+            allTitle.forEach(title => {
+                title.textContent = title.textContent.replace(/ ▲| ▼/, "");
+            });
+            const title = listContainer.querySelector(`.table-header:nth-child(${columnIndex + 1}) strong`);
+            title.textContent += next === "asc" ? " ▲" : " ▼";
+            sortState[columnIndex] = next;
+
+            const items = Array.from(listContainer.getElementsByClassName("content-item")).slice(1);
+
+            const sortedItems = items.sort((a, b) => {
+                let aText = a.children[columnIndex].textContent.trim();
+                let bText = b.children[columnIndex].textContent.trim();
+
+                if (columnIndex === 2) {
+                    const result = new Date(aText) - new Date(bText);
+                    return next === "asc" ? result : -result;
+                } else {
+                    const result = aText.localeCompare(bText);
+                    return next === "asc" ? result : -result;
+                }
+            });
+
+            sortedItems.forEach(item => listContainer.appendChild(item));
+        }
     </script>
     <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>

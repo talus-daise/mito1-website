@@ -71,7 +71,7 @@
             <button id="search-btn">検索</button>
             <button id="search-help" class="help-button"><i class="fa-solid fa-circle-question"></i></button>
             <p>※自動生成のため、実際とは違う日付になっている可能性があります。現在修正中ですので少々お待ちください。</p>
-            <div id="past-timetable">読み込み中…</div>
+            <div id="past-timetable"></div>
         </section>
     </main>
 
@@ -121,8 +121,8 @@
                             cropCtx.drawImage(img, startX, startY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
 
                             // ★ 横方向を2.0倍に拡大
-                            const stretchX = 3.0;
-                            const stretchY = 2.0;
+                            const stretchX = 3.3;
+                            const stretchY = 2.3;
                             canvas.width = cropWidth * stretchX;
                             canvas.height = cropHeight * stretchY;
                             ctx.drawImage(cropCanvas, 0, 0, canvas.width, canvas.height);
@@ -213,13 +213,18 @@
                 }
 
                 const list = document.createElement("div");
+                const pastTimetable = document.getElementById("past-timetable");
+                const progress = document.createElement("p");
+                progress.textContent = "0%/100% 処理中...";
+                pastTimetable.appendChild(progress);
 
-                // 最新以外を処理
-                for (const file of files.slice(1)) {
+                const filesToProcess = files.slice(1);
+
+                for (let i = 0; i < filesToProcess.length; i++) {
+                    const file = filesToProcess[i];
                     const li = document.createElement("div");
                     const url = baseURL + file.replace(/^\//, "");
 
-                    // blob経由で画像を取得
                     try {
                         const imgResponse = await fetch(url, {
                             headers: makeHeaders("talus", "talus"),
@@ -229,21 +234,24 @@
                         const blob = await imgResponse.blob();
                         const blobURL = URL.createObjectURL(blob);
 
-                        // OCRで日付取得
                         const { text: dateText, processedURL } = await extractDateFromImage(blob);
 
-                        // 日付表示
                         const name = document.createElement("span");
                         name.textContent = dateText;
                         name.style.fontWeight = "bold";
                         name.style.marginBottom = "4px";
 
-                        // 表示用リンクと画像
                         const link = document.createElement("a");
                         link.href = blobURL;
                         link.target = "_blank";
                         link.rel = "noopener noreferrer";
                         link.title = file;
+
+                        const imgWrapper = document.createElement("div");
+                        imgWrapper.style.display = "block";
+                        imgWrapper.style.marginBottom = "12px";
+                        imgWrapper.style.cursor = "pointer";
+                        imgWrapper.style.position = "relative";
 
                         const img = document.createElement("img");
                         img.src = blobURL;
@@ -255,11 +263,30 @@
                         img.style.marginBottom = "12px";
                         img.style.cursor = "pointer";
 
-                        // 組み立て
-                        link.appendChild(img);
+                        const filelabel = document.createElement("span");
+                        filelabel.textContent = file;
+                        filelabel.style.position = "absolute";
+                        filelabel.style.top = "0";
+                        filelabel.style.right = "0";
+                        filelabel.style.backgroundColor = "rgba(0, 0, 0, 0.6)";
+                        filelabel.style.color = "#fff";
+                        filelabel.style.fontSize = "10px";
+                        filelabel.style.padding = "2px 4px";
+                        filelabel.style.borderBottomLeftRadius = "4px";
+
+                        imgWrapper.appendChild(img);
+                        imgWrapper.appendChild(filelabel);
+                        link.appendChild(imgWrapper);
                         li.appendChild(name);
                         li.appendChild(link);
                         list.appendChild(li);
+
+                        // 進捗更新
+                        const percent = Math.round(((i + 1) / filesToProcess.length) * 100);
+                        progress.textContent = `${percent}%/100% 処理中...`;
+
+                        // 描画を即反映
+                        await new Promise(requestAnimationFrame);
                     } catch (e) {
                         console.warn(`${file} の画像取得に失敗しました:`, e);
                     }

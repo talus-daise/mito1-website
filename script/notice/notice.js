@@ -162,6 +162,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     <i class="fa-solid fa-house"></i>トップページ
                 </a>
             </li>
+            <li id="timetable" class="menu-item">
+                <a href="/mito1-website/timetable/">
+                    <i class="fa-solid fa-calendar-days"></i>時間割
+                </a>
+            </li>
             <li id="memberList" class="menu-item">
                 <a href="/mito1-website/member_list/">
                     <i class="fa-solid fa-clipboard-list"></i>名簿
@@ -185,6 +190,11 @@ document.addEventListener("DOMContentLoaded", () => {
             <li id="troubleshooting" class="menu-item">
                 <a href="/mito1-website/troubleshooting/">
                     <i class="fa-solid fa-screwdriver-wrench"></i>トラブルシューティング
+                </a>
+            </li>
+            <li id="requestMusic" class="menu-item">
+                <a href="/mito1-website/request_music/">
+                    <i class="fa-solid fa-music"></i>リクエスト曲
                 </a>
             </li>
         </ul>
