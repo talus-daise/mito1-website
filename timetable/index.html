@@ -38,7 +38,7 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!--マニフェスト-->
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="../manifest.json">
 </head>
 
 <body>
@@ -53,17 +53,13 @@
     <main>
         <section>
             <h2>現在の時間割画像</h2>
-            <img src="" alt="時間割画像" id="timetable">
-            <p>※もし画像が表示されない場合は、一度<a href="https://rebecka-unchilled-lisandra.ngrok-free.dev/">こちら</a>にアクセスしてください。</p>
+            <img src="" alt="時間割画像" id="timetable" width="calc(100% - 2rem)">
         </section>
         <section class="main__classlist">
             <h2>時間割スプレッドシート</h2>
             <iframe src="https://docs.google.com/spreadsheets/d/1fdSGqT1s2kit91TcQV_mjcuvOawGAU6JZ_5N684bH3U/htmlview"
                 title="時間割">
             </iframe>
-            <br>
-            <a href="https://drive.google.com/drive/u/0/folders/1vCjJklOsTeYBcyQ7P4eJNBuCE1VvzvF8" target="_blank"
-                rel="noopener noreferrer">Google Driveで過去の時間割を見る</a>
         </section>
         <section>
             <h2>過去の時間割一覧</h2>
@@ -72,6 +68,11 @@
             <button id="search-help" class="help-button"><i class="fa-solid fa-circle-question"></i></button>
             <p>※自動生成のため、実際とは違う日付になっている可能性があります。現在修正中ですので少々お待ちください。</p>
             <div id="past-timetable"></div>
+        </section>
+        <section>
+            <h2>サーバーの稼働状況</h2>
+            <p>状態: <span id="server-state"></span></p>
+            <p></p>
         </section>
     </main>
 
@@ -83,252 +84,171 @@
         </p>
     </footer>
     <script>
-        (async () => {
+        const timetable = document.getElementById("timetable");
+        timetable.style.display = "none";
+        timetable.insertAdjacentHTML("afterend", "<span>読み込み中…</span>");
+
+        (function () {
             const container = document.getElementById("past-timetable");
             const baseURL = "https://mito1-website.loca.lt/";
 
-            function makeHeaders(user, pass) {
-                const token = btoa(`${user}:${pass}`);
-                return {
-                    Authorization: `Basic ${token}`,
-                    'bypass-tunnel-reminder': 'true',
-                    'User-Agent': 'CustomClient/1.0',
+            function get(url, callback) {
+                const xhr = new XMLHttpRequest();
+                xhr.open("GET", url, true);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        callback(xhr.status, xhr.responseText);
+                    }
                 };
+                xhr.send();
             }
 
-            async function extractDateFromImage(blob) {
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        img.onload = async () => {
-                            const canvas = document.createElement("canvas");
-                            const ctx = canvas.getContext("2d");
-
-                            // 左上 2.5×1cm （28×21cm全体に対して）
-                            const ratioX = 2.5 / 28;
-                            const ratioY = 1 / 21;
-                            const cropWidth = img.width * ratioX;
-                            const cropHeight = img.height * ratioY;
-                            const startX = img.width / 2 + 10;
-                            const startY = 10;
-
-                            // クロップ領域を一旦切り出し
-                            const cropCanvas = document.createElement("canvas");
-                            cropCanvas.width = cropWidth;
-                            cropCanvas.height = cropHeight;
-                            const cropCtx = cropCanvas.getContext("2d");
-                            cropCtx.drawImage(img, startX, startY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-
-                            // ★ 横方向を2.0倍に拡大
-                            const stretchX = 3.3;
-                            const stretchY = 2.3;
-                            canvas.width = cropWidth * stretchX;
-                            canvas.height = cropHeight * stretchY;
-                            ctx.drawImage(cropCanvas, 0, 0, canvas.width, canvas.height);
-
-                            // 白黒化処理（OCR前処理）
-                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                            const data = imageData.data;
-                            for (let i = 0; i < data.length; i += 4) {
-                                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                                const value = avg > 140 ? 255 : 0; // 明暗しきい値
-                                data[i] = data[i + 1] = data[i + 2] = value;
-                            }
-                            ctx.putImageData(imageData, 0, 0);
-
-                            // ★ 白黒化結果をBlobとして出力
-                            const processedBlob = await new Promise((res) => canvas.toBlob(res, "image/png"));
-                            const processedURL = URL.createObjectURL(processedBlob);
-
-                            // // ★ プレビュー表示（必要なら削除可）
-                            // const preview = document.createElement("img");
-                            // preview.src = processedURL;
-                            // preview.alt = "OCR対象領域（横1.3倍拡大済み）";
-                            // preview.style.display = "block";
-                            // preview.style.border = "1px solid #ccc";
-                            // preview.style.margin = "8px 0";
-                            // preview.style.maxWidth = "300px";
-                            // document.body.appendChild(preview);
-
-                            // OCR実行
-                            const { createWorker } = Tesseract;
-                            const worker = await createWorker("jpn");
-                            const { data: { text } } = await worker.recognize(canvas);
-                            await worker.terminate();
-
-                            // 日付＋曜日形式のみ抽出
-                            const match = text.match(
-                                /(\d{1,2})\s*[\/\.．－‐ー−―]\s*(\d{1,2})\s*[\(（]\s*[日月火水木金土]\s*[\)）]/
-                            );
-
-                            resolve({
-                                text: match ? match[0].replace(/\s+/g, "") : text.trim() || "日付不明",
-                                processedURL,
-                            });
-                        };
-                        img.src = reader.result;
-                    };
-                    reader.readAsDataURL(blob);
-                });
+            function getBlob(url, callback) {
+                const xhr = new XMLHttpRequest();
+                xhr.open("GET", url, true);
+                xhr.responseType = "blob";
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        callback(xhr.status, xhr.response);
+                    }
+                };
+                xhr.send();
             }
 
-            try {
-                const response = await fetch(baseURL, {
-                    headers: makeHeaders("talus", "talus"),
-                    cache: "no-store",
-                });
-
-                if (!response.ok) throw new Error(`HTTPエラー: ${response.status}`);
-
-                const html = await response.text();
+            get(baseURL, function (status, html) {
+                if (status !== 200) {
+                    container.textContent = "画像一覧の取得に失敗しました。";
+                    return;
+                }
 
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, "text/html");
+                const links = [].slice.call(doc.querySelectorAll("a[href$='.jpg']"));
 
-                const links = [...doc.querySelectorAll("a[href$='.jpg']")];
                 if (links.length === 0) {
                     container.textContent = "画像が見つかりません。";
                     return;
                 }
 
-                const files = links.map(a => a.getAttribute("href")).sort().reverse();
+                const files = links.map(function (a) {
+                    return a.getAttribute("href");
+                }).sort().reverse();
 
-                const timetable = document.getElementById("timetable");
-                timetable.style.maxWidth = "calc(100% - 2rem)";
                 const latestFile = files[0];
                 const latestFileURL = baseURL + latestFile.replace(/^\//, "");
-                const latestFileBlobResponse = await fetch(latestFileURL, {
-                    headers: makeHeaders("talus", "talus"),
-                    cache: "no-store",
+
+                getBlob(latestFileURL, function (st, blob) {
+                    if (st === 200) {
+                        const blobURL = URL.createObjectURL(blob);
+                        timetable.src = blobURL;
+                        timetable.alt = "最新の時間割画像 (" + latestFile + ")";
+                        timetable.style.display = "block";
+                        timetable.nextElementSibling.remove();
+                    }
                 });
-                if (latestFileBlobResponse.ok) {
-                    const latestBlob = await latestFileBlobResponse.blob();
-                    const latestBlobURL = URL.createObjectURL(latestBlob);
-                    timetable.src = latestBlobURL;
-                    timetable.alt = `最新の時間割画像 (${latestFile})`;
-                } else {
-                    console.warn(`最新画像の取得に失敗しました: ${latestFileBlobResponse.status}`);
-                    timetable.alt = "最新の時間割画像を取得できませんでした。";
-                }
 
                 const list = document.createElement("div");
                 const pastTimetable = document.getElementById("past-timetable");
                 const progress = document.createElement("p");
-                progress.textContent = "0%/100% 処理中...";
+                progress.textContent = "処理中…";
                 pastTimetable.appendChild(progress);
 
-                const filesToProcess = files.slice(1);
+                const otherFiles = files.slice(1);
+                let index = 0;
 
-                for (let i = 0; i < filesToProcess.length; i++) {
-                    const file = filesToProcess[i];
-                    const li = document.createElement("div");
-                    const url = baseURL + file.replace(/^\//, "");
-
-                    try {
-                        const imgResponse = await fetch(url, {
-                            headers: makeHeaders("talus", "talus"),
-                            cache: "no-store",
-                        });
-                        if (!imgResponse.ok) throw new Error(`画像取得エラー: ${imgResponse.status}`);
-                        const blob = await imgResponse.blob();
-                        const blobURL = URL.createObjectURL(blob);
-
-                        const { text: dateText, processedURL } = await extractDateFromImage(blob);
-
-                        const name = document.createElement("span");
-                        name.textContent = dateText;
-                        name.style.fontWeight = "bold";
-                        name.style.marginBottom = "4px";
-
-                        const link = document.createElement("a");
-                        link.href = blobURL;
-                        link.target = "_blank";
-                        link.rel = "noopener noreferrer";
-                        link.title = file;
-
-                        const imgWrapper = document.createElement("div");
-                        imgWrapper.style.display = "block";
-                        imgWrapper.style.marginBottom = "12px";
-                        imgWrapper.style.cursor = "pointer";
-                        imgWrapper.style.position = "relative";
-
-                        const img = document.createElement("img");
-                        img.src = blobURL;
-                        img.alt = file;
-                        img.loading = "lazy";
-                        img.style.maxWidth = "300px";
-                        img.style.display = "block";
-                        img.style.borderRadius = "8px";
-                        img.style.marginBottom = "12px";
-                        img.style.cursor = "pointer";
-
-                        const filelabel = document.createElement("span");
-                        filelabel.textContent = file;
-                        filelabel.style.position = "absolute";
-                        filelabel.style.top = "0";
-                        filelabel.style.right = "0";
-                        filelabel.style.backgroundColor = "rgba(0, 0, 0, 0.6)";
-                        filelabel.style.color = "#fff";
-                        filelabel.style.fontSize = "10px";
-                        filelabel.style.padding = "2px 4px";
-                        filelabel.style.borderBottomLeftRadius = "4px";
-
-                        imgWrapper.appendChild(img);
-                        imgWrapper.appendChild(filelabel);
-                        link.appendChild(imgWrapper);
-                        li.appendChild(name);
-                        li.appendChild(link);
-                        list.appendChild(li);
-
-                        // 進捗更新
-                        const percent = Math.round(((i + 1) / filesToProcess.length) * 100);
-                        progress.textContent = `${percent}%/100% 処理中...`;
-
-                        // 描画を即反映
-                        await new Promise(requestAnimationFrame);
-                    } catch (e) {
-                        console.warn(`${file} の画像取得に失敗しました:`, e);
+                function processNext() {
+                    if (index >= otherFiles.length) {
+                        container.innerHTML = "";
+                        container.appendChild(list);
+                        return;
                     }
+
+                    const file = otherFiles[index];
+                    const fileURL = baseURL + file.replace(/^\//, "");
+
+                    getBlob(fileURL, function (st, blob) {
+                        if (st === 200) {
+                            const blobURL = URL.createObjectURL(blob);
+
+                            const li = document.createElement("div");
+
+                            const name = document.createElement("span");
+                            name.textContent = file;
+                            name.style.fontWeight = "bold";
+                            name.style.marginBottom = "4px";
+
+                            const link = document.createElement("a");
+                            link.href = blobURL;
+                            link.target = "_blank";
+                            link.rel = "noopener noreferrer";
+
+                            const imgWrapper = document.createElement("div");
+                            imgWrapper.style.display = "block";
+                            imgWrapper.style.marginBottom = "12px";
+                            imgWrapper.style.cursor = "pointer";
+                            imgWrapper.style.position = "relative";
+
+                            const img = document.createElement("img");
+                            img.src = blobURL;
+                            img.alt = file;
+                            img.loading = "lazy";
+                            img.style.maxWidth = "300px";
+                            img.style.display = "block";
+                            img.style.borderRadius = "8px";
+                            img.style.marginBottom = "12px";
+
+                            const filelabel = document.createElement("span");
+                            filelabel.textContent = file;
+                            filelabel.style.position = "absolute";
+                            filelabel.style.top = "0";
+                            filelabel.style.right = "0";
+                            filelabel.style.backgroundColor = "rgba(0,0,0,0.6)";
+                            filelabel.style.color = "#fff";
+                            filelabel.style.fontSize = "10px";
+                            filelabel.style.padding = "2px 4px";
+                            filelabel.style.borderBottomLeftRadius = "4px";
+
+                            imgWrapper.appendChild(img);
+                            imgWrapper.appendChild(filelabel);
+                            link.appendChild(imgWrapper);
+                            li.appendChild(name);
+                            li.appendChild(link);
+                            list.appendChild(li);
+                        }
+
+                        index++;
+                        processNext();
+                    });
                 }
 
-                container.innerHTML = "";
-                container.appendChild(list);
-            } catch (err) {
-                console.error("画像一覧取得エラー:", err);
-                container.textContent = "画像一覧の取得に失敗しました。";
-            }
+                processNext();
+            });
         })();
 
-        document.getElementById("search-btn").addEventListener("click", () => {
+        document.getElementById("search-btn").addEventListener("click", function () {
             const query = document.getElementById("search-box").value.trim().toLowerCase();
             const pastTimetable = document.getElementById("past-timetable");
             const items = pastTimetable.querySelectorAll("div > div");
 
-            items.forEach(item => {
+            items.forEach(function (item) {
                 const text = item.innerHTML.trim().toLowerCase();
-                if (text.includes(query)) {
-                    item.style.display = "";
-                } else {
-                    item.style.display = "none";
-                }
+                item.style.display = text.includes(query) ? "" : "none";
             });
         });
 
-        document.getElementById("search-box").addEventListener("keydown", (event) => {
+        document.getElementById("search-box").addEventListener("keydown", function (event) {
             if (event.key === "Enter") {
                 document.getElementById("search-btn").click();
             }
         });
 
-        document.getElementById("search-help").addEventListener("click", () => {
+        document.getElementById("search-help").addEventListener("click", function () {
             showCustomAlert(
                 "<b>検索機能のヒント</b><br>" +
                 "・キーワードは部分一致で検索されます。<br>" +
                 "・時間割画像は前日に更新されることが多いです。<br>" +
-                "・ファイル名は更新日時なので、一日前や、月曜日だったら金曜日の日にちで検索してみてもいいでしょう。<br>" +
-                "・ファイル名の形式はYYYYMMDD-hhmmss-index.jpgです。<br>例: 20240219-123129-1.jpg<br>" +
-                "・以上の形式で検索すると見つかるかもしれません。"
+                "・ファイル名は更新日時なので、日付で検索すると見つかる場合があります。<br>" +
+                "・形式は YYYYMMDD-hhmmss-index.jpg です。"
             );
         });
     </script>

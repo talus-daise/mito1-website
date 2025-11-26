@@ -50,14 +50,14 @@
         <section class="main__classlist">
             <h2>時間割</h2>
             <img src="" alt="時間割画像" id="timetable">
-            <a href="timetable/">過去の時間割など</a>
-            <hr>
-            <p style="color: red;">もし、画像が表示されない場合は、一度<a
-                    href="https://rebecka-unchilled-lisandra.ngrok-free.dev/">こちら</a>にアクセスして<code>Yes, I visit</code>を押してください。</p>
+            <a href="./timetable/">過去の時間割など</a>
         </section>
         <section>
             <h2>サイト概要</h2>
-            <p>水戸一高附属中生に向けた総合ウェブサイトです。主に掲示板や知恵袋サービスを運営しています。<br>更に使いやすいサイトになれるよう、頑張っていきますので、今後ともよろしくお願いします。</p>
+            <p>
+                水戸一高附属中生に向けた総合ウェブサイトです。主に掲示板や知恵袋サービスを運営しています。<br>
+                更に使いやすいサイトになれるよう、頑張っていきますので、今後ともよろしくお願いします。
+            </p>
         </section>
         <section class="highlight">
             <h2>スパムについて</h2>
@@ -71,7 +71,21 @@
                 サイトに関する要望があれば
                 <a href="mailto:yamamoto.yuujirou@mito1-h.ibk.ed.jp?subject=ウェブサイトについての要望&body=要望の内容:%0D%0A%0D%0A不具合の報告の場合は以下の情報もご記入ください。%0D%0A- 使用端末（例: Windows PC, iPad, スマートフォンなど）%0D%0A- 使用ブラウザ（例: Chrome, Safari, Edgeなど）%0D%0A- 発生日時（例: 2025年2月28日 14:30頃）%0D%0A- スクリーンショットなどがあると尚良いです。%0D%0A- 不具合の詳細な説明:"
                     target="_blank" rel="noopener noreferrer">yamamoto.yuujirou@mito1-h.ibk.ed.jp</a>
-                まで
+                もしくは以下のフォームまで
+            </p>
+            <hr>
+            <h3><a href="https://docs.google.com/forms/d/e/1FAIpQLSda7T_NJjbBKJkGJ839RP9A4gn1P7QEO5XnTq13EJshxgjxTA/viewform"
+                    target="_blank" rel="noopener noreferrer">バグ報告フォーム</a></h3>
+            <iframe
+                src="https://docs.google.com/forms/d/e/1FAIpQLSda7T_NJjbBKJkGJ839RP9A4gn1P7QEO5XnTq13EJshxgjxTA/viewform?embedded=true"
+                width="90%" height="924" frameborder="0" marginheight="0" marginwidth="0">読み込んでいます…</iframe>
+        </section>
+        <section>
+            <h2>About Us</h2>
+            <p>
+                水戸一高附属中総合ウェブサイトでは、附属中生徒が利用しやすく、学習や生活面での課題を解決できるようなサイトを目指して、日々開発に励んでいます。<br>
+                主に2Aの有志で運営しており、主に時間割の配信や掲示板、質問箱などのサービスを展開しています。<br>
+                現在人手が大変足りていない状況なので、サイト運営に興味がある方はぜひメールなどでお知らせください！
             </p>
         </section>
     </main>
@@ -121,13 +135,16 @@
             const token = btoa(`${user}:${pass}`);
             return {
                 Authorization: `Basic ${token}`,
-                'ngrok-skip-browser-warning': 'true',
+                'bypass-tunnel-reminder': 'true',
                 'User-Agent': 'CustomClient/1.0',
             };
         }
 
         async function updateLatestImage(baseUrl = 'https://mito1-website.loca.lt/') {
             const imgEl = document.getElementById('timetable');
+
+            imgEl.style.display = 'none';
+            imgEl.insertAdjacentHTML('afterend', "<span>読み込み中…</span>");
 
             try {
                 const res = await fetch(baseUrl, {
@@ -191,6 +208,9 @@
                 imgEl.style.objectPosition = "left top";
                 imgEl.style.display = "block";
                 imgEl.style.cursor = "pointer";
+
+                imgEl.style.display = 'block';
+                wrapper.nextElementSibling.remove();
 
                 console.info('最新画像を更新:', latest.filename);
 
