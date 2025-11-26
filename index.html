@@ -99,21 +99,16 @@
     </footer>
 
     <script>
-        // 要素取得
         const imgEl = document.getElementById('timetable');
 
-        // ファイル名パターン：年月日-時分秒-インデックス.jpg
         const FILENAME_RE = /(\d{6,8})-(\d{6})-(\d+)\.jpg$/i;
 
-        /**
-         * ファイル名から Date とインデックスを抽出
-         */
         function parseFilename(filename) {
             const m = filename.match(FILENAME_RE);
             if (!m) return null;
 
             let [, datePart, timePart, indexPart] = m;
-            if (datePart.length === 6) datePart = '20' + datePart; // YYMMDD → YYYYMMDD 補正
+            if (datePart.length === 6) datePart = '20' + datePart;
 
             const y = datePart.slice(0, 4);
             const mo = datePart.slice(4, 6);
@@ -128,102 +123,107 @@
             return { date, index: Number(indexPart) };
         }
 
-        /**
-         * Basic認証＋ngrokスキップヘッダー付きfetch
-         */
-        function makeHeaders(user, pass) {
-            const token = btoa(`${user}:${pass}`);
-            return {
-                Authorization: `Basic ${token}`,
-                'bypass-tunnel-reminder': 'true',
-                'User-Agent': 'CustomClient/1.0',
-            };
-        }
-
-        async function updateLatestImage(baseUrl = 'https://mito1-website.loca.lt/') {
+        function updateLatestImage(baseUrl) {
+            baseUrl = baseUrl || 'https://mito1-website.loca.lt/';
             const imgEl = document.getElementById('timetable');
 
             imgEl.style.display = 'none';
             imgEl.insertAdjacentHTML('afterend', "<span>読み込み中…</span>");
 
-            try {
-                const res = await fetch(baseUrl, {
-                    cache: 'no-store',
-                    headers: makeHeaders('talus', 'talus'),
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", baseUrl, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState !== 4) return;
+
+                if (xhr.status !== 200) {
+                    console.error("一覧取得失敗:", xhr.status);
+                    return;
+                }
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(xhr.responseText, 'text/html');
+                const anchors = Array.prototype.slice.call(doc.querySelectorAll('a[href]'));
+
+                const candidates = anchors.map(function (a) {
+                    const href = a.getAttribute('href');
+                    if (!href) return null;
+
+                    const filename = href.split('/').pop();
+                    const m = filename.match(FILENAME_RE);
+                    if (!m) return null;
+
+                    const [, datePartRaw, timePart, indexPart] = m;
+                    const datePart = datePartRaw.length === 6 ? '20' + datePartRaw : datePartRaw;
+
+                    const y = datePart.slice(0, 4);
+                    const mo = datePart.slice(4, 6);
+                    const d = datePart.slice(6, 8);
+                    const hh = timePart.slice(0, 2);
+                    const mm = timePart.slice(2, 4);
+                    const ss = timePart.slice(4, 6);
+
+                    const date = new Date(`${y}-${mo}-${d}T${hh}:${mm}:${ss}Z`);
+                    return {
+                        url: (new URL(href, baseUrl)).href,
+                        filename: filename,
+                        date: date,
+                        index: Number(indexPart),
+                    };
+                }).filter(Boolean).sort(function (a, b) {
+                    return (b.date - a.date) || (b.index - a.index);
                 });
 
-                if (!res.ok) throw new Error(`一覧取得失敗: ${res.status}`);
-
-                const text = await res.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(text, 'text/html');
-                const anchors = Array.from(doc.querySelectorAll('a[href]'));
-
-                const candidates = anchors
-                    .map(a => {
-                        const href = a.getAttribute('href');
-                        if (!href) return null;
-                        const filename = href.split('/').pop();
-                        const m = filename.match(FILENAME_RE);
-                        if (!m) return null;
-                        const [, datePartRaw, timePart, indexPart] = m;
-                        const datePart = datePartRaw.length === 6 ? '20' + datePartRaw : datePartRaw;
-                        const y = datePart.slice(0, 4);
-                        const mo = datePart.slice(4, 6);
-                        const d = datePart.slice(6, 8);
-                        const hh = timePart.slice(0, 2);
-                        const mm = timePart.slice(2, 4);
-                        const ss = timePart.slice(4, 6);
-                        const date = new Date(`${y}-${mo}-${d}T${hh}:${mm}:${ss}Z`);
-                        return { url: new URL(href, baseUrl).href, filename, date, index: Number(indexPart) };
-                    })
-                    .filter(Boolean)
-                    .sort((a, b) => b.date - a.date || b.index - a.index);
-
-                if (candidates.length === 0) throw new Error('jpgファイルが見つかりませんでした。');
+                if (candidates.length === 0) {
+                    console.error("jpgファイルが見つかりません");
+                    return;
+                }
 
                 const latest = candidates[0];
-                const imgRes = await fetch(latest.url, { headers: makeHeaders('talus', 'talus') });
-                if (!imgRes.ok) throw new Error(`画像取得失敗: ${imgRes.status}`);
 
-                const blob = await imgRes.blob();
-                imgEl.src = URL.createObjectURL(blob);
-                imgEl.alt = latest.filename;
+                const xhrImg = new XMLHttpRequest();
+                xhrImg.open("GET", latest.url, true);
+                xhrImg.responseType = "blob";
+                xhrImg.onreadystatechange = function () {
+                    if (xhrImg.readyState !== 4) return;
 
-                // 親コンテナを作成（画像の見える範囲を制限）
-                const wrapper = document.createElement('div');
-                imgEl.parentNode.insertBefore(wrapper, imgEl);
-                wrapper.appendChild(imgEl);
+                    if (xhrImg.status !== 200) {
+                        console.error("画像取得失敗:", xhrImg.status);
+                        return;
+                    }
 
-                // 親コンテナ側の設定（ここが表示範囲になる）
-                wrapper.style.width = "calc(100% - 2rem)";      // 横の半分（=左上1/4用）
-                wrapper.style.aspectRatio = "4 / 3"; // 4:3比率固定
-                wrapper.style.overflow = "hidden";
-                wrapper.style.position = "relative";
-                wrapper.style.borderRadius = "8px";
+                    const blobURL = URL.createObjectURL(xhrImg.response);
+                    imgEl.src = blobURL;
+                    imgEl.alt = latest.filename;
 
-                // 画像側の設定
-                imgEl.style.width = "calc(200% + 20px)";
-                imgEl.style.objectFit = "cover";
-                imgEl.style.objectPosition = "left top";
-                imgEl.style.display = "block";
-                imgEl.style.cursor = "pointer";
+                    const wrapper = document.createElement('div');
+                    imgEl.parentNode.insertBefore(wrapper, imgEl);
+                    wrapper.appendChild(imgEl);
 
-                imgEl.style.display = 'block';
-                wrapper.nextElementSibling.remove();
+                    wrapper.style.width = "calc(100% - 2rem)";
+                    wrapper.style.aspectRatio = "4 / 3";
+                    wrapper.style.overflow = "hidden";
+                    wrapper.style.position = "relative";
+                    wrapper.style.borderRadius = "8px";
 
-                console.info('最新画像を更新:', latest.filename);
+                    imgEl.style.width = "calc(200% + 20px)";
+                    imgEl.style.objectFit = "cover";
+                    imgEl.style.objectPosition = "left top";
+                    imgEl.style.display = "block";
+                    imgEl.style.cursor = "pointer";
 
-            } catch (err) {
-                console.error('画像更新エラー:', err);
-            }
+                    imgEl.style.display = 'block';
+                    wrapper.nextElementSibling.remove();
+
+                    console.info("最新画像を更新:", latest.filename);
+                };
+                xhrImg.send();
+            };
+            xhr.send();
         }
 
-        // ページ読み込み時に1回実行
         updateLatestImage();
 
-        // ★ クリックで全体表示する処理
-        imgEl.addEventListener('click', () => {
+        imgEl.addEventListener('click', function () {
             const fullView = document.createElement('div');
             fullView.style.position = 'fixed';
             fullView.style.top = 0;
@@ -247,8 +247,7 @@
             fullView.appendChild(img);
             document.body.appendChild(fullView);
 
-            // クリックで閉じる
-            fullView.addEventListener('click', () => {
+            fullView.addEventListener('click', function () {
                 fullView.remove();
             });
         });

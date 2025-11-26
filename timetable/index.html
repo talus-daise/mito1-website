@@ -63,10 +63,8 @@
         </section>
         <section>
             <h2>過去の時間割一覧</h2>
-            <label for="search-box">検索：<input type="text" id="search-box" placeholder="時間割を検索..."></label>
+            <label for="search-box">検索：<input type="text" id="search-box" placeholder="時間割をファイル名から検索..."></label>
             <button id="search-btn">検索</button>
-            <button id="search-help" class="help-button"><i class="fa-solid fa-circle-question"></i></button>
-            <p>※自動生成のため、実際とは違う日付になっている可能性があります。現在修正中ですので少々お待ちください。</p>
             <div id="past-timetable"></div>
         </section>
         <section>
@@ -143,6 +141,7 @@
                         timetable.src = blobURL;
                         timetable.alt = "最新の時間割画像 (" + latestFile + ")";
                         timetable.style.display = "block";
+                        timetable.style.width = "calc(100% - 2rem)"
                         timetable.nextElementSibling.remove();
                     }
                 });
@@ -150,8 +149,12 @@
                 const list = document.createElement("div");
                 const pastTimetable = document.getElementById("past-timetable");
                 const progress = document.createElement("p");
-                progress.textContent = "処理中…";
+                progress.textContent = "0% / 100% 処理中…";
+                const progressBar = document.createElement("progress");
+                progressBar.value = 0;
+                progressBar.max = 100;
                 pastTimetable.appendChild(progress);
+                pastTimetable.appendChild(progressBar);
 
                 const otherFiles = files.slice(1);
                 let index = 0;
@@ -171,11 +174,7 @@
                             const blobURL = URL.createObjectURL(blob);
 
                             const li = document.createElement("div");
-
-                            const name = document.createElement("span");
-                            name.textContent = file;
-                            name.style.fontWeight = "bold";
-                            name.style.marginBottom = "4px";
+                            li.style.width = "fit-content"
 
                             const link = document.createElement("a");
                             link.href = blobURL;
@@ -211,12 +210,13 @@
                             imgWrapper.appendChild(img);
                             imgWrapper.appendChild(filelabel);
                             link.appendChild(imgWrapper);
-                            li.appendChild(name);
                             li.appendChild(link);
                             list.appendChild(li);
                         }
 
                         index++;
+                        progress.textContent = `${Math.floor((index / otherFiles.length) * 100)}% / 100% 処理中…`;
+                        progressBar.value = Math.floor((index / otherFiles.length) * 100);
                         processNext();
                     });
                 }
