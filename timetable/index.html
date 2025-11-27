@@ -34,7 +34,6 @@
     <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    <script src="../script/customAlert.js" type="module"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!--マニフェスト-->
@@ -69,8 +68,9 @@
         </section>
         <section>
             <h2>サーバーの稼働状況</h2>
-            <p>状態: <span id="server-state"></span></p>
-            <p></p>
+            <p id="server-state"></p>
+            <hr>
+            <p>5分ごとにサーバーを監視し、エラーが起きた場合は再起動しています。</p>
         </section>
     </main>
 
@@ -86,145 +86,149 @@
         timetable.style.display = "none";
         timetable.insertAdjacentHTML("afterend", "<span>読み込み中…</span>");
 
-        (function () {
+        (async () => {
             const container = document.getElementById("past-timetable");
-            const baseURL = "https://mito1-website.loca.lt/";
+            const baseURL = "https://mito1-website.loca.lt/files/";
+            const timetable = document.getElementById("timetable");
 
-            function get(url, callback) {
-                const xhr = new XMLHttpRequest();
-                xhr.open("GET", url, true);
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState === 4) {
-                        callback(xhr.status, xhr.responseText);
-                    }
-                };
-                xhr.send();
+            // 進捗表示用要素作成
+            const progress = document.createElement("p");
+            progress.textContent = "0% / 100% 処理中…";
+            const progressBar = document.createElement("progress");
+            progressBar.value = 0;
+            progressBar.max = 100;
+            container.appendChild(progress);
+            container.appendChild(progressBar);
+
+            async function fetchBlob(url) {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+                const blob = await res.blob();
+                return URL.createObjectURL(blob);
             }
 
-            function getBlob(url, callback) {
-                const xhr = new XMLHttpRequest();
-                xhr.open("GET", url, true);
-                xhr.responseType = "blob";
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState === 4) {
-                        callback(xhr.status, xhr.response);
-                    }
-                };
-                xhr.send();
-            }
+            try {
+                const res = await fetch(baseURL + "images.json");
+                const data = await res.json();
+                const files = data.files.slice().sort().reverse();
 
-            get(baseURL, function (status, html) {
-                if (status !== 200) {
-                    container.textContent = "画像一覧の取得に失敗しました。";
-                    return;
-                }
-
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, "text/html");
-                const links = [].slice.call(doc.querySelectorAll("a[href$='.jpg']"));
-
-                if (links.length === 0) {
+                if (!files.length) {
                     container.textContent = "画像が見つかりません。";
                     return;
                 }
 
-                const files = links.map(function (a) {
-                    return a.getAttribute("href");
-                }).sort().reverse();
-
+                // 最新画像表示
                 const latestFile = files[0];
-                const latestFileURL = baseURL + latestFile.replace(/^\//, "");
+                timetable.src = await fetchBlob(baseURL + latestFile);
+                timetable.alt = "最新の時間割画像 (" + latestFile + ")";
+                timetable.style.display = "block";
+                timetable.style.width = "calc(100% - 2rem)";
+                if (timetable.nextElementSibling) timetable.nextElementSibling.remove();
 
-                getBlob(latestFileURL, function (st, blob) {
-                    if (st === 200) {
-                        const blobURL = URL.createObjectURL(blob);
-                        timetable.src = blobURL;
-                        timetable.alt = "最新の時間割画像 (" + latestFile + ")";
-                        timetable.style.display = "block";
-                        timetable.style.width = "calc(100% - 2rem)"
-                        timetable.nextElementSibling.remove();
-                    }
-                });
-
+                // 過去画像リスト表示
                 const list = document.createElement("div");
-                const pastTimetable = document.getElementById("past-timetable");
-                const progress = document.createElement("p");
-                progress.textContent = "0% / 100% 処理中…";
-                const progressBar = document.createElement("progress");
-                progressBar.value = 0;
-                progressBar.max = 100;
-                pastTimetable.appendChild(progress);
-                pastTimetable.appendChild(progressBar);
-
+                const frag = document.createDocumentFragment();
                 const otherFiles = files.slice(1);
-                let index = 0;
 
-                function processNext() {
-                    if (index >= otherFiles.length) {
-                        container.innerHTML = "";
-                        container.appendChild(list);
-                        return;
-                    }
+                for (let i = 0; i < otherFiles.length; i++) {
+                    const file = otherFiles[i];
+                    const blobURL = await fetchBlob(baseURL + file);
 
-                    const file = otherFiles[index];
-                    const fileURL = baseURL + file.replace(/^\//, "");
+                    const link = document.createElement("a");
+                    link.href = blobURL;
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
 
-                    getBlob(fileURL, function (st, blob) {
-                        if (st === 200) {
-                            const blobURL = URL.createObjectURL(blob);
+                    const imgWrapper = document.createElement("div");
+                    imgWrapper.style.cssText = "display:block; margin-bottom:12px; cursor:pointer; position:relative; width:fit-content;";
 
-                            const li = document.createElement("div");
-                            li.style.width = "fit-content"
+                    const img = document.createElement("img");
+                    img.src = blobURL;
+                    img.alt = file;
+                    img.loading = "lazy";
+                    img.style.cssText = "max-width:300px; display:block; border-radius:8px; margin-bottom:12px";
 
-                            const link = document.createElement("a");
-                            link.href = blobURL;
-                            link.target = "_blank";
-                            link.rel = "noopener noreferrer";
+                    const filelabel = document.createElement("span");
+                    filelabel.textContent = file;
+                    filelabel.style.cssText = "position:absolute; top:0; right:0; background:rgba(0,0,0,0.6); color:#fff; font-size:10px; padding:2px 4px; border-bottom-left-radius:4px";
 
-                            const imgWrapper = document.createElement("div");
-                            imgWrapper.style.display = "block";
-                            imgWrapper.style.marginBottom = "12px";
-                            imgWrapper.style.cursor = "pointer";
-                            imgWrapper.style.position = "relative";
+                    imgWrapper.appendChild(img);
+                    imgWrapper.appendChild(filelabel);
+                    link.appendChild(imgWrapper);
+                    frag.appendChild(link);
 
-                            const img = document.createElement("img");
-                            img.src = blobURL;
-                            img.alt = file;
-                            img.loading = "lazy";
-                            img.style.maxWidth = "300px";
-                            img.style.display = "block";
-                            img.style.borderRadius = "8px";
-                            img.style.marginBottom = "12px";
-
-                            const filelabel = document.createElement("span");
-                            filelabel.textContent = file;
-                            filelabel.style.position = "absolute";
-                            filelabel.style.top = "0";
-                            filelabel.style.right = "0";
-                            filelabel.style.backgroundColor = "rgba(0,0,0,0.6)";
-                            filelabel.style.color = "#fff";
-                            filelabel.style.fontSize = "10px";
-                            filelabel.style.padding = "2px 4px";
-                            filelabel.style.borderBottomLeftRadius = "4px";
-
-                            imgWrapper.appendChild(img);
-                            imgWrapper.appendChild(filelabel);
-                            link.appendChild(imgWrapper);
-                            li.appendChild(link);
-                            list.appendChild(li);
-                        }
-
-                        index++;
-                        progress.textContent = `${Math.floor((index / otherFiles.length) * 100)}% / 100% 処理中…`;
-                        progressBar.value = Math.floor((index / otherFiles.length) * 100);
-                        processNext();
-                    });
+                    // 進捗更新
+                    const percent = Math.floor(((i + 1) / otherFiles.length) * 100);
+                    progress.textContent = `${percent}% / 100% 処理中…`;
+                    progressBar.value = percent;
                 }
 
-                processNext();
-            });
+                list.appendChild(frag);
+                container.innerHTML = "";
+                container.appendChild(list);
+
+            } catch (e) {
+                container.textContent = "画像一覧の取得に失敗しました。";
+                console.error(e);
+            }
         })();
 
+        // ▼ server-state.json を読み込み、状態とルートアクセス結果を表示
+        (function () {
+            const stateSpan = document.getElementById("server-state");
+            const stateURL = "https://mito1-website.loca.lt/files/server-state.json";
+            const rootURL = "https://mito1-website.loca.lt/";
+
+            Promise.all([
+                fetch(stateURL).then(res => res.json()).catch(() => null),
+                fetch(rootURL, { method: "GET" })
+                    .then(r => ({ ok: true, status: r.status, statusText: r.statusText }))
+                    .catch(err => ({ ok: false, error: err.toString() }))
+            ])
+                .then(([data, rootStatus]) => {
+                    const results = [];
+
+                    // ▼ server-state.json 側
+                    if (!data || !Array.isArray(data.services)) {
+                        results.push("server-state.json: 取得失敗");
+                    } else {
+                        const svcTexts = data.services.map(svc => {
+                            const name = svc.name || "unknown";
+                            const active = svc.ActiveState || "unknown";
+                            let dispname = name;
+
+                            switch (name) {
+                                case "update-timetable":
+                                    dispname = '時間割取得プログラム';
+                                    break;
+                                case "update_timetable":
+                                    dispname = '時間割公開プログラム';
+                                    break;
+                                case 'update-timetable-tunnel':
+                                    dispname = 'サーバートンネルプログラム';
+                                    break;
+                            }
+
+                            return `${dispname}: ${active}`;
+                        });
+                        results.push(...svcTexts);
+                    }
+
+                    // ▼ ルート URL のステータス
+                    if (rootStatus.ok) {
+                        results.push(`サーバー状況: ${rootStatus.status} ${rootStatus.statusText}`);
+                    } else {
+                        results.push(`サーバー状況: エラー (${rootStatus.error})`);
+                    }
+
+                    stateSpan.innerHTML = results.join("<br>");
+                })
+                .catch(() => {
+                    stateSpan.textContent = "取得失敗";
+                });
+        })();
+
+        // 検索
         document.getElementById("search-btn").addEventListener("click", function () {
             const query = document.getElementById("search-box").value.trim().toLowerCase();
             const pastTimetable = document.getElementById("past-timetable");
@@ -242,14 +246,29 @@
             }
         });
 
-        document.getElementById("search-help").addEventListener("click", function () {
-            showCustomAlert(
-                "<b>検索機能のヒント</b><br>" +
-                "・キーワードは部分一致で検索されます。<br>" +
-                "・時間割画像は前日に更新されることが多いです。<br>" +
-                "・ファイル名は更新日時なので、日付で検索すると見つかる場合があります。<br>" +
-                "・形式は YYYYMMDD-hhmmss-index.jpg です。"
-            );
+        const isPageVisited = localStorage.getItem("isPageVisited");
+
+        document.addEventListener("DOMContentLoaded", () => {
+            if (isPageVisited === null) {
+                const sect = document.createElement("section");
+                sect.classList.add("highlight");
+
+                const h2 = document.createElement("h2");
+                h2.textContent = "注意";
+
+                const p = document.createElement("p");
+                p.innerHTML =
+                    "時間割が見られないときは、以下の手順を踏んだ上、再読込してください。<br>" +
+                    "1. <a href='https://mito1-website.loca.lt/' target='_blank' rel='noopener noreferrer'>このリンク</a>に飛ぶ<br>" +
+                    "2. パスワード欄に`106.73.192.65`を入力する<br>" +
+                    "3. submitを押す<br>" +
+                    "4. ファイル一覧が表示されたら成功→名簿と時間割が表示されるようになります。";
+
+                sect.append(h2, p);
+                document.querySelector("main").insertAdjacentElement("afterbegin", sect);
+
+                localStorage.setItem("isPageVisited", "true");
+            }
         });
     </script>
     <script type="module" src="../script/notice/notice.js"></script>

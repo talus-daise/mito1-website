@@ -1,6 +1,6 @@
 let names = [];
 
-fetch("/mito1-website/names.json")
+fetch("https://mito1-website.loca.lt/files/names.json")
     .then(response => response.json())
     .then(data => {
         // dataがオブジェクトの場合、全クラスを統合
