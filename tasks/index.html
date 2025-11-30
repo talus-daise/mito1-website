@@ -34,7 +34,7 @@
     <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    
+
     <!--マニフェスト-->
     <link rel="manifest" href="../manifest.json">
 </head>
@@ -66,7 +66,15 @@
         <section>
             <h2>課題を追加</h2>
             <form id="taskForm">
-                <input type="text" id="grade-class" placeholder="学年・クラス 例）2A" required><br>
+                <select id="grade-class" required>
+                    <option value="">選択してください</option>
+                    <option value="1A">1A</option>
+                    <option value="1B">1B</option>
+                    <option value="2A">2A</option>
+                    <option value="2B">2B</option>
+                    <option value="3A">3A</option>
+                    <option value="3B">3B</option>
+                </select><br>
                 <input type="text" id="title" placeholder="課題名" required><br>
                 <input type="date" id="deadline" required><br>
                 <input type="text" id="description" placeholder="課題内容" required><br>
@@ -170,7 +178,8 @@
 
     <footer>
         <p>&copy; 2025 talus</p>
-        <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意<a href="../math/2equation/">くだ</a><a href="../math/quadratic/">さい。</a></p>
+        <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意<a href="../math/2equation/">くだ</a><a
+                href="../math/quadratic/">さい。</a></p>
         <p><a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
         </p>
     </footer>
@@ -204,7 +213,7 @@
             }
 
             document.getElementById("taskForm").reset();
-            showCustomAlert("課題が追加されました！");
+            showCustomNotification("課題が追加されました！");
             loadTasks(); // 課題を再読み込み
         });
 
@@ -255,11 +264,9 @@
                 .select("*")
                 .order("deadline", { ascending: true });
 
-            console.log(data);
-
             if (error) {
                 console.error("データ取得エラー:", error);
-                showCustomAlert("課題の取得に失敗しました");
+                showCustomNotification("課題の取得に失敗しました");
                 return;
             }
 
@@ -267,17 +274,26 @@
 
             for (const task of data) {
                 const deadlineDate = new Date(task.deadline);
+
+                // 期限切れなら削除
+                if (deadlineDate < now) {
+                    const { error: deleteError } = await supabase
+                        .from("tasks")
+                        .delete()
+                        .eq("id", task.id);
+
+                    if (deleteError) {
+                        console.error("期限切れタスク削除エラー:", deleteError);
+                    }
+                    continue; // 次のタスクへ
+                }
+
                 const row = document.createElement("tr");
                 row.innerHTML = `<td>${task.gradeClass}</td>
-                                 <td>${task.title}</td>
-                                 <td>${task.deadline}</td>
-                                 <td>${task.description}</td>
-                                 <td>${task.notes}</td>`;
-
-                // 期限切れのタスクは赤くする
-                if (deadlineDate < now) {
-                    row.style.color = "red";
-                }
+                         <td>${task.title}</td>
+                         <td>${task.deadline}</td>
+                         <td>${task.description}</td>
+                         <td>${task.notes}</td>`;
 
                 if (taskTables[task.gradeClass]) {
                     taskTables[task.gradeClass].appendChild(row);
@@ -364,7 +380,9 @@
     </script>
     <script type="module" src="../script/notice/notice.js"></script>
     <script src="../script/customAlert.js" type="module"></script>
-    
+    <script type="module" src="../script/restriction.js"></script>
+    <script type="module" src="../script/notification.js"></script>
+    <script type="module" src="../script/notification.js"></script>
     <script src="../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

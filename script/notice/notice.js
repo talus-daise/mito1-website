@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         if (error) {
             console.error(error);
-            alert("ログインに失敗しました。");
+            showCustomNotification("ログインに失敗しました。");
         }
     });
 
@@ -126,7 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 email.endsWith(".ibk.ed.jp");
 
             if (!allowed) {
-                alert("このメールアドレスのドメインではログインできません。");
+                showCustomNotification("このメールアドレスのドメインではログインできません。");
                 await pd.auth.signOut();
                 userInfo.textContent = "";
                 loginBtn.style.display = "inline-block";

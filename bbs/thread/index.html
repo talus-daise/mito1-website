@@ -144,7 +144,7 @@
                     const content = parseMarkdown(document.getElementById("content").value.trim());
 
                     if (!title || !content) {
-                        alert("タイトルと内容を入力してください。");
+                        showCustomNotification("タイトルと内容を入力してください。");
                         return;
                     }
 
@@ -159,7 +159,7 @@
 
                     if (error) {
                         console.error(error);
-                        alert("投稿に失敗しました。");
+                        showCustomNotification("投稿に失敗しました。");
                         return;
                     }
 
@@ -171,7 +171,7 @@
                 usernameInput.placeholder = "ログインしていません";
                 postForm.addEventListener("submit", (e) => {
                     e.preventDefault();
-                    alert("ログインしてから投稿してください。");
+                    showCustomAlert("ログインしてから投稿してください。", false);
                 });
             }
 
@@ -326,6 +326,8 @@
 
     <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
+    <script type="module" src="../../script/restriction.js"></script>
+    <script type="module" src="../../script/notification.js"></script>
     <script src="../../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

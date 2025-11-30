@@ -65,7 +65,6 @@
             <div class="stats">
                 <p><i class="fa-solid fa-door-open" title="訪問回数"></i> <span id="visit-count">0</span></p>
                 <p><i class="fa-solid fa-pencil" title="投稿回数"></i> <span id="post-count">0</span></p>
-                <p>(2025年10月22日以降)</p>
             </div>
         </section>
 
@@ -104,7 +103,7 @@
         // Googleログインしているユーザーを取得
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            alert("ログインしてください");
+            showCustomAlert("ログインしてください", false);
         }
 
         const userEmail = user.email;
@@ -143,10 +142,10 @@
             const { error } = await supabase.auth.signOut();
             if (error) {
                 console.error(error);
-                alert("ログアウトに失敗しました。");
+                showCustomNotification("ログアウトに失敗しました。");
                 return;
             }
-            alert("ログアウトしました。");
+            showCustomNotification("ログアウトしました。");
             window.location.href = "../";
         });
 
@@ -176,11 +175,30 @@
                 console.error("Error fetching names.json:", error);
             });
 
+        let disprole;
+        switch(updatedUser.role) {
+            case "master":
+                disprole = "マスター";
+                break;
+            case "admin":
+                disprole = "管理者";
+                break;
+            case "manager":
+                disprole = "コンテンツ管理者";
+                break;
+            case "request_music_manager":
+                disprole = "リクエスト曲管理者";
+                break;
+            default:
+                disprole = "通常ユーザー";
+                break;
+        }
+
         document.getElementById("user-avatar").src = user.user_metadata.avatar_url || "../img/default-avatar.png";
         document.getElementById("user-name").textContent = user.user_metadata.full_name || "ゲスト";
         document.getElementById("user-email").textContent = textMosaic(userEmail);
         document.getElementById("display-name").textContent = updatedUser.display_name || "とある水戸一の名無し";
-        document.getElementById("user-role").textContent = updatedUser.role;
+        document.getElementById("user-role").textContent = disprole;
         document.getElementById("visit-count").textContent = updatedUser.visit_count;
         document.getElementById("post-count").textContent = updatedUser.post_count;
         document.getElementById("my-page-link").href = `./other/?user_id=${encodeURIComponent(updatedUser.user_id)}`;
@@ -249,12 +267,12 @@
 
             if (dupErr) {
                 console.error(dupErr);
-                alert("表示名の確認中にエラーが発生しました。後でもう一度お試しください。");
+                showCustomNotification("表示名の確認中にエラーが発生しました。後でもう一度お試しください。");
                 return;
             }
 
             if (duplicate && duplicate.user_email && duplicate.user_email !== userEmail) {
-                alert("この表示名は既に使われています。別の表示名を選んでください。");
+                showCustomNotification("この表示名は既に使われています。別の表示名を選んでください。");
                 return;
             }
             const { data: existingUser } = await supabase
@@ -269,9 +287,9 @@
                     .eq("user_email", userEmail);
 
                 document.getElementById("display-name").textContent = newDisplayName;
-                alert("表示名を更新しました。");
+                showCustomNotification("表示名を更新しました。");
             } else {
-                alert("無効な表示名です。20文字以内で入力してください。");
+                showCustomNotification("無効な表示名です。20文字以内で入力してください。");
             }
         });
 
@@ -281,6 +299,8 @@
     </script>
     <script type="module" src="../script/notice/notice.js"></script>
     <script src="../script/customAlert.js" type="module"></script>
+    <script type="module" src="../script/restriction.js"></script>
+    <script type="module" src="../script/notification.js"></script>
     <script src="../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

@@ -5,7 +5,7 @@
     <!--文字コード・互換モード-->
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
-    <title>リクエスト曲 | R7年度2学年総合ウェブサイト</title>
+    <title>リクエスト曲 | 水戸一高附属中総合ウェブサイト</title>
     <!--ビューポート-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!--css-->
@@ -43,14 +43,14 @@
     <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    
+
     <!--マニフェスト-->
     <link rel="manifest" href="../manifest.json">
 </head>
 
 <body>
     <header>
-        <h1><a href="../">R7年度2学年総合ウェブサイト</a></h1>
+        <h1><a href="../">水戸一高附属中総合ウェブサイト</a></h1>
         <p class="header__breadcrumb">
             <a href="../"><i class="fa-solid fa-house"></i>トップページ</a>
             <a href="./"><i class="fa-solid fa-music"></i>リクエスト曲一覧</a>
@@ -80,34 +80,6 @@
                 <div id="todayMusic"></div>
             </div>
         </section>
-        <section>
-            <h2>曲一覧</h2>
-            <p>これまでに<b>1B</b>で放送したリクエスト曲一覧です。</p>
-            <ul>
-                <li><a href="detail/?date=2024-12-18">2024-12-18</a></li>
-                <li><a href="detail/?date=2025-01-08">2025-01-08</a></li>
-                <li><a href="detail/?date=2025-01-09">2025-01-09</a></li>
-                <li><a href="detail/?date=2025-01-17">2025-01-17</a></li>
-                <li><a href="detail/?date=2025-01-23">2025-01-23</a></li>
-                <li><a href="detail/?date=2025-01-24">2025-01-24</a></li>
-                <li><a href="detail/?date=2025-01-27">2025-01-27</a></li>
-                <li><a href="detail/?date=2025-01-29">2025-01-29</a></li>
-                <li><a href="detail/?date=2025-02-05">2025-02-05</a></li>
-                <li><a href="detail/?date=2025-02-06-1">2025-02-06-1</a></li>
-                <li><a href="detail/?date=2025-02-06">2025-02-06</a></li>
-                <li><a href="detail/?date=2025-02-07">2025-02-07</a></li>
-                <li><a href="detail/?date=2025-02-10">2025-02-10</a></li>
-                <li><a href="detail/?date=2025-02-12">2025-02-12</a></li>
-                <li><a href="detail/?date=2025-02-14">2025-02-14</a></li>
-                <li><a href="detail/?date=2025-02-17">2025-02-17</a></li>
-                <li><a href="detail/?date=2025-02-19">2025-02-19</a></li>
-                <li><a href="detail/?date=2025-02-21">2025-02-21</a></li>
-                <li><a href="detail/?date=2025-03-05">2025-03-05</a></li>
-                <li><a href="detail/?date=2025-03-07">2025-03-07</a></li>
-                <li><a href="detail/?date=2025-03-12">2025-03-12</a></li>
-                <li><a href="detail/?date=2025-03-14">2025-03-14</a></li>
-            </ul>
-        </section>
     </main>
 
     <footer>
@@ -117,16 +89,17 @@
         </p>
     </footer>
 
-    
+
     <script src="../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <script type="module">
         import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
         // ===== Supabase 初期化 =====
-        const supabaseUrl = "https://mgsbwkidyxmicbacqeeh.supabase.co";
-        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg";
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        const supabase = createClient(
+            "https://mgsbwkidyxmicbacqeeh.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
+        );
 
         // ===== 要素参照 =====
         const sendForm = document.getElementById("sendRequest");
@@ -134,133 +107,45 @@
         const randomMusicBtn = document.getElementById("randomMusic");
         const todayMusic = document.getElementById("todayMusic");
         const todayMusicList = document.createElement("div");
-
         let musicData = [];
 
-        // ===== 楽曲送信 =====
-        sendForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            if (localStorage.getItem("lastRequestMusicDate")) {
-                const lastDate = new Date(localStorage.getItem("lastRequestMusicDate"));
-                const now = new Date();
-                const lastMonday = new Date(now);
-                lastMonday.setDate(now.getDate() - now.getDay() + 1); // 月曜始まりの週の月曜日を取得
-
-                if (lastDate < lastMonday) {
-                    localStorage.setItem("weekofRequestMusicNumber", "0");
-                }
-            }
-
-            if (localStorage.getItem("weekofRequestMusicNumber") >= "5") {
-                showCustomAlert("今週のリクエスト曲の上限に達しました。");
-                return;
-            }
-
-            const studentId = document.getElementById("studentId").value.trim();
-            const musicName = document.getElementById("musicName").value.trim();
-            const url = document.getElementById("musicUrl").value.trim();
-            const desc = document.getElementById("description").value.trim();
-
-            if (!studentId || !musicName || !url) {
-                showCustomAlert("正しく入力してください");
-                return;
-            }
-
-            if (!(url.includes("watch?v=") || url.includes("youtu.be/"))) {
-                showCustomAlert("正しく入力してください");
-                return;
-            }
-            // 存在確認
-            const { data: existingData, error: existingError } = await supabase
-                .from("request-music")
-                .select("*")
-                .or(`musicName.eq.${musicName},url.eq.${url}`);
-
-            if (existingError) {
-                showCustomAlert("確認中にエラーが発生しました：" + existingError.message);
-                console.error(existingError);
-                return;
-            }
-
-            if (existingData && existingData.length > 0) {
-                showCustomAlert("この曲はすでにリクエストされています。");
-                return;
-            }
-            // Supabase に送信
-            const { error } = await supabase.from("request-music").insert([
-                { studentId, musicName, url, desc }
-            ]);
-
-            if (error) {
-                showCustomAlert("送信に失敗しました：" + error.message);
-                console.error(error);
-            } else {
-                showCustomAlert("送信しました！");
-                sendForm.reset();
-                getTodayMusic();
-                localStorage.setItem("weekofRequestMusicNumber", String(Number(localStorage.getItem("weekofRequestMusicNumber") || "0") + 1));
-                localStorage.setItem("lastRequestMusicDate", new Date().toISOString());
-            }
-        });
-
-        // ===== 今日の楽曲を取得 =====
-        async function getTodayMusic() {
-            const { data, error } = await supabase
-                .from("request-music")
-                .select("*")
-                .order("musicName", { ascending: true })
-                .eq("isplayed", false);
-
-            if (error) {
-                showCustomAlert("データの取得に失敗しました。");
-                console.error(error);
-                return;
-            }
-
-            musicData = data;
-            todayMusicList.innerHTML = "";
-
-            data.forEach(({ musicName, url, desc }) => {
-                todayMusicList.appendChild(createMusicItem(musicName, url, desc));
-            });
+        // ===== ユーティリティ =====
+        function showNotification(message) {
+            // 実装済みの showCustomNotification を呼ぶ
+            showCustomNotification(message);
         }
 
-        // ===== YouTubeリンク → 埋め込みリンク変換 =====
         function convertEmbedLink(link) {
             let videoId = "";
             if (link.includes("watch?v=")) {
-                const url = new URL(link);
-                videoId = url.searchParams.get("v");
+                videoId = new URL(link).searchParams.get("v");
             } else if (link.includes("youtu.be/")) {
                 videoId = link.split("youtu.be/")[1].split("?")[0];
             }
             return videoId ? `https://www.youtube.com/embed/${videoId}` : "";
         }
 
-        // ===== 楽曲アイテム生成 =====
         function createMusicItem(musicName, url, desc, isOpened = false, isToggleable = false) {
             const div = document.createElement("div");
 
-            // タイトル
             const title = document.createElement("h3");
             title.textContent = musicName;
 
-            // 説明文
             const description = document.createElement("p");
             description.textContent = desc;
 
-            // 動画表示ブロック
             const videoContainer = document.createElement("div");
             const toggleText = document.createElement("p");
             toggleText.textContent = "▼クリックで開く";
             videoContainer.appendChild(toggleText);
 
             const iframe = document.createElement("iframe");
-            iframe.src = convertEmbedLink(url);
-            iframe.setAttribute("frameborder", "0");
-            iframe.setAttribute("allowfullscreen", "");
-            iframe.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen");
+            Object.assign(iframe, {
+                src: convertEmbedLink(url),
+                frameBorder: "0",
+                allowFullscreen: true,
+                allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            });
 
             videoContainer.addEventListener("click", () => {
                 const opened = videoContainer.classList.toggle("show");
@@ -271,15 +156,12 @@
                 if (opened) videoContainer.appendChild(iframe);
             });
 
-            // チェックボックス
             const label = document.createElement("label");
             label.textContent = "再生済み: ";
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
             checkbox.checked = false;
-            if (!isToggleable) {
-                checkbox.disabled = true;
-            }
+            checkbox.disabled = !isToggleable;
             label.appendChild(checkbox);
 
             checkbox.addEventListener("change", async () => {
@@ -289,174 +171,197 @@
                     .eq("musicName", musicName)
                     .eq("url", url);
 
-                if (error) {
-                    showCustomAlert("更新に失敗しました：" + error.message);
-                    console.error(error);
-                } else {
-                    showCustomAlert("更新しました！");
-                }
+                if (error) showNotification("更新に失敗しました：" + error.message);
+                else showNotification("更新しました！");
             });
 
-            // 区切り線
-            const hr = document.createElement("hr");
+            div.append(title, videoContainer, description, label, document.createElement("hr"));
 
-            // 要素まとめ
-            div.appendChild(title);
-            div.appendChild(videoContainer);
-            div.appendChild(description);
-            div.appendChild(label);
-            div.appendChild(hr);
-
-            if (isOpened) {
-                videoContainer.click();
-            }
+            if (isOpened) videoContainer.click();
 
             return div;
         }
 
-        // ===== 「今日の曲」開閉 =====
-        openMusicBtn.addEventListener("click", () => {
-            const isOpen = todayMusic.classList.toggle("open");
-            if (isOpen) {
-                todayMusic.appendChild(todayMusicList);
-            } else {
-                if (todayMusic.contains(todayMusicList)) todayMusic.removeChild(todayMusicList);
-            }
-        });
+        // ===== データ取得 =====
+        async function getTodayMusic() {
+            const { data, error } = await supabase
+                .from("request-music")
+                .select("*")
+                .order("musicName", { ascending: true })
+                .eq("isplayed", false);
 
-        randomMusicBtn.addEventListener("click", () => {
-            const selectedMusic = document.getElementById("selectedMusic");
-            if (musicData.length === 0) {
-                showCustomAlert("データがありません。");
+            if (error) {
+                showNotification("データの取得に失敗しました。");
+                console.error(error);
                 return;
             }
 
-            let count = 0;
-            const intervalId = setInterval(() => {
-                const random = Math.floor(Math.random() * musicData.length);
-                const { musicName, url, desc } = musicData[random];
+            musicData = data;
+            todayMusicList.innerHTML = "";
+            data.forEach(({ musicName, url, desc }) => {
+                todayMusicList.appendChild(createMusicItem(musicName, url, desc));
+            });
+        }
 
+        // ===== 送信処理 =====
+        sendForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const now = new Date();
+            const lastDateStr = localStorage.getItem("lastRequestMusicDate");
+            if (lastDateStr) {
+                const lastDate = new Date(lastDateStr);
+                const lastMonday = new Date(now);
+                lastMonday.setDate(now.getDate() - now.getDay() + 1);
+                if (lastDate < lastMonday) localStorage.setItem("weekofRequestMusicNumber", "0");
+            }
+
+            if ((localStorage.getItem("weekofRequestMusicNumber") || "0") >= "5") {
+                showNotification("今週のリクエスト曲の上限に達しました。");
+                return;
+            }
+
+            const studentId = document.getElementById("studentId").value.trim();
+            const musicName = document.getElementById("musicName").value.trim();
+            const url = document.getElementById("musicUrl").value.trim();
+            const desc = document.getElementById("description").value.trim();
+
+            if (!studentId || !musicName || !url || (!url.includes("watch?v=") && !url.includes("youtu.be/"))) {
+                showNotification("正しく入力してください");
+                return;
+            }
+
+            const { data: existingData, error: existingError } = await supabase
+                .from("request-music")
+                .select("*")
+                .or(`musicName.eq.${musicName},url.eq.${url}`);
+
+            if (existingError) return showNotification("確認中にエラーが発生しました：" + existingError.message);
+            if (existingData && existingData.length > 0) return showNotification("この曲はすでにリクエストされています。");
+
+            const { error } = await supabase.from("request-music").insert([{ studentId, musicName, url, desc }]);
+            if (error) return showNotification("送信に失敗しました：" + error.message);
+
+            showNotification("送信しました！");
+            sendForm.reset();
+            getTodayMusic();
+            localStorage.setItem("weekofRequestMusicNumber", String(Number(localStorage.getItem("weekofRequestMusicNumber") || "0") + 1));
+            localStorage.setItem("lastRequestMusicDate", new Date().toISOString());
+        });
+
+        // ===== ボタン操作 =====
+        openMusicBtn.addEventListener("click", () => {
+            const isOpen = todayMusic.classList.toggle("open");
+            if (isOpen) todayMusic.appendChild(todayMusicList);
+            else if (todayMusic.contains(todayMusicList)) todayMusic.removeChild(todayMusicList);
+        });
+
+        randomMusicBtn.addEventListener("click", () => {
+            if (!musicData.length) return showNotification("データがありません。");
+
+            const selectedMusic = document.getElementById("selectedMusic");
+            let count = 0;
+
+            const intervalId = setInterval(() => {
+                const { musicName, url, desc } = musicData[Math.floor(Math.random() * musicData.length)];
                 selectedMusic.innerHTML = "";
                 selectedMusic.classList.add("open");
                 selectedMusic.appendChild(createMusicItem(musicName, url, desc, true, true));
 
-                count++;
-                if (count >= 20) {
+                if (++count >= 20) {
                     clearInterval(intervalId);
-
-                    const iframe = selectedMusic.querySelector("iframe");
-                    if (iframe) {
-                        // 初期サイズ
-                        Object.assign(iframe.style, {
-                            position: "fixed",
-                            top: "50%",
-                            left: "50%",
-                            width: "200px",
-                            height: "150px",
-                            transform: "translate(-50%, -50%)",
-                            zIndex: "9999",
-                            border: "none"
-                        });
-
-                        // 拡大アニメーション
-                        const startTime = performance.now();
-                        const duration = 500; // 500msで全画面化
-                        const startWidth = 200;
-                        const startHeight = 150;
-                        const targetWidth = window.innerWidth;
-                        const targetHeight = window.innerHeight;
-
-                        function expandAnimation(now) {
-                            const elapsed = now - startTime;
-                            const progress = Math.min(elapsed / duration, 1); // 0〜1
-                            const ease = progress < 0.5
-                                ? 2 * progress * progress
-                                : -1 + (4 - 2 * progress) * progress; // イーズインアウト
-
-                            iframe.style.width = `${startWidth + (targetWidth - startWidth) * ease}px`;
-                            iframe.style.height = `${startHeight + (targetHeight - startHeight) * ease}px`;
-                            iframe.style.top = "50%";
-                            iframe.style.left = "50%";
-                            iframe.style.transform = "translate(-50%, -50%)";
-
-                            if (progress < 1) {
-                                requestAnimationFrame(expandAnimation);
-                            } else {
-                                // 完全に全画面化
-                                Object.assign(iframe.style, {
-                                    top: "0",
-                                    left: "0",
-                                    width: "100vw",
-                                    height: "100vh",
-                                    transform: "none"
-                                });
-                            }
-                        }
-                        requestAnimationFrame(expandAnimation);
-
-                        // 閉じるボタン
-                        const closeBtn = document.createElement("button");
-                        closeBtn.textContent = "✖";
-                        Object.assign(closeBtn.style, {
-                            position: "fixed",
-                            top: "10px",
-                            right: "10px",
-                            zIndex: "10000",
-                            fontSize: "24px",
-                            background: "rgba(0,0,0,0.5)",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "5px",
-                            padding: "5px 10px",
-                            cursor: "pointer"
-                        });
-                        document.body.appendChild(closeBtn);
-
-                        closeBtn.addEventListener("click", () => {
-                            // 縮小アニメーション
-                            const shrinkStart = performance.now();
-                            const shrinkDuration = 300;
-
-                            function shrinkAnimation(now) {
-                                const elapsed = now - shrinkStart;
-                                const progress = Math.min(elapsed / shrinkDuration, 1);
-                                const ease = 1 - (1 - progress) * (1 - progress); // イーズアウト
-
-                                iframe.style.width = `${targetWidth - (targetWidth - startWidth) * ease}px`;
-                                iframe.style.height = `${targetHeight - (targetHeight - startHeight) * ease}px`;
-                                iframe.style.top = "50%";
-                                iframe.style.left = "50%";
-                                iframe.style.transform = "translate(-50%, -50%)";
-
-                                if (progress < 1) {
-                                    requestAnimationFrame(shrinkAnimation);
-                                } else {
-                                    // 元の状態に戻す
-                                    iframe.style.position = "";
-                                    iframe.style.top = "";
-                                    iframe.style.left = "";
-                                    iframe.style.width = "";
-                                    iframe.style.height = "";
-                                    iframe.style.transform = "";
-                                    iframe.style.zIndex = "";
-                                    iframe.style.border = "";
-                                    closeBtn.remove();
-                                }
-                            }
-                            requestAnimationFrame(shrinkAnimation);
-                        });
-                    }
+                    enlargeIframe(selectedMusic.querySelector("iframe"));
                 }
             }, 50);
         });
 
-        // 初回読み込み
+        // ===== YouTube全画面アニメーション =====
+        function enlargeIframe(iframe) {
+            if (!iframe) return;
+            const startWidth = 200, startHeight = 150;
+            const targetWidth = window.innerWidth, targetHeight = window.innerHeight;
+
+            Object.assign(iframe.style, {
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                width: startWidth + "px",
+                height: startHeight + "px",
+                transform: "translate(-50%, -50%)",
+                zIndex: 9999,
+                border: "none"
+            });
+
+            const startTime = performance.now();
+            const duration = 500;
+
+            function expandAnimation(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+
+                iframe.style.width = `${startWidth + (targetWidth - startWidth) * ease}px`;
+                iframe.style.height = `${startHeight + (targetHeight - startHeight) * ease}px`;
+
+                if (progress < 1) requestAnimationFrame(expandAnimation);
+                else Object.assign(iframe.style, { top: 0, left: 0, width: "100vw", height: "100vh", transform: "none" });
+            }
+
+            requestAnimationFrame(expandAnimation);
+
+            const closeBtn = document.createElement("button");
+            Object.assign(closeBtn.style, {
+                position: "fixed",
+                top: "10px",
+                right: "10px",
+                zIndex: 10000,
+                fontSize: "24px",
+                background: "rgba(0,0,0,0.5)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "5px",
+                padding: "5px 10px",
+                cursor: "pointer"
+            });
+            closeBtn.textContent = "✖";
+            document.body.appendChild(closeBtn);
+
+            closeBtn.addEventListener("click", () => shrinkIframe(iframe, closeBtn, startWidth, startHeight, targetWidth, targetHeight));
+        }
+
+        function shrinkIframe(iframe, closeBtn, startW, startH, targetW, targetH) {
+            const shrinkStart = performance.now();
+            const shrinkDuration = 300;
+
+            function shrinkAnimation(now) {
+                const elapsed = now - shrinkStart;
+                const progress = Math.min(elapsed / shrinkDuration, 1);
+                const ease = 1 - (1 - progress) ** 2;
+
+                iframe.style.width = `${targetW - (targetW - startW) * ease}px`;
+                iframe.style.height = `${targetH - (targetH - startH) * ease}px`;
+
+                if (progress < 1) requestAnimationFrame(shrinkAnimation);
+                else {
+                    Object.assign(iframe.style, {
+                        position: "", top: "", left: "", width: "", height: "", transform: "", zIndex: "", border: ""
+                    });
+                    closeBtn.remove();
+                }
+            }
+
+            requestAnimationFrame(shrinkAnimation);
+        }
+
+        // ===== 初回読み込み =====
         getTodayMusic();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"></script>
     <script type="module" src="../script/notice/notice.js"></script>
     <script src="../script/customAlert.js" type="module"></script>
+    <script type="module" src="../script/restriction.js"></script>
+    <script type="module" src="../script/notification.js"></script>
     <script src="../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

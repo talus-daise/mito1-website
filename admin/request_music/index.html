@@ -142,15 +142,15 @@
                     isPlayed.checked = request.isplayed;
                     isPlayed.addEventListener("change", async () => {
                         const { error: updateError } = await supabase
-                            .from("request_music")
-                            .update({ played: isPlayed.checked })
+                            .from("request-music")
+                            .update({ isplayed: isPlayed.checked })
                             .eq("id", request.id);
                         if (updateError) {
-                            showCustomAlert("更新中にエラーが発生しました。");
+                            showCustomNotification("更新中にエラーが発生しました。");
                             console.error("更新エラー:", updateError);
                             isPlayed.checked = !isPlayed.checked; // 元に戻す
                         } else {
-                            showCustomAlert("再生状況を更新しました。");
+                            showCustomNotification("再生状況を更新しました。");
                         }
                     });
 
@@ -177,10 +177,10 @@
                             .delete()
                             .eq("id", request.id);
                         if (deleteError) {
-                            showCustomAlert("削除中にエラーが発生しました。");
+                            showCustomNotification("削除中にエラーが発生しました。");
                             console.error("削除エラー:", deleteError);
                         } else {
-                            showCustomAlert("リクエストを削除しました。");
+                            showCustomNotification("リクエストを削除しました。");
                             item.remove();
                         }
                     });
@@ -269,6 +269,9 @@
     </script>
     <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
+    <script type="module" src="../../script/restriction.js"></script>
+    <script type="module" src="../../script/notification.js"></script>
+    <script type="module" src="../../script/notification.js"></script>
     <script src="../../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

@@ -133,7 +133,7 @@
 
                     if (updateError) {
                         console.error("Error updating website allow status:", updateError);
-                        showCustomAlert("ステータスの更新中にエラーが発生しました。");
+                        showCustomNotification("ステータスの更新中にエラーが発生しました。");
                         return;
                     }
                 } else {
@@ -143,7 +143,7 @@
 
                     if (insertError) {
                         console.error("Error inserting new website allow status:", insertError);
-                        showCustomAlert("ステータスの挿入中にエラーが発生しました。");
+                        showCustomNotification("ステータスの挿入中にエラーが発生しました。");
                         return;
                     }
                 }
@@ -158,7 +158,7 @@
                     is_allowed = false;
                 }
 
-                showCustomAlert("ステータスが更新されました。");
+                showCustomNotification("ステータスが更新されました。");
             });
 
             const days = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
@@ -169,6 +169,8 @@
     </script>
     <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
+    <script type="module" src="../../script/restriction.js"></script>
+    <script type="module" src="../../script/notification.js"></script>
     <script src="../../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

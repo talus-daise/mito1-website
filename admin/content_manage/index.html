@@ -325,10 +325,10 @@
                     if (confirm("本当に削除しますか？この操作は元に戻せません。")) {
                         const { error } = await supabase.from(type).delete().eq("id", id);
                         if (error) {
-                            showCustomAlert("削除中にエラーが発生しました。");
+                            showCustomNotification("削除中にエラーが発生しました。");
                             console.error("削除エラー:", error);
                         } else {
-                            showCustomAlert("コンテンツを削除しました。");
+                            showCustomNotification("コンテンツを削除しました。");
                             location.reload();
                         }
                     }
@@ -350,7 +350,7 @@
                         // 回答の場合、関連する質問ページへリダイレクト
                         supabase.from("answers").select("question_id").eq("id", id).then(({ data, error }) => {
                             if (error) {
-                                showCustomAlert("エラーが発生しました。");
+                                showCustomNotification("エラーが発生しました。");
                                 console.error("取得エラー:", error);
                             } else if (data.length > 0) {
                                 window.location.href = `../../question/details/?id=${data[0].question_id}`;
@@ -359,7 +359,7 @@
                     } else if (type === "post") {
                         supabase.from("BBS").select("thread").eq("id", id).then(({ data, error }) => {
                             if (error) {
-                                showCustomAlert("エラーが発生しました。");
+                                showCustomNotification("エラーが発生しました。");
                                 console.error("取得エラー:", error);
                             } else if (data.length > 0) {
                                 window.location.href = `../../bbs/thread/?thread=${encodeURIComponent(data[0].thread)}`;
@@ -476,7 +476,7 @@
 
                             if (deleteError) {
                                 console.error(deleteError);
-                                alert("削除中にエラーが発生しました");
+                                showCustomNotification("削除中にエラーが発生しました");
                                 continue;
                             }
 
@@ -612,6 +612,8 @@
     </script>
     <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
+    <script type="module" src="../../script/restriction.js"></script>
+    <script type="module" src="../../script/notification.js"></script>
     <script src="../../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

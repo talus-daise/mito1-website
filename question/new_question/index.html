@@ -113,7 +113,7 @@
             // ログインユーザー情報取得
             const { data: { user }, error: userError } = await pd.auth.getUser();
             if (userError || !user) {
-                showCustomAlert('投稿するにはログインが必要です');
+                showCustomAlert('投稿するにはログインが必要です', false);
                 event.target.disabled = false;
                 return;
             }
@@ -133,19 +133,19 @@
 
             // スパム対策
             if (!title || !content) {
-                showCustomAlert('すべてのフィールドを入力してください');
+                showCustomNotification('すべてのフィールドを入力してください');
                 event.target.disabled = false;
                 return;
             }
             if (title.length < 8 || content.length < 20) {
-                showCustomAlert('タイトルは8文字以上、内容は20文字以上にしてください');
+                showCustomNotification('タイトルは8文字以上、内容は20文字以上にしてください');
                 event.target.disabled = false;
                 return;
             }
 
             const now = Date.now();
             if (now - lastPostTime < 60000) {
-                showCustomAlert('短時間での連続投稿はできません。少し待ってから再度投稿してください');
+                showCustomNotification('短時間での連続投稿はできません。少し待ってから再度投稿してください');
                 event.target.disabled = false;
                 return;
             }
@@ -167,9 +167,9 @@
 
             if (error) {
                 console.error('Error posting question:', error);
-                showCustomAlert('質問の投稿に失敗しました');
+                showCustomNotification('質問の投稿に失敗しました');
             } else {
-                showCustomAlert('質問が投稿されました');
+                showCustomNotification('質問が投稿されました');
                 localStorage.setItem('lastPostTime', now);
                 window.location.href = "../../question/";
             }
@@ -266,6 +266,8 @@
     </script>
     <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
+    <script type="module" src="../../script/restriction.js"></script>
+    <script type="module" src="../../script/notification.js"></script>
     <script src="../../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

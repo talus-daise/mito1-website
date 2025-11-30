@@ -114,7 +114,7 @@
                         console.error("Error stopping user:", stopError);
                         return;
                     }
-                    showCustomAlert("ユーザーを停止しました。");
+                    showCustomNotification("ユーザーを停止しました。");
                 });
 
                 const deleteBtn = userItem.querySelector(".delete-user-btn");
@@ -139,6 +139,8 @@
     </script>
     <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
+    <script type="module" src="../../script/restriction.js"></script>
+    <script type="module" src="../../script/notification.js"></script>
     <script src="../../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

@@ -5,7 +5,7 @@
     <!--文字コード・互換モード-->
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
-    <title>トップぺージ | 水戸一高附属中総合ウェブサイト</title>
+    <title>時間割 | 水戸一高附属中総合ウェブサイト</title>
     <!--ビューポート-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!--css-->
@@ -50,6 +50,17 @@
     </header>
 
     <main>
+        <section class="highlight">
+            <h2>注意</h2>
+            <p>
+                時間割が見られないときは、以下の手順を踏んだ上、再読込してください。<br>
+                1. <a href='https://mito1-website.loca.lt/' target='_blank' rel='noopener noreferrer'>このリンク</a>に飛ぶ<br>
+                2. パスワード欄に`106.73.192.65`を入力する<br>
+                3. submitを押す<br>
+                4.
+                ファイル一覧が表示されたら成功→名簿と時間割が表示されるようになります。
+            </p>
+        </section>
         <section>
             <h2>現在の時間割画像</h2>
             <img src="" alt="時間割画像" id="timetable" width="calc(100% - 2rem)">
@@ -155,7 +166,9 @@
                     imgWrapper.appendChild(img);
                     imgWrapper.appendChild(filelabel);
                     link.appendChild(imgWrapper);
-                    frag.appendChild(link);
+
+                    // ここで即座に追加
+                    container.appendChild(link);
 
                     // 進捗更新
                     const percent = Math.floor(((i + 1) / otherFiles.length) * 100);
@@ -163,9 +176,8 @@
                     progressBar.value = percent;
                 }
 
-                list.appendChild(frag);
-                container.innerHTML = "";
-                container.appendChild(list);
+                progress.remove()
+                progressBar.remove()
 
             } catch (e) {
                 container.textContent = "画像一覧の取得に失敗しました。";
@@ -245,34 +257,11 @@
                 document.getElementById("search-btn").click();
             }
         });
-
-        const isPageVisited = localStorage.getItem("isPageVisited");
-
-        document.addEventListener("DOMContentLoaded", () => {
-            if (isPageVisited === null) {
-                const sect = document.createElement("section");
-                sect.classList.add("highlight");
-
-                const h2 = document.createElement("h2");
-                h2.textContent = "注意";
-
-                const p = document.createElement("p");
-                p.innerHTML =
-                    "時間割が見られないときは、以下の手順を踏んだ上、再読込してください。<br>" +
-                    "1. <a href='https://mito1-website.loca.lt/' target='_blank' rel='noopener noreferrer'>このリンク</a>に飛ぶ<br>" +
-                    "2. パスワード欄に`106.73.192.65`を入力する<br>" +
-                    "3. submitを押す<br>" +
-                    "4. ファイル一覧が表示されたら成功→名簿と時間割が表示されるようになります。";
-
-                sect.append(h2, p);
-                document.querySelector("main").insertAdjacentElement("afterbegin", sect);
-
-                localStorage.setItem("isPageVisited", "true");
-            }
-        });
     </script>
     <script type="module" src="../script/notice/notice.js"></script>
     <script src="../script/customAlert.js" type="module"></script>
+    <script type="module" src="../script/restriction.js"></script>
+    <script type="module" src="../script/notification.js"></script>
     <script src="../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

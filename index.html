@@ -12,6 +12,47 @@
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
     <link rel="stylesheet" href="./script/notice/notice.css">
+    <style>
+        #timetable-wrapper {
+            width: calc(100% - 2rem);
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+            position: relative;
+            border-radius: 8px;
+        }
+
+        #timetable-wrapper img {
+            width: calc(200% + 20px);
+            object-fit: cover;
+            object-position: left top;
+            display: block;
+            cursor: pointer;
+        }
+
+        #timetable-loading {
+            display: block;
+        }
+
+        #timetable-fullview {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        #timetable-fullview img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+    </style>
     <!--web情報-->
     <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
     <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
@@ -34,7 +75,7 @@
     <link rel="icon" type="image/png" href="./img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    
+
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!--マニフェスト-->
     <link rel="manifest" href="manifest.json">
@@ -50,7 +91,7 @@
         <section class="main__classlist">
             <h2>時間割</h2>
             <img src="" alt="時間割画像" id="timetable">
-            <p>※時間割が表示されない場合、<a href="./timetable/">過去の時間割</a>やよくある質問を参照してください。</p>
+            <p>※時間割が表示されない場合、<a href="./timetable/">過去の時間割</a>や<a href="./faq.html#timetable-error:~:text=%E3%82%82%E3%81%82%E3%82%8A%E3%81%BE%E3%81%9B%E3%82%93%E3%80%82-,%E6%99%82%E9%96%93%E5%89%B2%E3%81%8C%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%A7%E8%A1%A8%E7%A4%BA%E3%81%95%E3%82%8C%E3%81%AA%E3%81%84,-%E6%99%82%E9%96%93%E5%89%B2%E3%81%8C%E8%A6%8B">よくある質問</a>を参照してください。</p>
         </section>
         <section>
             <h2>サイト概要</h2>
@@ -79,8 +120,10 @@
             <h2>About Us</h2>
             <p>
                 水戸一高附属中総合ウェブサイトでは、附属中生徒が利用しやすく、学習や生活面での課題を解決できるようなサイトを目指して、日々開発に励んでいます。<br>
-                主に2Aの有志で運営しており、主に<a href="./timetable/">時間割</a>の配信や<a href="./bbs/">掲示板</a>、<a href="./question/">質問箱</a>などのサービスを展開しています。<br>
-                現在人手が大変足りていない状況なので、サイト運営に興味がある方はぜひ<a href="mailto:yamamoto.yuujirou@mito1-h.ibk.ed.jp?subject=サイト運営について&body=サイト運営に関わりたい場合、以下に名前、学籍番号、理由（自由記述）を記入してメールを送信してください。"
+                主に2Aの有志で運営しており、主に<a href="./timetable/">時間割</a>の配信や<a href="./bbs/">掲示板</a>、<a
+                    href="./question/">質問箱</a>などのサービスを展開しています。<br>
+                現在人手が大変足りていない状況なので、サイト運営に興味がある方はぜひ<a
+                    href="mailto:yamamoto.yuujirou@mito1-h.ibk.ed.jp?subject=サイト運営について&body=サイト運営に関わりたい場合、以下に名前、学籍番号、理由（自由記述）を記入してメールを送信してください。"
                     target="_blank" rel="noopener noreferrer">メール</a>などでお知らせください！
             </p>
         </section>
@@ -96,9 +139,9 @@
 
     <script>
         const imgEl = document.getElementById('timetable');
+        const FILENAME_RE = /(\d{6,8})-(\d{6})(?:-(\d+))?\.jpg$/i;
 
-        const FILENAME_RE = /(\d{6,8})-(\d{6})-(\d+)\.jpg$/i;
-
+        // ファイル名を解析
         function parseFilename(filename) {
             const m = filename.match(FILENAME_RE);
             if (!m) return null;
@@ -119,137 +162,98 @@
             return { date, index: Number(indexPart) };
         }
 
-        function updateLatestImage(baseUrl) {
-            baseUrl = baseUrl || 'https://mito1-website.loca.lt/';
-            const imgEl = document.getElementById('timetable');
+        // 最新画像を取得して表示
+        async function updateLatestImage(baseUrl = 'https://mito1-website.loca.lt/') {
+            // 読み込み中表示
+            let loadingEl = document.getElementById('timetable-loading');
+            if (!loadingEl) {
+                loadingEl = document.createElement('p');
+                loadingEl.id = 'timetable-loading';
+                loadingEl.textContent = '読み込み中…';
+                imgEl.insertAdjacentElement('afterend', loadingEl);
+            }
 
             imgEl.style.display = 'none';
-            imgEl.insertAdjacentHTML('afterend', "<span>読み込み中…</span>");
 
-            const xhr = new XMLHttpRequest();
-            xhr.open("GET", baseUrl, true);
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState !== 4) return;
+            try {
+                const res = await fetch(baseUrl);
+                if (!res.ok) throw new Error('一覧取得失敗');
 
-                if (xhr.status !== 200) {
-                    console.error("一覧取得失敗:", xhr.status);
-                    return;
-                }
-
+                const htmlText = await res.text();
                 const parser = new DOMParser();
-                const doc = parser.parseFromString(xhr.responseText, 'text/html');
-                const anchors = Array.prototype.slice.call(doc.querySelectorAll('a[href]'));
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                const anchors = Array.from(doc.querySelectorAll('a[href]'));
 
-                const candidates = anchors.map(function (a) {
+                const candidates = anchors.map(a => {
                     const href = a.getAttribute('href');
                     if (!href) return null;
 
                     const filename = href.split('/').pop();
-                    const m = filename.match(FILENAME_RE);
-                    if (!m) return null;
+                    const parsed = parseFilename(filename);
+                    if (!parsed) return null;
 
-                    const [, datePartRaw, timePart, indexPart] = m;
-                    const datePart = datePartRaw.length === 6 ? '20' + datePartRaw : datePartRaw;
-
-                    const y = datePart.slice(0, 4);
-                    const mo = datePart.slice(4, 6);
-                    const d = datePart.slice(6, 8);
-                    const hh = timePart.slice(0, 2);
-                    const mm = timePart.slice(2, 4);
-                    const ss = timePart.slice(4, 6);
-
-                    const date = new Date(`${y}-${mo}-${d}T${hh}:${mm}:${ss}Z`);
                     return {
                         url: (new URL(href, baseUrl)).href,
-                        filename: filename,
-                        date: date,
-                        index: Number(indexPart),
+                        filename,
+                        date: parsed.date,
+                        index: parsed.index
                     };
-                }).filter(Boolean).sort(function (a, b) {
-                    return (b.date - a.date) || (b.index - a.index);
-                });
+                }).filter(Boolean)
+                    .sort((a, b) => (b.date - a.date) || (b.index - a.index));
 
-                if (candidates.length === 0) {
-                    console.error("jpgファイルが見つかりません");
-                    return;
-                }
+                if (candidates.length === 0) throw new Error('jpgファイルが見つかりません');
 
                 const latest = candidates[0];
+                const imgRes = await fetch(latest.url);
+                if (!imgRes.ok) throw new Error('画像取得失敗');
 
-                const xhrImg = new XMLHttpRequest();
-                xhrImg.open("GET", latest.url, true);
-                xhrImg.responseType = "blob";
-                xhrImg.onreadystatechange = function () {
-                    if (xhrImg.readyState !== 4) return;
+                const blob = await imgRes.blob();
+                imgEl.src = URL.createObjectURL(blob);
+                imgEl.alt = latest.filename;
 
-                    if (xhrImg.status !== 200) {
-                        console.error("画像取得失敗:", xhrImg.status);
-                        return;
-                    }
-
-                    const blobURL = URL.createObjectURL(xhrImg.response);
-                    imgEl.src = blobURL;
-                    imgEl.alt = latest.filename;
-
-                    const wrapper = document.createElement('div');
+                // wrapper作成
+                let wrapper = imgEl.parentNode.querySelector('#timetable-wrapper');
+                if (!wrapper) {
+                    wrapper = document.createElement('div');
+                    wrapper.id = 'timetable-wrapper';
                     imgEl.parentNode.insertBefore(wrapper, imgEl);
                     wrapper.appendChild(imgEl);
+                }
 
-                    wrapper.style.width = "calc(100% - 2rem)";
-                    wrapper.style.aspectRatio = "4 / 3";
-                    wrapper.style.overflow = "hidden";
-                    wrapper.style.position = "relative";
-                    wrapper.style.borderRadius = "8px";
+                imgEl.style.display = 'block';
+                loadingEl.remove();
 
-                    imgEl.style.width = "calc(200% + 20px)";
-                    imgEl.style.objectFit = "cover";
-                    imgEl.style.objectPosition = "left top";
-                    imgEl.style.display = "block";
-                    imgEl.style.cursor = "pointer";
-
-                    imgEl.style.display = 'block';
-                    wrapper.nextElementSibling.remove();
-
-                    console.info("最新画像を更新:", latest.filename);
-                };
-                xhrImg.send();
-            };
-            xhr.send();
+                console.info('最新画像を更新:', latest.filename);
+            } catch (err) {
+                console.error(err);
+                loadingEl.textContent = '画像取得に失敗しました';
+            }
         }
 
-        updateLatestImage();
+        // 拡大表示
+        imgEl.addEventListener('click', () => {
+            let existing = document.getElementById('timetable-fullview');
+            if (existing) existing.remove();
 
-        imgEl.addEventListener('click', function () {
             const fullView = document.createElement('div');
-            fullView.style.position = 'fixed';
-            fullView.style.top = 0;
-            fullView.style.left = 0;
-            fullView.style.width = '100vw';
-            fullView.style.height = '100vh';
-            fullView.style.backgroundColor = 'rgba(0,0,0,0.8)';
-            fullView.style.display = 'flex';
-            fullView.style.alignItems = 'center';
-            fullView.style.justifyContent = 'center';
-            fullView.style.zIndex = 9999;
+            fullView.id = 'timetable-fullview';
 
             const img = document.createElement('img');
             img.src = imgEl.src;
             img.alt = imgEl.alt;
-            img.style.maxWidth = '90vw';
-            img.style.maxHeight = '90vh';
-            img.style.borderRadius = '8px';
-            img.style.boxShadow = '0 0 20px rgba(0,0,0,0.5)';
 
             fullView.appendChild(img);
             document.body.appendChild(fullView);
 
-            fullView.addEventListener('click', function () {
-                fullView.remove();
-            });
+            fullView.addEventListener('click', () => fullView.remove());
         });
+
+        updateLatestImage();
     </script>
     <script type="module" src="./script/notice/notice.js"></script>
     <script src="./script/customAlert.js" type="module"></script>
+    <script type="module" src="./script/restriction.js"></script>
+    <script type="module" src="./script/notification.js"></script>
     <script src="./script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

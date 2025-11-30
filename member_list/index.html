@@ -147,6 +147,8 @@
 
     <script type="module" src="../script/notice/notice.js"></script>
     <script src="../script/customAlert.js" type="module"></script>
+    <script type="module" src="../script/restriction.js"></script>
+    <script type="module" src="../script/notification.js"></script>
     
     <script src="../script/verification.js"></script>
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
@@ -180,7 +182,7 @@
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (!session || !session.user) {
-                    showCustomAlert("名簿を見るにはログインが必要です。");
+                    showCustomAlert("名簿を見るにはログインが必要です。", false);
                     document.getElementById("teachers").style.display = "none";
                     return;
                 }

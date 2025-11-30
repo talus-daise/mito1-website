@@ -135,13 +135,13 @@
                     const content = parseMarkdown(document.getElementById("content").value.trim());
 
                     if (!thread || !title || !content) {
-                        showCustomAlert("必須項目を入力してください！");
+                        showCustomNotification("必須項目を入力してください！");
                         return;
                     }
 
                     const { data: { session } } = await supabase.auth.getSession();
                     if (!session || !session.user) {
-                        showCustomAlert("ログインしてから投稿してください。");
+                        showCustomNotification("ログインしてから投稿してください。");
                         return;
                     }
 
@@ -161,7 +161,7 @@
 
                     if (error) {
                         console.error(error);
-                        showCustomAlert("スレッド作成に失敗しました");
+                        showCustomNotification("スレッド作成に失敗しました");
                         return;
                     }
 
@@ -384,6 +384,8 @@
     </script>
     <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
+    <script type="module" src="../../script/restriction.js"></script>
+    <script type="module" src="../../script/notification.js"></script>
     <!--マニフェスト-->
     <link rel="manifest" href="../../manifest.json">
     <script src="../../script/verification.js"></script>

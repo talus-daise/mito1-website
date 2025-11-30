@@ -205,7 +205,7 @@
             // 🔒 ログイン済みユーザーを取得
             const { data: { user }, error: userError } = await pd.auth.getUser();
             if (userError || !user) {
-                showCustomAlert("回答を投稿するにはログインが必要です");
+                showCustomAlert("回答を投稿するにはログインが必要です", false);
                 event.target.disabled = false;
                 return;
             }
@@ -225,12 +225,12 @@
             const content = parseMarkdown(document.getElementById("answer-content").value.trim());
 
             if (!content) {
-                showCustomAlert("すべてのフィールドを入力してください");
+                showCustomNotification("すべてのフィールドを入力してください");
                 event.target.disabled = false;
                 return;
             }
             if (content.length < 20) {
-                showCustomAlert("回答は20文字以上にしてください（スパム対策です）");
+                showCustomNotification("回答は20文字以上にしてください（スパム対策です）");
                 event.target.disabled = false;
                 return;
             }
@@ -238,7 +238,7 @@
             const lastAnswerTime = localStorage.getItem("lastAnswerTime") || 0;
             const now = Date.now();
             if (now - lastAnswerTime < 60000) {
-                showCustomAlert("短時間での連続投稿はできません。少し待ってから再度投稿してください");
+                showCustomNotification("短時間での連続投稿はできません。少し待ってから再度投稿してください");
                 event.target.disabled = false;
                 return;
             }
@@ -259,9 +259,9 @@
 
             if (error) {
                 console.error("Error posting answer:", error);
-                showCustomAlert("回答の投稿に失敗しました");
+                showCustomNotification("回答の投稿に失敗しました");
             } else {
-                showCustomAlert("回答が投稿されました");
+                showCustomNotification("回答が投稿されました");
                 localStorage.setItem("lastAnswerTime", now);
                 markAsAnswered(questionId);
                 fetchAnswers();
@@ -380,6 +380,8 @@
     </script>
     <script type="module" src="../../script/notice/notice.js" defer></script>
     <script src="../../script/customAlert.js" type="module"></script>
+    <script type="module" src="../../script/restriction.js"></script>
+    <script type="module" src="../../script/notification.js"></script>
     <!--マニフェスト-->
     <link rel="manifest" href="../../manifest.json">
     <script src="../../script/verification.js"></script>
