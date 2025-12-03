@@ -54,6 +54,7 @@
                 <p>表示名: <span id="display-name">とある水戸一の名無し</span><button id="edit-display-name" style="margin: 0 0 0 1rem;">編集</button></p>
                 <p>メールアドレス: <span id="user-email">guest@example.com</span></p>
                 <p>権限: <span id="user-role">ゲスト</span></p>
+                <p>自己紹介: <span id="about-me">自己紹介は未設定です。</span></p><button id="edit-about-me" style="margin: 0 0 0 1rem;">編集</button>
             </div>
             <button id="logout-button">ログアウト</button>
             <hr>
@@ -202,6 +203,7 @@
         document.getElementById("visit-count").textContent = updatedUser.visit_count;
         document.getElementById("post-count").textContent = updatedUser.post_count;
         document.getElementById("my-page-link").href = `./other/?user_id=${encodeURIComponent(updatedUser.user_id)}`;
+        document.getElementById("about-me").textContent = updatedUser.about_me || "自己紹介は未設定です。";
 
         document.getElementById("user-role").addEventListener("click", () => {
             if (!(updatedUser.role === "")) {
@@ -292,6 +294,24 @@
                 showCustomNotification("無効な表示名です。20文字以内で入力してください。");
             }
         });
+
+        document.getElementById("edit-about-me").addEventListener("click", () => {
+            let newAboutMe = prompt("新しい自己紹介を入力してください（100文字以内）:");
+            if (newAboutMe === null) return;
+            newAboutMe = newAboutMe.trim();
+            if (newAboutMe.length <= 100) {
+                supabase
+                    .from("users")
+                    .update({ about_me: newAboutMe })
+                    .eq("user_email", userEmail)
+                    .then(() => {
+                        document.getElementById("about-me").textContent = newAboutMe || "自己紹介は未設定です。";
+                        showCustomNotification("自己紹介を更新しました。");
+                    });
+            } else {
+                showCustomNotification("無効な自己紹介です。100文字以内で入力してください。");
+            }
+        })
 
         function textMosaic(str) {
             return str.slice(0, 5) + "*".repeat(10) + str.slice(-5);

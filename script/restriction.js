@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const ranges = [
             [8 * 60 + 25, 11 * 60 + 29 + 59 / 60],   // 8:25 ~ 11:29:59
-            [13 * 60 + 5, 19 * 60 + 54 + 59 / 60]   // 13:05 ~ 15:54:59
+            [13 * 60 + 5, 15 * 60 + 54 + 59 / 60]   // 13:05 ~ 15:54:59
         ];
 
         return ranges.some(([start, end]) => currentMinutes >= start && currentMinutes <= end);
