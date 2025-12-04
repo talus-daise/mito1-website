@@ -111,7 +111,6 @@
 
         // ===== ユーティリティ =====
         function showNotification(message) {
-            // 実装済みの showCustomNotification を呼ぶ
             showCustomNotification(message);
         }
 
@@ -125,7 +124,7 @@
             return videoId ? `https://www.youtube.com/embed/${videoId}` : "";
         }
 
-        function createMusicItem(musicName, url, desc, isOpened = false, isToggleable = false) {
+        function createMusicItem(musicName, url, desc, studentId, isOpened = false, isToggleable = false) {
             const div = document.createElement("div");
 
             const title = document.createElement("h3");
@@ -164,6 +163,9 @@
             checkbox.disabled = !isToggleable;
             label.appendChild(checkbox);
 
+            const student = document.createElement("p");
+            student.textContent = studentId;
+
             checkbox.addEventListener("change", async () => {
                 const { error } = await supabase
                     .from("request-music")
@@ -198,8 +200,8 @@
 
             musicData = data;
             todayMusicList.innerHTML = "";
-            data.forEach(({ musicName, url, desc }) => {
-                todayMusicList.appendChild(createMusicItem(musicName, url, desc));
+            data.forEach(({ musicName, url, desc, studentId }) => {
+                todayMusicList.appendChild(createMusicItem(musicName, url, desc, studentId));
             });
         }
 
@@ -217,7 +219,7 @@
             }
 
             if ((localStorage.getItem("weekofRequestMusicNumber") || "0") >= "5") {
-                showNotification("今週のリクエスト曲の上限に達しました。");
+                showNotification("今週の上限に達しました。");
                 return;
             }
 
@@ -236,8 +238,8 @@
                 .select("*")
                 .or(`musicName.eq.${musicName},url.eq.${url}`);
 
-            if (existingError) return showNotification("確認中にエラーが発生しました：" + existingError.message);
-            if (existingData && existingData.length > 0) return showNotification("この曲はすでにリクエストされています。");
+            if (existingError) return showNotification("確認中にエラー：" + existingError.message);
+            if (existingData && existingData.length > 0) return showNotification("この曲はすでに登録されています。");
 
             const { error } = await supabase.from("request-music").insert([{ studentId, musicName, url, desc }]);
             if (error) return showNotification("送信に失敗しました：" + error.message);
@@ -256,17 +258,58 @@
             else if (todayMusic.contains(todayMusicList)) todayMusic.removeChild(todayMusicList);
         });
 
+        // ===== 投稿数マップ生成 =====
+        function buildSubmitCountMap(data) {
+            const map = {};
+            data.forEach(item => {
+                map[item.studentId] = (map[item.studentId] || 0) + 1;
+            });
+            return map;
+        }
+
+        let lastSelectedStudentId = null;
+
+        // ===== 重み付きランダム選択 =====
+        function weightedRandomChoice(items, submitCountMap) {
+            const filtered = items.filter(item => item.studentId !== lastSelectedStudentId);
+            const targetItems = filtered.length > 0 ? filtered : items;
+
+            const weights = targetItems.map(item => {
+                const count = submitCountMap[item.studentId] || 1;
+                return 1 / Math.sqrt(count);
+            });
+
+            const total = weights.reduce((a, b) => a + b, 0);
+            let r = Math.random() * total;
+
+            for (let i = 0; i < targetItems.length; i++) {
+                r -= weights[i];
+                if (r <= 0) {
+                    lastSelectedStudentId = targetItems[i].studentId;
+                    return targetItems[i];
+                }
+            }
+
+            lastSelectedStudentId = targetItems[targetItems.length - 1].studentId;
+            return targetItems[targetItems.length - 1];
+        }
+
+        // ===== ランダム選択処理 =====
         randomMusicBtn.addEventListener("click", () => {
             if (!musicData.length) return showNotification("データがありません。");
+
+            const submitCountMap = buildSubmitCountMap(musicData);
 
             const selectedMusic = document.getElementById("selectedMusic");
             let count = 0;
 
             const intervalId = setInterval(() => {
-                const { musicName, url, desc } = musicData[Math.floor(Math.random() * musicData.length)];
+                const item = weightedRandomChoice(musicData, submitCountMap);
+                const { musicName, url, desc, studentId } = item;
+
                 selectedMusic.innerHTML = "";
                 selectedMusic.classList.add("open");
-                selectedMusic.appendChild(createMusicItem(musicName, url, desc, true, true));
+                selectedMusic.appendChild(createMusicItem(musicName, url, desc, studentId, true, true));
 
                 if (++count >= 20) {
                     clearInterval(intervalId);
@@ -275,7 +318,7 @@
             }, 50);
         });
 
-        // ===== YouTube全画面アニメーション =====
+        // ===== YouTube全画面アニメ =====
         function enlargeIframe(iframe) {
             if (!iframe) return;
             const startWidth = 200, startHeight = 150;
@@ -336,16 +379,14 @@
             function shrinkAnimation(now) {
                 const elapsed = now - shrinkStart;
                 const progress = Math.min(elapsed / shrinkDuration, 1);
-                const ease = 1 - (1 - progress) ** 2;
+                const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
 
                 iframe.style.width = `${targetW - (targetW - startW) * ease}px`;
                 iframe.style.height = `${targetH - (targetH - startH) * ease}px`;
 
                 if (progress < 1) requestAnimationFrame(shrinkAnimation);
                 else {
-                    Object.assign(iframe.style, {
-                        position: "", top: "", left: "", width: "", height: "", transform: "", zIndex: "", border: ""
-                    });
+                    iframe.remove();
                     closeBtn.remove();
                 }
             }
