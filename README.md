@@ -1,4 +1,8 @@
 # 水戸一高附属中総合ウェブサイト
+![HTML Badge](https://img.shields.io/badge/-Html5-E34F26.svg?logo=html5&style=for-the-badge&logoColor=ffffff)
+![CSS Badge](https://img.shields.io/badge/-Css3-1572B6.svg?logo=css&style=for-the-badge)
+![JS Badge](https://img.shields.io/badge/-Javascript-F7DF1E.svg?logo=javascript&style=for-the-badge&logoColor=ffffff)
+![Github Pages Badge](https://img.shields.io/badge/-Github%20Pages-181717.svg?logo=github&style=for-the-badge)
 
 ## 概要
 水戸一高附属中生向け総合ウェブサイトです。
@@ -7,6 +11,7 @@
 ## 更新履歴
 | ver.    | 日付       | 更新内容                                                              |
 | ------- | ---------- | --------------------------------------------------------------------- |
+| v3.2.17 | 2025-12-17 | README更新                                                            |
 | v3.2.16 | 2025-12-06 | 時間割に関する修正                                                    |
 | v3.2.15 | 2025-12-04 | リクエスト曲の出る確率の重み付け                                      |
 | v3.2.14 | 2025-12-04 | 時間制限が長すぎる問題の解決、マイページに自分について書けるように    |
