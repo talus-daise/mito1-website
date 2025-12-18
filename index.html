@@ -89,7 +89,7 @@
         </h1>
     </header>
     <main>
-        <section class="highlight">
+        <section>
             <h2>重要</h2>
             <p>現在、サイトで使用している<a href="https://localtunnel.me" target="_blank" rel="noopener noreferrer">localtunnel</a>
                 というサービスに障害が発生しているため、一部の機能が正常に動作しない可能性があります。運営側としてはどうしようもありませんので、ご理解のほどよろしくお願いいたします。</p>
@@ -97,6 +97,7 @@
             <p>ご迷惑をおかけして申し訳ありません。</p>
             <p>なお、課題や掲示板など、投稿サービスは通常通り利用できますので、どうぞよろしくおねがいします。</p>
             <p>※2025-12-06追記　サーバーにエラーが発生していた場合は再起動するように修正しました。ただ、上記の状況は治っていません。</p>
+            <p>※2025-12-18追記　直りました🎉</p>
         </section>
         <section class="main__classlist">
             <h2>時間割</h2>
@@ -152,7 +153,7 @@
 
     <script>
         const containerEl = document.getElementById('timetable');
-        const FILENAME_RE = /(\d{6,8})-(\d{6})(?:-(\d+))?\.jpg$/i;
+        const FILENAME_RE = /(\d{6,8})-(\d{6})(?:-(\d+))?\.[jpg, png]$/i;
 
         // ファイル名解析
         function parseFilename(filename) {

@@ -101,6 +101,14 @@
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
         );
 
+        const { data: user, error: userError } = await supabase.auth.getUser();
+        if (userError) {
+            console.error("ユーザー情報の取得に失敗しました:", userError);
+            showCustomAlert("ログインしてください", false)
+        } else {
+            console.log("ユーザー情報:", user);
+        }
+
         // ===== 要素参照 =====
         const sendForm = document.getElementById("sendRequest");
         const openMusicBtn = document.getElementById("openMusic");
@@ -135,7 +143,7 @@
 
             const videoContainer = document.createElement("div");
             const toggleText = document.createElement("p");
-            toggleText.textContent = "▼クリックで開く";
+            if (isToggleable) toggleText.textContent = "▼クリックで開く";
             videoContainer.appendChild(toggleText);
 
             const iframe = document.createElement("iframe");
@@ -146,14 +154,19 @@
                 allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             });
 
-            videoContainer.addEventListener("click", () => {
-                const opened = videoContainer.classList.toggle("show");
-                videoContainer.innerHTML = "";
-                const newText = document.createElement("p");
-                newText.textContent = opened ? "▼クリックで閉じる" : "▼クリックで開く";
-                videoContainer.appendChild(newText);
-                if (opened) videoContainer.appendChild(iframe);
-            });
+            if (isToggleable) {
+                videoContainer.addEventListener("click", () => {
+                    const opened = videoContainer.classList.toggle("show");
+                    videoContainer.innerHTML = "";
+                    const newText = document.createElement("p");
+                    newText.textContent = opened ? "▼クリックで閉じる" : "▼クリックで開く";
+                    videoContainer.appendChild(newText);
+                    if (opened) videoContainer.appendChild(iframe);
+                });
+            } else {
+                videoContainer.appendChild(iframe);
+            }
+
 
             const label = document.createElement("label");
             label.textContent = "再生済み: ";
@@ -258,25 +271,33 @@
             else if (todayMusic.contains(todayMusicList)) todayMusic.removeChild(todayMusicList);
         });
 
-        // ===== 投稿数マップ生成 =====
         function buildSubmitCountMap(data) {
             const map = {};
-            data.forEach(item => {
-                map[item.studentId] = (map[item.studentId] || 0) + 1;
-            });
+            data
+                .filter(item => !item.isplayed)
+                .forEach(item => {
+                    map[item.studentId] = (map[item.studentId] || 0) + 1;
+                });
             return map;
         }
 
         let lastSelectedStudentId = null;
 
-        // ===== 重み付きランダム選択 =====
         function weightedRandomChoice(items, submitCountMap) {
-            const filtered = items.filter(item => item.studentId !== lastSelectedStudentId);
-            const targetItems = filtered.length > 0 ? filtered : items;
+            // 未再生のみ対象
+            const unplayed = items.filter(item => !item.isplayed);
+
+            if (!unplayed.length) return null;
+
+            // 連続同一学籍番号回避
+            const filtered = unplayed.filter(
+                item => item.studentId !== lastSelectedStudentId
+            );
+            const targetItems = filtered.length ? filtered : unplayed;
 
             const weights = targetItems.map(item => {
                 const count = submitCountMap[item.studentId] || 1;
-                return 1 / Math.sqrt(count);
+                return 1 / count;
             });
 
             const total = weights.reduce((a, b) => a + b, 0);
@@ -294,22 +315,29 @@
             return targetItems[targetItems.length - 1];
         }
 
-        // ===== ランダム選択処理 =====
         randomMusicBtn.addEventListener("click", () => {
-            if (!musicData.length) return showNotification("データがありません。");
+            const unplayed = musicData.filter(item => !item.isplayed);
+            if (!unplayed.length) {
+                showNotification("未再生の曲がありません。");
+                return;
+            }
 
-            const submitCountMap = buildSubmitCountMap(musicData);
+            const submitCountMap = buildSubmitCountMap(unplayed);
 
-            const selectedMusic = document.getElementById("selectedMusic");
             let count = 0;
+            const selectedMusic = document.getElementById("selectedMusic");
 
             const intervalId = setInterval(() => {
-                const item = weightedRandomChoice(musicData, submitCountMap);
+                const item = weightedRandomChoice(unplayed, submitCountMap);
+                if (!item) return;
+
                 const { musicName, url, desc, studentId } = item;
 
                 selectedMusic.innerHTML = "";
                 selectedMusic.classList.add("open");
-                selectedMusic.appendChild(createMusicItem(musicName, url, desc, studentId, true, true));
+                selectedMusic.appendChild(
+                    createMusicItem(musicName, url, desc, studentId, true)
+                );
 
                 if (++count >= 20) {
                     clearInterval(intervalId);
@@ -369,7 +397,12 @@
             closeBtn.textContent = "✖";
             document.body.appendChild(closeBtn);
 
-            closeBtn.addEventListener("click", () => shrinkIframe(iframe, closeBtn, startWidth, startHeight, targetWidth, targetHeight));
+            closeBtn.addEventListener("click", () => {
+                iframe.style.width = "auto";
+                iframe.style.height = "auto";
+                iframe.style.position = "static";
+                closeBtn.remove();
+            });
         }
 
         function shrinkIframe(iframe, closeBtn, startW, startH, targetW, targetH) {
@@ -393,6 +426,19 @@
 
             requestAnimationFrame(shrinkAnimation);
         }
+
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                const iframe = document.querySelector("#selectedMusic iframe");
+                if (iframe) {
+                    iframe.style.width = "auto";
+                    iframe.style.height = "auto";
+                    iframe.style.position = "static";
+                    const closeBtn = document.querySelector("button[style*='position: fixed']");
+                    if (closeBtn) closeBtn.remove();
+                }
+            }
+        });
 
         // ===== 初回読み込み =====
         getTodayMusic();

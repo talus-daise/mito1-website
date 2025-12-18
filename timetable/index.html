@@ -72,6 +72,12 @@
             </iframe>
         </section>
         <section>
+            <h2>お詫び</h2>
+            <p>サーバー関係の不具合で、2025-12-09 ~ 2025-12-16の時間割が保存されていなかったことに現在(2025-12-18)気が付きました…^^;</p>
+            <p>そもそも保存がされていなかったようなので、残念ながら閲覧することができません…</p>
+            <p>ご不便をおかけして申し訳ありません。</p>
+        </section>
+        <section>
             <h2>過去の時間割一覧</h2>
             <label for="search-box">検索：<input type="text" id="search-box" placeholder="時間割をファイル名から検索..."></label>
             <button id="search-btn">検索</button>
@@ -82,6 +88,17 @@
             <p id="server-state"></p>
             <hr>
             <p>5分ごとにサーバーを監視し、エラーが起きた場合は再起動しています。</p>
+        </section>
+        <section>
+            <h2>サーバーの仕様</h2>
+            <p><img src="https://img.shields.io/badge/-Node.js-339933.svg?logo=node.js&style=for-the-badge&logoColor=ffffff">で動かしており、ファイル一覧の公開は<img src="https://img.shields.io/badge/Python-Flask-3776AB.svg?logo=python&style=for-the-badge&logoColor=ffffff">で行っています。</p>
+            <h3>エラーの種類と対処法</h3>
+            <h4>511 Network Authentication Required</h4>
+            <p>ページ上部の認証をしてください。一週間に一度程度要求される場合があります。</p>
+            <h4>502 Bad Gateway</h4>
+            <p>再読み込みしてください。再起動中かもしれません。</p>
+            <h4>fetch error</h4>
+            <p>時間割画像の取得に失敗しました。再読み込みしてください。また、サーバー側の障害の場合もあるので時間を開けてもう一度お試しください。</p>
         </section>
     </main>
 
@@ -102,14 +119,13 @@
             const baseURL = "https://mito1-website.loca.lt/files/";
             const timetable = document.getElementById("timetable");
 
-            // 進捗表示用要素作成
+            // 進捗表示
             const progress = document.createElement("p");
             progress.textContent = "0% / 100% 処理中…";
             const progressBar = document.createElement("progress");
             progressBar.value = 0;
             progressBar.max = 100;
-            container.appendChild(progress);
-            container.appendChild(progressBar);
+            container.appendChild(progress, progressBar);
 
             async function fetchBlob(url) {
                 const res = await fetch(url);
@@ -117,6 +133,13 @@
                 const blob = await res.blob();
                 return URL.createObjectURL(blob);
             }
+
+            // 今日の日付 yyyymmdd
+            const today = new Date();
+            const ymd =
+                today.getFullYear().toString() +
+                String(today.getMonth() + 1).padStart(2, "0") +
+                String(today.getDate()).padStart(2, "0");
 
             try {
                 const res = await fetch(baseURL + "images.json");
@@ -128,18 +151,37 @@
                     return;
                 }
 
-                // 最新画像表示
-                const latestFile = files[0];
-                timetable.src = await fetchBlob(baseURL + latestFile);
-                timetable.alt = "最新の時間割画像 (" + latestFile + ")";
-                timetable.style.display = "block";
-                timetable.style.width = "calc(100% - 2rem)";
+                // ▼ 今日の画像をすべて取得
+                const todayFiles = files.filter(f => f.startsWith(ymd));
+
+                console.log({ files})
+                console.log({ todayFiles });
+
+                // 表示対象
+                const displayFiles = todayFiles.length ? todayFiles : [files[0]];
+
+                // 既存 single img を隠す
+                timetable.style.display = "none";
                 if (timetable.nextElementSibling) timetable.nextElementSibling.remove();
 
-                // 過去画像リスト表示
-                const list = document.createElement("div");
-                const frag = document.createDocumentFragment();
-                const otherFiles = files.slice(1);
+                // 表示用ラッパー
+                const todayWrapper = document.createElement("div");
+                todayWrapper.style.cssText = "display:flex; flex-wrap:wrap; gap:12px;";
+                timetable.parentNode.appendChild(todayWrapper);
+
+                for (const file of displayFiles) {
+                    const blobURL = await fetchBlob(baseURL + file);
+
+                    const img = document.createElement("img");
+                    img.src = blobURL;
+                    img.alt = file;
+                    img.style.cssText = "max-width:100%; border-radius:8px";
+
+                    todayWrapper.appendChild(img);
+                }
+
+                // ▼ 過去画像
+                const otherFiles = files.filter(f => !displayFiles.includes(f));
 
                 for (let i = 0; i < otherFiles.length; i++) {
                     const file = otherFiles[i];
@@ -151,33 +193,33 @@
                     link.rel = "noopener noreferrer";
 
                     const imgWrapper = document.createElement("div");
-                    imgWrapper.style.cssText = "display:block; margin-bottom:12px; cursor:pointer; position:relative; width:fit-content;";
+                    imgWrapper.style.cssText =
+                        "display:block; margin-bottom:12px; cursor:pointer; position:relative; width:fit-content;";
 
                     const img = document.createElement("img");
                     img.src = blobURL;
                     img.alt = file;
                     img.loading = "lazy";
-                    img.style.cssText = "max-width:300px; display:block; border-radius:8px; margin-bottom:12px";
+                    img.style.cssText =
+                        "max-width:300px; display:block; border-radius:8px; margin-bottom:12px";
 
                     const filelabel = document.createElement("span");
                     filelabel.textContent = file;
-                    filelabel.style.cssText = "position:absolute; top:0; right:0; background:rgba(0,0,0,0.6); color:#fff; font-size:10px; padding:2px 4px; border-bottom-left-radius:4px";
+                    filelabel.style.cssText =
+                        "position:absolute; top:0; right:0; background:rgba(0,0,0,0.6); color:#fff; font-size:10px; padding:2px 4px; border-bottom-left-radius:4px";
 
                     imgWrapper.appendChild(img);
                     imgWrapper.appendChild(filelabel);
                     link.appendChild(imgWrapper);
-
-                    // ここで即座に追加
                     container.appendChild(link);
 
-                    // 進捗更新
                     const percent = Math.floor(((i + 1) / otherFiles.length) * 100);
                     progress.textContent = `${percent}% / 100% 処理中…`;
                     progressBar.value = percent;
                 }
 
-                progress.remove()
-                progressBar.remove()
+                progress.remove();
+                progressBar.remove();
 
             } catch (e) {
                 container.textContent = "画像一覧の取得に失敗しました。";
