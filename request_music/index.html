@@ -132,7 +132,7 @@
             return videoId ? `https://www.youtube.com/embed/${videoId}` : "";
         }
 
-        function createMusicItem(musicName, url, desc, studentId, isOpened = false, isToggleable = false) {
+        function createMusicItem(musicName, url, desc, studentId, isOpened = false, isToggleable = false, isPlayedToggleable = true) {
             const div = document.createElement("div");
 
             const title = document.createElement("h3");
@@ -154,7 +154,7 @@
                 allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             });
 
-            if (isToggleable) {
+            if (isPlayedToggleable) {
                 videoContainer.addEventListener("click", () => {
                     const opened = videoContainer.classList.toggle("show");
                     videoContainer.innerHTML = "";
@@ -336,7 +336,7 @@
                 selectedMusic.innerHTML = "";
                 selectedMusic.classList.add("open");
                 selectedMusic.appendChild(
-                    createMusicItem(musicName, url, desc, studentId, true)
+                    createMusicItem(musicName, url, desc, studentId, true, true, false)
                 );
 
                 if (++count >= 20) {
