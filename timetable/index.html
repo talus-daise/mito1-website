@@ -12,6 +12,19 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
     <link rel="stylesheet" href="../script/notice/notice.css">
+    <style>
+        #past-timetable img {
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+        }
+
+        #past-timetable a::after {
+            content: "";
+            display: block;
+            clear: both;
+        }
+    </style>
     <!--web情報-->
     <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
     <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
@@ -50,17 +63,6 @@
     </header>
 
     <main>
-        <section class="highlight">
-            <h2>注意</h2>
-            <p>
-                時間割が見られないときは、以下の手順を踏んだ上、再読込してください。<br>
-                1. <a href='https://mito1-website.loca.lt/' target='_blank' rel='noopener noreferrer'>このリンク</a>に飛ぶ<br>
-                2. パスワード欄に`106.73.192.65`を入力する<br>
-                3. submitを押す<br>
-                4.
-                ファイル一覧が表示されたら成功→名簿と時間割が表示されるようになります。
-            </p>
-        </section>
         <section>
             <h2>現在の時間割画像</h2>
             <img src="" alt="時間割画像" id="timetable" width="calc(100% - 2rem)">
@@ -91,12 +93,7 @@
         </section>
         <section>
             <h2>サーバーの仕様</h2>
-            <p><img src="https://img.shields.io/badge/-Node.js-339933.svg?logo=node.js&style=for-the-badge&logoColor=ffffff">で動かしており、ファイル一覧の公開は<img src="https://img.shields.io/badge/Python-Flask-3776AB.svg?logo=python&style=for-the-badge&logoColor=ffffff">で行っています。</p>
-            <h3>エラーの種類と対処法</h3>
-            <h4>511 Network Authentication Required</h4>
-            <p>ページ上部の認証をしてください。一週間に一度程度要求される場合があります。</p>
-            <h4>502 Bad Gateway</h4>
-            <p>再読み込みしてください。再起動中かもしれません。</p>
+            <p><img src="https://img.shields.io/badge/Python-3776AB.svg?logo=python&style=for-the-badge&logoColor=ffffff">で動かしています。</p>
             <h4>fetch error</h4>
             <p>時間割画像の取得に失敗しました。再読み込みしてください。また、サーバー側の障害の場合もあるので時間を開けてもう一度お試しください。</p>
         </section>
@@ -110,194 +107,139 @@
         </p>
     </footer>
     <script>
-        const timetable = document.getElementById("timetable");
-        timetable.style.display = "none";
-        timetable.insertAdjacentHTML("afterend", "<span>読み込み中…</span>");
+        const BASE_URL = "https://talus-daise.github.io/mito1-website-timetable/output/";
+        const JSON_URL = BASE_URL + "images.json";
 
-        (async () => {
-            const container = document.getElementById("past-timetable");
-            const baseURL = "https://mito1-website.loca.lt/files/";
-            const timetable = document.getElementById("timetable");
+        const timetableImg = document.getElementById("timetable");
+        timetableImg.style.display = "none";
+        timetableImg.insertAdjacentHTML("afterend", "<span id='loading'>読み込み中…</span>");
 
-            // 進捗表示
-            const progress = document.createElement("p");
-            progress.textContent = "0% / 100% 処理中…";
-            const progressBar = document.createElement("progress");
-            progressBar.value = 0;
-            progressBar.max = 100;
-            container.appendChild(progress, progressBar);
+        // YYYYMMDD-HHMMSS / YYYYMMDD-1 対応
+        function parseFilename(name) {
+            const m = name.match(/^(\d{8})(?:-(\d{6})|-(\d+))\.(jpg|png)$/i);
+            if (!m) return null;
 
-            async function fetchBlob(url) {
-                const res = await fetch(url);
-                if (!res.ok) throw new Error(`Failed to fetch ${url}`);
-                const blob = await res.blob();
-                return URL.createObjectURL(blob);
+            const [, ymd, time, indexOnly] = m;
+            const y = ymd.slice(0, 4);
+            const mo = ymd.slice(4, 6);
+            const d = ymd.slice(6, 8);
+
+            let hh = "00", mm = "00", ss = "00";
+            let index = 0;
+
+            if (time) {
+                hh = time.slice(0, 2);
+                mm = time.slice(2, 4);
+                ss = time.slice(4, 6);
+            } else if (indexOnly) {
+                index = Number(indexOnly);
             }
 
-            // 今日の日付 yyyymmdd
-            const today = new Date();
-            const ymd =
-                today.getFullYear().toString() +
-                String(today.getMonth() + 1).padStart(2, "0") +
-                String(today.getDate()).padStart(2, "0");
+            return {
+                filename: name,
+                url: BASE_URL + name,
+                date: new Date(`${y}-${mo}-${d}T${hh}:${mm}:${ss}Z`),
+                dateKey: `${y}-${mo}-${d}`,
+                index
+            };
+        }
+
+        (async () => {
+            const pastContainer = document.getElementById("past-timetable");
+
+            const progress = document.createElement("p");
+            progress.textContent = "0% / 100% 処理中…";
+            const bar = document.createElement("progress");
+            bar.max = 100;
+            bar.value = 0;
+            pastContainer.append(progress, bar);
 
             try {
-                const res = await fetch(baseURL + "images.json");
-                const data = await res.json();
-                const files = data.files.slice().sort().reverse();
+                const res = await fetch(JSON_URL);
+                if (!res.ok) throw new Error("images.json 取得失敗");
 
-                if (!files.length) {
-                    container.textContent = "画像が見つかりません。";
-                    return;
-                }
+                const json = await res.json();
+                const files = json.files
+                    .map(parseFilename)
+                    .filter(Boolean)
+                    .sort((a, b) => (b.date - a.date) || (b.index - a.index));
 
-                // ▼ 今日の画像をすべて取得
-                const todayFiles = files.filter(f => f.startsWith(ymd));
+                if (!files.length) throw new Error("画像なし");
 
-                console.log({ files})
-                console.log({ todayFiles });
+                const latestDateKey = files[0].dateKey;
+                const todayFiles = files
+                    .filter(f => f.dateKey === latestDateKey)
+                    .sort((a, b) => (a.index - b.index) || (a.date - b.date));
 
-                // 表示対象
-                const displayFiles = todayFiles.length ? todayFiles : [files[0]];
+                document.getElementById("loading")?.remove();
 
-                // 既存 single img を隠す
-                timetable.style.display = "none";
-                if (timetable.nextElementSibling) timetable.nextElementSibling.remove();
+                // ▼ 最新日の確認用表示
+                const wrapper = document.createElement("div");
+                wrapper.style.cssText = "display:flex; flex-wrap:wrap; gap:12px;";
+                timetableImg.parentNode.appendChild(wrapper);
 
-                // 表示用ラッパー
-                const todayWrapper = document.createElement("div");
-                todayWrapper.style.cssText = "display:flex; flex-wrap:wrap; gap:12px;";
-                timetable.parentNode.appendChild(todayWrapper);
-
-                for (const file of displayFiles) {
-                    const blobURL = await fetchBlob(baseURL + file);
-
+                for (const f of todayFiles) {
                     const img = document.createElement("img");
-                    img.src = blobURL;
-                    img.alt = file;
+                    img.src = f.url;
+                    img.alt = f.filename;
                     img.style.cssText = "max-width:100%; border-radius:8px";
-
-                    todayWrapper.appendChild(img);
+                    wrapper.appendChild(img);
                 }
 
-                // ▼ 過去画像
-                const otherFiles = files.filter(f => !displayFiles.includes(f));
+                // ▼ 過去分
+                const others = files.filter(f => f.dateKey !== latestDateKey);
 
-                for (let i = 0; i < otherFiles.length; i++) {
-                    const file = otherFiles[i];
-                    const blobURL = await fetchBlob(baseURL + file);
+                for (let i = 0; i < others.length; i++) {
+                    const f = others[i];
 
                     const link = document.createElement("a");
-                    link.href = blobURL;
+                    link.href = f.url;
                     link.target = "_blank";
                     link.rel = "noopener noreferrer";
 
-                    const imgWrapper = document.createElement("div");
-                    imgWrapper.style.cssText =
-                        "display:block; margin-bottom:12px; cursor:pointer; position:relative; width:fit-content;";
+                    const box = document.createElement("div");
+                    box.style.cssText =
+                        "display:block; margin-bottom:12px; position:relative; width:fit-content;";
 
                     const img = document.createElement("img");
-                    img.src = blobURL;
-                    img.alt = file;
+                    img.src = f.url;
                     img.loading = "lazy";
                     img.style.cssText =
-                        "max-width:300px; display:block; border-radius:8px; margin-bottom:12px";
+                        "max-width:300px; border-radius:8px; display:block;";
 
-                    const filelabel = document.createElement("span");
-                    filelabel.textContent = file;
-                    filelabel.style.cssText =
-                        "position:absolute; top:0; right:0; background:rgba(0,0,0,0.6); color:#fff; font-size:10px; padding:2px 4px; border-bottom-left-radius:4px";
+                    const label = document.createElement("span");
+                    label.textContent = f.filename;
+                    label.style.cssText =
+                        "position:absolute; top:0; right:0; background:rgba(0,0,0,.6); color:#fff; font-size:10px; padding:2px 4px; border-top-right-radius:8px;";
 
-                    imgWrapper.appendChild(img);
-                    imgWrapper.appendChild(filelabel);
-                    link.appendChild(imgWrapper);
-                    container.appendChild(link);
+                    box.append(img, label);
+                    link.appendChild(box);
+                    pastContainer.appendChild(link);
 
-                    const percent = Math.floor(((i + 1) / otherFiles.length) * 100);
+                    const percent = Math.floor(((i + 1) / others.length) * 100);
+                    bar.value = percent;
                     progress.textContent = `${percent}% / 100% 処理中…`;
-                    progressBar.value = percent;
                 }
 
                 progress.remove();
-                progressBar.remove();
+                bar.remove();
 
             } catch (e) {
-                container.textContent = "画像一覧の取得に失敗しました。";
                 console.error(e);
+                pastContainer.textContent = "画像一覧の取得に失敗しました。";
             }
-        })();
-
-        // ▼ server-state.json を読み込み、状態とルートアクセス結果を表示
-        (function () {
-            const stateSpan = document.getElementById("server-state");
-            const stateURL = "https://mito1-website.loca.lt/files/server-state.json";
-            const rootURL = "https://mito1-website.loca.lt/";
-
-            Promise.all([
-                fetch(stateURL).then(res => res.json()).catch(() => null),
-                fetch(rootURL, { method: "GET" })
-                    .then(r => ({ ok: true, status: r.status, statusText: r.statusText }))
-                    .catch(err => ({ ok: false, error: err.toString() }))
-            ])
-                .then(([data, rootStatus]) => {
-                    const results = [];
-
-                    // ▼ server-state.json 側
-                    if (!data || !Array.isArray(data.services)) {
-                        results.push("server-state.json: 取得失敗");
-                    } else {
-                        const svcTexts = data.services.map(svc => {
-                            const name = svc.name || "unknown";
-                            const active = svc.ActiveState || "unknown";
-                            let dispname = name;
-
-                            switch (name) {
-                                case "update-timetable":
-                                    dispname = '時間割取得プログラム';
-                                    break;
-                                case "update_timetable":
-                                    dispname = '時間割公開プログラム';
-                                    break;
-                                case 'update-timetable-tunnel':
-                                    dispname = 'サーバートンネルプログラム';
-                                    break;
-                            }
-
-                            return `${dispname}: ${active}`;
-                        });
-                        results.push(...svcTexts);
-                    }
-
-                    // ▼ ルート URL のステータス
-                    if (rootStatus.ok) {
-                        results.push(`サーバー状況: ${rootStatus.status} ${rootStatus.statusText}`);
-                    } else {
-                        results.push(`サーバー状況: エラー (${rootStatus.error})`);
-                    }
-
-                    stateSpan.innerHTML = results.join("<br>");
-                })
-                .catch(() => {
-                    stateSpan.textContent = "取得失敗";
-                });
         })();
 
         // 検索
-        document.getElementById("search-btn").addEventListener("click", function () {
-            const query = document.getElementById("search-box").value.trim().toLowerCase();
-            const pastTimetable = document.getElementById("past-timetable");
-            const items = pastTimetable.querySelectorAll("div > div");
-
-            items.forEach(function (item) {
-                const text = item.innerHTML.trim().toLowerCase();
-                item.style.display = text.includes(query) ? "" : "none";
+        document.getElementById("search-btn").addEventListener("click", () => {
+            const q = document.getElementById("search-box").value.toLowerCase();
+            document.querySelectorAll("#past-timetable div").forEach(el => {
+                el.style.display = el.textContent.toLowerCase().includes(q) ? "" : "none";
             });
         });
 
-        document.getElementById("search-box").addEventListener("keydown", function (event) {
-            if (event.key === "Enter") {
-                document.getElementById("search-btn").click();
-            }
+        document.getElementById("search-box").addEventListener("keydown", e => {
+            if (e.key === "Enter") document.getElementById("search-btn").click();
         });
     </script>
     <script type="module" src="../script/notice/notice.js"></script>

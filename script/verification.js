@@ -1,6 +1,6 @@
 let names = [];
 
-fetch("https://mito1-website.loca.lt/files/names.json")
+fetch("/mito1-website/private/names.json")
     .then(response => response.json())
     .then(data => {
         // dataがオブジェクトの場合、全クラスを統合
@@ -96,7 +96,7 @@ function checkVerification() {
     nameBox.id = "question-name";
     nameBox.type = "text";
     nameBox.placeholder = "例: 山田太郎";
-    Object.assign(nameBox.style, {padding: "6px 8px", boxSizing: "border-box"});
+    Object.assign(nameBox.style, { padding: "6px 8px", boxSizing: "border-box" });
 
     const closeButton = document.createElement("button");
     closeButton.innerText = "OK";

@@ -146,7 +146,7 @@
                     document.title = `${user.display_name || "とある水戸一の名無し"} のマイページ | 水戸一高附属中総合ウェブサイト`;
 
                     // --- 学籍番号取得 ---
-                    fetch("https://mito1-website.loca.lt/files/names.json")
+                    fetch("/mito1-website/private/names.json")
                         .then(response => response.json())
                         .then(data => {
                             const classes = Object.keys(data);

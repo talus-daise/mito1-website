@@ -95,10 +95,9 @@
         </section>
         <section class="main__classlist">
             <h2>時間割</h2>
-            <img src="" alt="時間割画像" id="timetable">
-            <p>※時間割が表示されない場合、<a href="./timetable/">過去の時間割</a>や<a
-                    href="./faq.html#timetable-error:~:text=%E3%82%82%E3%81%82%E3%82%8A%E3%81%BE%E3%81%9B%E3%82%93%E3%80%82-,%E6%99%82%E9%96%93%E5%89%B2%E3%81%8C%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%A7%E8%A1%A8%E7%A4%BA%E3%81%95%E3%82%8C%E3%81%AA%E3%81%84,-%E6%99%82%E9%96%93%E5%89%B2%E3%81%8C%E8%A6%8B">よくある質問</a>を参照してください。
-            </p>
+            <div id="timetable-wrapper">
+                <div id="timetable"></div>
+            </div>
         </section>
         <section>
             <h2>サイト概要</h2>
@@ -147,35 +146,51 @@
 
     <script>
         const containerEl = document.getElementById('timetable');
-        const FILENAME_RE = /(\d{6,8})-(\d{6})(?:-(\d+))?\.[jpg, png]$/i;
+
+        const BASE_URL = 'https://talus-daise.github.io/mito1-website-timetable/output/';
+        const JSON_URL = BASE_URL + 'images.json';
+
+        // YYYYMMDD-HHMMSS(.jpg)
+        // YYYYMMDD-1(.jpg)
+        const FILENAME_RE =
+            /^(\d{8})(?:-(\d{6})|-(\d+))\.(jpg|png)$/i;
 
         // ファイル名解析
         function parseFilename(filename) {
             const m = filename.match(FILENAME_RE);
             if (!m) return null;
 
-            let [, datePart, timePart, indexPart] = m;
-            if (datePart.length === 6) datePart = '20' + datePart;
+            const [, datePart, timePart, indexOnly] = m;
 
             const y = datePart.slice(0, 4);
             const mo = datePart.slice(4, 6);
             const d = datePart.slice(6, 8);
-            const hh = timePart.slice(0, 2);
-            const mm = timePart.slice(2, 4);
-            const ss = timePart.slice(4, 6);
+
+            let hh = '00', mm = '00', ss = '00';
+            let index = 0;
+
+            if (timePart) {
+                hh = timePart.slice(0, 2);
+                mm = timePart.slice(2, 4);
+                ss = timePart.slice(4, 6);
+            } else if (indexOnly) {
+                index = Number(indexOnly);
+            }
 
             const date = new Date(`${y}-${mo}-${d}T${hh}:${mm}:${ss}Z`);
             if (isNaN(date.getTime())) return null;
 
             return {
+                filename,
+                url: BASE_URL + filename,
                 date,
                 dateKey: `${y}-${mo}-${d}`,
-                index: Number(indexPart ?? 0)
+                index
             };
         }
 
-        // 最新日の画像をすべて表示
-        async function updateLatestImages(baseUrl = 'https://mito1-website.loca.lt/') {
+        // 最新日の画像を表示
+        async function updateLatestImages() {
             let loadingEl = document.getElementById('timetable-loading');
             if (!loadingEl) {
                 loadingEl = document.createElement('p');
@@ -188,68 +203,49 @@
             containerEl.style.display = 'none';
 
             try {
-                const res = await fetch(baseUrl);
-                if (!res.ok) throw new Error('一覧取得失敗');
+                const res = await fetch(JSON_URL);
+                if (!res.ok) throw new Error('images.json 取得失敗');
 
-                const htmlText = await res.text();
-                const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+                const json = await res.json();
+                const filenames = json.files ?? [];
 
-                const files = Array.from(doc.querySelectorAll('a[href]'))
-                    .map(a => {
-                        const href = a.getAttribute('href');
-                        if (!href) return null;
-                        const filename = href.split('/').pop();
-                        const parsed = parseFilename(filename);
-                        if (!parsed) return null;
-
-                        return {
-                            url: new URL(href, baseUrl).href,
-                            filename,
-                            ...parsed
-                        };
-                    })
+                const files = filenames
+                    .map(parseFilename)
                     .filter(Boolean)
                     .sort((a, b) =>
                         (b.date - a.date) || (b.index - a.index)
                     );
 
-                if (files.length === 0) throw new Error('jpgファイルが見つかりません');
+                if (files.length === 0) throw new Error('画像なし');
 
-                // 最新の日付キーを取得
                 const latestDateKey = files[0].dateKey;
 
-                // 同じ日の画像を抽出
                 const todayImages = files
                     .filter(f => f.dateKey === latestDateKey)
                     .sort((a, b) =>
-                        (a.date - b.date) || (a.index - b.index)
+                        (a.index - b.index) || (a.date - b.date)
                     );
 
                 for (const item of todayImages) {
                     const img = document.createElement('img');
                     img.loading = 'lazy';
+                    img.src = item.url;
                     img.alt = item.filename;
 
-                    const imgRes = await fetch(item.url);
-                    if (!imgRes.ok) continue;
-
-                    const blob = await imgRes.blob();
-                    img.src = URL.createObjectURL(blob);
-
                     img.addEventListener('click', () => {
-                        let existing = document.getElementById('timetable-fullview');
-                        if (existing) existing.remove();
+                        const old = document.getElementById('timetable-fullview');
+                        if (old) old.remove();
 
-                        const fullView = document.createElement('div');
-                        fullView.id = 'timetable-fullview';
+                        const overlay = document.createElement('div');
+                        overlay.id = 'timetable-fullview';
 
                         const big = document.createElement('img');
-                        big.src = img.src;
-                        big.alt = img.alt;
+                        big.src = item.url;
+                        big.alt = item.filename;
 
-                        fullView.appendChild(big);
-                        document.body.appendChild(fullView);
-                        fullView.addEventListener('click', () => fullView.remove());
+                        overlay.appendChild(big);
+                        document.body.appendChild(overlay);
+                        overlay.addEventListener('click', () => overlay.remove());
                     });
 
                     containerEl.appendChild(img);
@@ -258,7 +254,9 @@
                 containerEl.style.display = 'block';
                 loadingEl.remove();
 
-                console.info(`最新日(${latestDateKey})の画像を ${todayImages.length} 枚表示`);
+                console.info(
+                    `最新日(${latestDateKey})の画像を ${todayImages.length} 枚表示`
+                );
             } catch (err) {
                 console.error(err);
                 loadingEl.textContent = '画像取得に失敗しました';
