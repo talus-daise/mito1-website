@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             .select("*")
             .gte("created_at", startOfDay.toISOString())
             .lt("created_at", endOfDay.toISOString())
-            .single();
+            .limit(1);
         if (!error) {
             allowData = data;
         }

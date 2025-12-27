@@ -1,6 +1,6 @@
 # 更新履歴
 
-## v3.2.19 (2025-12-26)
+## [v3.2.19](https://github.com/talus-daise/mito1-website/releases/tag/v3.2.19) (2025-12-26)
 - 時間割の不具合を修正
 - リクエスト曲の不具合を修正
 

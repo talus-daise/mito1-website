@@ -1,141 +1,219 @@
-let names = [];
+/* =========================================================
+ *  Googleログイン必須（オーバーレイ方式）
+ * ========================================================= */
 
-fetch("/mito1-website/private/names.json")
-    .then(response => response.json())
-    .then(data => {
-        // dataがオブジェクトの場合、全クラスを統合
-        names = Array.isArray(data) ? data : Object.values(data).flat();
-        checkVerification();
-    })
-    .catch(error => {
-        console.error("Failed to fetch names:", error);
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+/* =========================================================
+ *  Supabase 設定
+ * ========================================================= */
+const supabaseUrl = "https://mgsbwkidyxmicbacqeeh.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg";
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+/* =========================================================
+ *  初期チェック
+ * ========================================================= */
+document.addEventListener("DOMContentLoaded", async () => {
+    const {
+        data: { session }
+    } = await supabase.auth.getSession();
+
+    if (!session?.user) {
+        showLoginOverlay();
+    } else {
+        verifyDomain(session.user);
+    }
+});
+
+/* =========================================================
+ *  オーバーレイ表示
+ * ========================================================= */
+function showLoginOverlay() {
+    const overlay = document.createElement("div");
+    overlay.id = "login-overlay";
+    Object.assign(overlay.style, {
+        position: "fixed",
+        inset: "0",
+        background: "rgba(0,0,0,0.75)",
+        zIndex: "9999",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
     });
 
-const verificationKey = "verification";
-
-function checkVerification() {
-    const verified = localStorage.getItem(verificationKey) === "true";
-
-    if (verified) return;
-
-    const alertBackground = document.createElement("div");
-    alertBackground.id = "custom-alert-background";
-    Object.assign(alertBackground.style, {
-        position: "fixed", zIndex: "1001", background: "#000", top: "0", left: "0",
-        width: "100%", height: "100%", opacity: "0", transition: "opacity 0.5s ease-in-out"
-    });
-
-    const alertContainer = document.createElement("div");
-    alertContainer.id = "custom-alert";
-    Object.assign(alertContainer.style, {
-        position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-        padding: "20px", background: "#abc3ff", border: "2px solid #00134c", zIndex: "1002",
-        boxShadow: "0px 4px 10px rgba(0,0,0,0.2)", borderRadius: "8px", textAlign: "center", opacity: "0",
-        transition: "opacity 0.5s ease-in-out"
-    });
-
-    const messageHead = document.createElement("h3");
-    messageHead.innerText = "認証";
-
-    const messageElem = document.createElement("p");
-    messageElem.innerText = "部外者でないことを確認します";
-    messageElem.style.marginBottom = "15px";
-
-    // 画像と重ねるためのラッパー（相対位置）
-    const imgWrapper = document.createElement("div");
-    imgWrapper.style.position = "relative";
-    imgWrapper.style.display = "inline-block";
-    imgWrapper.style.marginBottom = "15px";
-
-    const img = document.createElement("img");
-    img.src = "/mito1-website/img/im-not-outsider.png";
-    img.alt = "Verification Image";
-    img.style.display = "block";
-
-    // 画像上に重ねるボタン
-    const imnotoutsider = document.createElement("button");
-    imnotoutsider.type = "button";
-    imnotoutsider.innerText = ""; // ボタンラベル
-    Object.assign(imnotoutsider.style, {
-        position: "absolute",
-        left: "7%",
-        top: "33%",
-        padding: "1.3rem",
-        cursor: "pointer",
-        border: "1px solid #adadae",
-        background: "rgba(248,248,248,0.95)",
-        color: "#00134c",
-        borderRadius: "5px",
-        transform: "translate(0, 0)",
-        zIndex: "2"
-    });
-
-    imgWrapper.appendChild(img);
-    imgWrapper.appendChild(imnotoutsider);
-
-    const popup = document.createElement("div");
-    popup.id = "name-popup";
-    Object.assign(popup.style, {
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        padding: "20px",
+    const box = document.createElement("div");
+    Object.assign(box.style, {
         background: "#f8f8f8",
-        boxShadow: "0px 4px 10px rgba(0,0,0,0.2)",
-        borderRadius: "8px",
-        zIndex: "1003",
-        transition: "all 0.3s ease-in-out"
+        padding: "30px",
+        borderRadius: "10px",
+        textAlign: "center",
+        boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
+        minWidth: "280px"
     });
 
-    const namePrompt = document.createElement("p");
-    namePrompt.innerText = "名前を入力してください(漢字で間を空けずに):";
-    namePrompt.style.margin = "10px 0 6px 0";
+    const title = document.createElement("h3");
+    title.textContent = "ログインが必要です";
 
-    const nameBox = document.createElement("input");
-    nameBox.id = "question-name";
-    nameBox.type = "text";
-    nameBox.placeholder = "例: 山田太郎";
-    Object.assign(nameBox.style, { padding: "6px 8px", boxSizing: "border-box" });
+    const desc = document.createElement("p");
+    desc.textContent = "Googleアカウントでログインしてください";
 
-    const closeButton = document.createElement("button");
-    closeButton.innerText = "OK";
-    Object.assign(closeButton.style, {
-        padding: "6px 14px", cursor: "pointer", border: "1px solid #00134c",
-        background: "#adadae", color: "#f8f8f8", borderRadius: "5px",
-        boxShadow: "0px 0px 5px 1px rgba(0, 0, 0, 0.2)", marginTop: "10px"
+    const loginBtn = document.createElement("div");
+    loginBtn.innerHTML = `
+            <button class="gsi-material-button">
+                <div class="gsi-material-button-state"></div>
+                <div class="gsi-material-button-content-wrapper">
+                    <div class="gsi-material-button-icon">
+                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" xmlns:xlink="http://www.w3.org/1999/xlink" style="display: block;">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                            <path fill="none" d="M0 0h48v48H0z"></path>
+                        </svg>
+                    </div>
+                    <span class="gsi-material-button-contents">Googleでログイン</span>
+                    <span style="display: none;">Googleでログイン</span>
+                </div>
+            </button>`;
+
+            
+    const style = document.createElement("style");
+    style.textContent = `
+        .gsi-material-button {
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            -webkit-appearance: none;
+            background-color: WHITE;
+            background-image: none;
+            border: 1px solid #747775;
+            -webkit-border-radius: 4px;
+            border-radius: 4px;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            color: #1f1f1f;
+            cursor: pointer;
+            font-family: 'Roboto', arial, sans-serif;
+            font-size: 14px;
+            height: 40px;
+            letter-spacing: 0.25px;
+            outline: none;
+            overflow: hidden;
+            padding: 0 12px;
+            position: relative;
+            text-align: center;
+            -webkit-transition: background-color .218s, border-color .218s, box-shadow .218s;
+            transition: background-color .218s, border-color .218s, box-shadow .218s;
+            vertical-align: middle;
+            white-space: nowrap;
+            width: auto;
+            max-width: 400px;
+            min-width: min-content;
+        }
+        .gsi-material-button .gsi-material-button-icon {
+            height: 20px;
+            margin-right: 12px;
+            min-width: 20px;
+            width: 20px;
+        }
+        .gsi-material-button .gsi-material-button-content-wrapper {
+            -webkit-align-items: center;
+            align-items: center;
+            display: flex;
+            -webkit-flex-direction: row;
+            flex-direction: row;
+            -webkit-flex-wrap: nowrap;
+            flex-wrap: nowrap;
+            height: 100%;
+            justify-content: space-between;
+            position: relative;
+            width: 100%;
+        }
+        .gsi-material-button .gsi-material-button-contents {
+            -webkit-flex-grow: 1;
+            flex-grow: 1;
+            font-family: 'Roboto', arial, sans-serif;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: top;
+        }
+        .gsi-material-button .gsi-material-button-state {
+            -webkit-transition: opacity .218s;
+            transition: opacity .218s;
+            bottom: 0;
+            left: 0;
+            opacity: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+        .gsi-material-button:disabled {
+            cursor: default;
+            background-color: #ffffff61;
+            border-color: #1f1f1f1f;
+        }
+        .gsi-material-button:disabled .gsi-material-button-contents {
+            opacity: 38%;
+        }
+        .gsi-material-button:disabled .gsi-material-button-icon {
+            opacity: 38%;
+        }
+        .gsi-material-button:not(:disabled):active .gsi-material-button-state,
+        .gsi-material-button:not(:disabled):focus .gsi-material-button-state {
+            background-color: #303030;
+            opacity: 12%;
+        }
+        .gsi-material-button:not(:disabled):hover {
+            -webkit-box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+            box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+        }
+        .gsi-material-button:not(:disabled):hover .gsi-material-button-state {
+            background-color: #303030;
+            opacity: 8%;
+        }
+    `;
+    document.head.appendChild(style);
+
+    loginBtn.addEventListener("click", async () => {
+        await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+                redirectTo: window.location.href
+            }
+        });
     });
 
-    // 最初は入力欄とボタンを非表示にする
-    popup.style.opacity = "0";
-
-    popup.append(namePrompt, nameBox, closeButton);
-
-    imnotoutsider.addEventListener("click", () => {
-        namePrompt.style.display = "block";
-        nameBox.style.display = "block";
-        closeButton.style.display = "inline-block";
-        popup.style.display = "block";
-        popup.style.opacity = "1";
-        nameBox.focus();
-    });
-
-    closeButton.addEventListener("click", () => {
-        alertContainer.style.opacity = "0";
-        const clientName = nameBox.value.trim();
-        const isValid = names.includes(clientName);
-        localStorage.setItem(verificationKey, isValid ? "true" : "false");
-        setTimeout(() => alertBackground.remove(), 500);
-        const clientUrl = window.location.pathname;
-        window.location.pathname = isValid ? clientUrl : "/mito1-website/caution";
-    });
-
-    alertContainer.append(messageHead, messageElem, imgWrapper, popup);
-    alertBackground.appendChild(alertContainer);
-    document.body.appendChild(alertBackground);
-
-    setTimeout(() => {
-        alertBackground.style.opacity = "1";
-        alertContainer.style.opacity = "1";
-    }, 10);
+    box.append(title, desc, loginBtn);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
 }
+
+/* =========================================================
+ *  ドメイン制限
+ * ========================================================= */
+async function verifyDomain(user) {
+    const email = user.email || "";
+
+    const allowed =
+        email.endsWith("@mito1-h.ibk.ed.jp") ||
+        email.endsWith(".ibk.ed.jp");
+
+    if (!allowed) {
+        await supabase.auth.signOut();
+        window.location.href = "/mito1-website/caution";
+    }
+}
+
+/* =========================================================
+ *  認証状態監視
+ * ========================================================= */
+supabase.auth.onAuthStateChange((_event, session) => {
+    if (!session?.user) {
+        showLoginOverlay();
+    } else {
+        document.getElementById("login-overlay")?.remove();
+        verifyDomain(session.user);
+    }
+});
