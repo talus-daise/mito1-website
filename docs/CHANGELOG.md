@@ -1,5 +1,10 @@
 # 更新履歴
 
+## [v3.3.0](https://github.com/talus-daise/mito1-website/releases/tag/v3.3.0) (2025-12-27)
+- サイト全体に認証機能を追加
+  - 各機能へのアクセス制限を追加
+  - 不正アクセス防止のための対策を実施
+
 ## [v3.2.19](https://github.com/talus-daise/mito1-website/releases/tag/v3.2.19) (2025-12-26)
 - 時間割の不具合を修正
 - リクエスト曲の不具合を修正
