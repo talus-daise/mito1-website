@@ -34,7 +34,7 @@
     <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    
+
     <!--マニフェスト-->
     <link rel="manifest" href="../manifest.json">
 </head>
@@ -49,12 +49,14 @@
             <h2>ユーザー情報</h2>
             <div class="user-info">
                 <img id="user-avatar" alt="ユーザーアイコン" width="50" height="50">
-                <p>学籍番号: <span id="student-id">0X00</span></p>
-                <p>ユーザー名: <span id="user-name">とある水戸一の名無し</span></p>
-                <p>表示名: <span id="display-name">とある水戸一の名無し</span><button id="edit-display-name" style="margin: 0 0 0 1rem;">編集</button></p>
-                <p>メールアドレス: <span id="user-email">guest@example.com</span></p>
-                <p>権限: <span id="user-role">ゲスト</span></p>
-                <p>自己紹介: <span id="about-me">自己紹介は未設定です。</span></p><button id="edit-about-me" style="margin: 0 0 0 1rem;">編集</button>
+                <p><i class="fa-solid fa-address-card"></i><span id="student-id">0X00</span></p>
+                <p><i class="fa-solid fa-school"></i><span id="user-name">とある水戸一の名無し</span></p>
+                <p><i class="fa-solid fa-user"></i><span id="display-name">とある水戸一の名無し</span><button id="edit-display-name"
+                        style="margin: 0 0 0 1rem;">編集</button></p>
+                <p><i class="fa-solid fa-envelope"></i>メールアドレス: <span id="user-email">guest@example.com</span></p>
+                <p><i class="fa-solid fa-shield-alt"></i>権限: <span id="user-role">ゲスト</span></p>
+                <p><i class="fa-solid fa-info-circle"></i>自己紹介: <span id="about-me">自己紹介は未設定です。</span></p><button id="edit-about-me"
+                    style="margin: 0 0 0 1rem;">編集</button>
             </div>
             <button id="logout-button">ログアウト</button>
             <hr>
@@ -71,17 +73,17 @@
 
         <section>
             <h2>掲示板の投稿一覧</h2>
-            <ul id="thread-list"></ul>
+            <div id="thread-list" class="content-list"></div>
         </section>
 
         <section>
             <h2>投稿した質問一覧</h2>
-            <ul id="question-list"></ul>
+            <div id="question-list" class="content-list"></div>
         </section>
 
         <section>
             <h2>投稿した回答一覧</h2>
-            <ul id="answer-list"></ul>
+            <div id="answer-list" class="content-list"></div>
         </section>
     </main>
     <script type="module">
@@ -118,7 +120,7 @@
 
         if (!existingUser) {
             // 新規ユーザーなら登録
-            await supabase.from("users").insert([{ user_id: user.id, user_email: userEmail, visit_count: 1 , avatar_url: user.user_metadata.avatar_url, full_name: user.user_metadata.full_name }]);
+            await supabase.from("users").insert([{ user_id: user.id, user_email: userEmail, visit_count: 1, avatar_url: user.user_metadata.avatar_url, full_name: user.user_metadata.full_name }]);
         } else {
             // 訪問回数を+1
             await supabase
@@ -177,7 +179,7 @@
             });
 
         let disprole;
-        switch(updatedUser.role) {
+        switch (updatedUser.role) {
             case "master":
                 disprole = "マスター";
                 break;
@@ -220,37 +222,76 @@
 
         const qList = document.getElementById("question-list");
         questions?.forEach(q => {
-            const li = document.createElement("li");
-            li.innerHTML = `<a href="/mito1-website/question/details/?id=${q.id}">${q.title}</a>`;
-            qList.appendChild(li);
+            const div = document.createElement("div");
+            div.classList.add("content-list-item");
+            const a = document.createElement("a");
+            a.href = `/mito1-website/question/details/?id=${q.id}`;
+            a.style.color = "inherit";
+            const title = document.createElement("h3");
+            title.textContent = q.title;
+            a.appendChild(title);
+            const time = document.createElement("p");
+            time.innerHTML = `<i class="fa-solid fa-clock"></i>${new Date(q.created_at).toLocaleString()}`;
+            a.appendChild(time);
+            const username = document.createElement("p");
+            username.innerHTML = `<i class="fa-solid fa-user"></i>あなた`;
+            a.appendChild(username);
+            div.appendChild(a);
+            qList.appendChild(div);
         });
 
         // --- 掲示板の投稿一覧を取得 ---
         const { data: threads } = await supabase
             .from("BBS")
-            .select("id, thread, title")
+            .select("id, thread, title, created_at, username")
             .eq("user_email", userEmail)
             .order("created_at", { ascending: false });
 
         const tList = document.getElementById("thread-list");
         threads?.forEach(t => {
-            const li = document.createElement("li");
-            li.innerHTML = `<a href="/mito1-website/bbs/thread/?thread=${encodeURIComponent(t.thread)}&post_id=${encodeURIComponent(t.id)}">${t.title} - ${t.thread}</a>`;
-            tList.appendChild(li);
+            const div = document.createElement("div");
+            div.classList.add("content-list-item");
+            const a = document.createElement("a");
+            a.href = `/mito1-website/bbs/thread/?thread=${encodeURIComponent(t.thread)}&post_id=${encodeURIComponent(t.id)}`;
+            a.style.color = "inherit";
+            const title = document.createElement("h3");
+            title.textContent = t.title;
+            a.appendChild(title);
+            const time = document.createElement("p");
+            time.innerHTML = `<i class="fa-solid fa-clock"></i>${new Date(t.created_at).toLocaleString()}`;
+            a.appendChild(time);
+            const username = document.createElement("p");
+            username.innerHTML = `<i class="fa-solid fa-user"></i>あなた`;
+            a.appendChild(username);
+            div.appendChild(a);
+            tList.appendChild(div);
         });
 
         // --- 回答一覧を取得 ---
         const { data: answers } = await supabase
             .from("answers")
-            .select("id, question_id, content")
+            .select("id, question_id, content, created_at, username")
             .eq("user_email", userEmail)
             .order("created_at", { ascending: false });
 
         const aList = document.getElementById("answer-list");
         answers?.forEach(a => {
-            const li = document.createElement("li");
-            li.innerHTML = `<a href="/mito1-website/question/details/?id=${a.question_id}&answer_id=${a.id}">${a.content.slice(0, 20)}...</a>`;
-            aList.appendChild(li);
+            const div = document.createElement("div");
+            div.classList.add("content-list-item");
+            const aTag = document.createElement("a");
+            aTag.href = `/mito1-website/question/details/?id=${a.question_id}&answer_id=${a.id}`;
+            aTag.style.color = "inherit";
+            const content = document.createElement("h3");
+            content.textContent = a.content.slice(0, 20) + (a.content.length > 20 ? "..." : "");
+            aTag.appendChild(content);
+            const time = document.createElement("p");
+            time.innerHTML = `<i class="fa-solid fa-clock"></i>${new Date(a.created_at).toLocaleString()}`;
+            aTag.appendChild(time);
+            const username = document.createElement("p");
+            username.innerHTML = `<i class="fa-solid fa-user"></i>あなた`;
+            aTag.appendChild(username);
+            div.appendChild(aTag);
+            aList.appendChild(div);
         });
 
         isLoading = false;
@@ -259,40 +300,65 @@
         document.getElementById("edit-display-name").addEventListener("click", async () => {
             let newDisplayName = prompt("新しい表示名を入力してください（20文字以内）:");
             if (newDisplayName === null) return;
+
             newDisplayName = newDisplayName.trim();
+            if (!newDisplayName || newDisplayName.length > 20) {
+                showCustomNotification("無効な表示名です。20文字以内で入力してください。");
+                return;
+            }
+
+            // 重複チェック
             const { data: duplicate, error: dupErr } = await supabase
                 .from("users")
                 .select("user_email")
                 .ilike("display_name", newDisplayName)
-                .limit(1)
+                .neq("user_email", userEmail)
                 .maybeSingle();
 
             if (dupErr) {
                 console.error(dupErr);
-                showCustomNotification("表示名の確認中にエラーが発生しました。後でもう一度お試しください。");
+                showCustomNotification("表示名の確認中にエラーが発生しました。");
                 return;
             }
 
-            if (duplicate && duplicate.user_email && duplicate.user_email !== userEmail) {
-                showCustomNotification("この表示名は既に使われています。別の表示名を選んでください。");
+            if (duplicate) {
+                showCustomNotification("この表示名は既に使用されています。");
                 return;
             }
-            const { data: existingUser } = await supabase
+
+            // users テーブル更新
+            const { error: userUpdateErr } = await supabase
                 .from("users")
-                .select("")
-                .eq("user_email", userEmail)
-                .single();
-            if (newDisplayName && newDisplayName.length <= 20) {
-                await supabase
-                    .from("users")
-                    .update({ display_name: newDisplayName })
-                    .eq("user_email", userEmail);
+                .update({ display_name: newDisplayName })
+                .eq("user_email", userEmail);
 
-                document.getElementById("display-name").textContent = newDisplayName;
-                showCustomNotification("表示名を更新しました。");
-            } else {
-                showCustomNotification("無効な表示名です。20文字以内で入力してください。");
+            if (userUpdateErr) {
+                console.error(userUpdateErr);
+                showCustomNotification("表示名の更新に失敗しました。");
+                return;
             }
+
+            // BBS 更新
+            await supabase
+                .from("BBS")
+                .update({ username: newDisplayName })
+                .eq("user_email", userEmail);
+
+            // questions 更新
+            await supabase
+                .from("questions")
+                .update({ username: newDisplayName })
+                .eq("user_email", userEmail);
+
+            // answers 更新
+            await supabase
+                .from("answers")
+                .update({ username: newDisplayName })
+                .eq("user_email", userEmail);
+
+            // 画面反映
+            document.getElementById("display-name").textContent = newDisplayName;
+            showCustomNotification("表示名を更新しました。");
         });
 
         document.getElementById("edit-about-me").addEventListener("click", () => {

@@ -82,6 +82,10 @@
             </div>
         </section>
         <section>
+            <h2>私について</h2>
+            <p id="about-me">自己紹介は未設定です。</p>
+        </section>
+        <section>
             <h2>ユーザー統計</h2>
             <div class="stats">
                 <p><i class="fa-solid fa-door-open" title="訪問回数"></i> <span id="visit-count">0</span></p>
@@ -175,6 +179,7 @@
                     document.getElementById("user-avatar").src = user.avatar_url || "../../img/default-avatar.png";
                     document.getElementById("user-name").textContent = user.display_name || "ゲスト";
                     document.getElementById("user-email").textContent = textMosaic(user.user_email);
+                    document.getElementById("about-me").textContent = user.about_me || "自己紹介は未設定です。";
                     document.getElementById("visit-count").textContent = user.visit_count;
                     document.getElementById("post-count").textContent = user.post_count;
 

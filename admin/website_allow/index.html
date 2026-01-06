@@ -5,26 +5,13 @@
     <!--文字コード・互換モード-->
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
-    <title>ウェブサイト許可管理 | 水戸一高附属中総合ウェブサイト</title>
+    <title>ウェブサイト許可管理 | 管理者用ページ</title>
     <!--ビューポート-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!--css-->
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
     <link rel="stylesheet" href="../../script/notice/notice.css">
-    <style>
-        .content-list {
-            display: grid;
-            grid-template-columns: 100%;
-            gap: 10px;
-        }
-
-        .content-item {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-    </style>
     <!--web情報-->
     <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
     <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
@@ -56,16 +43,47 @@
     <header>
         <h1>管理者用ページ</h1>
     </header>
+
     <main>
+        <h1>ウェブサイト許可管理</h1>
+
         <section>
-            <h2>ウェブサイト許可管理</h2>
+            <h2>現在の全体ステータス</h2>
+            <p id="current-status">読み込み中...</p>
+        </section>
 
-            <h3>現在のサイトアクセス許可状況</h3>
-            <p><span id="current-status">読み込み中...</span></p>
-            <button id="toggle-button">許可/不許可</button>
+        <section>
+            <h2>制限ルール追加</h2>
 
-            <h3>今日の曜日</h3>
-            <p id="current-day">読み込み中...</p>
+            <label>
+                ラベル
+                <input id="label" type="text" placeholder="例：平日昼制限">
+            </label><br>
+
+            <label>
+                開始日時
+                <input id="start-time" type="datetime-local">
+            </label><br>
+
+            <label>
+                終了日時
+                <input id="end-time" type="datetime-local">
+            </label><br>
+
+            <label>
+                モード
+                <select id="mode">
+                    <option value="restrict">制限</option>
+                    <option value="allow">制限解除</option>
+                </select>
+            </label>
+
+            <button id="add-rule">追加</button>
+        </section>
+
+        <section>
+            <h2>現在有効な制限</h2>
+            <div id="active-rules" class="content-list"></div>
         </section>
     </main>
 
@@ -77,101 +95,98 @@
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
         );
 
-        let is_allowed = false;
-
-        const statusSpan = document.getElementById("current-status");
-
         document.addEventListener("DOMContentLoaded", async () => {
-            // 直前のページ（リファラ）が存在しない場合
-            if (!document.referrer.includes("/mito1-website/admin/")) {
-                window.location.href = "../"; // リダイレクト先
-            }
+            const statusEl = document.getElementById("current-status");
+            const listEl = document.getElementById("active-rules");
 
-            const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
+            async function refresh() {
+                const nowUtc = Date.now(); // UTC 基準
 
-            const endOfDay = new Date();
-            endOfDay.setHours(23, 59, 59, 999);
+                const { data, error } = await supabase
+                    .from("website_restrictions")
+                    .select("*");
 
-            const { data, error } = await supabase
-                .from("website_allow")
-                .select("*")
-                .gte("created_at", startOfDay.toISOString()) // 当日00:00:00以降
-                .lt("created_at", endOfDay.toISOString())    // 当日23:59:59以前
-                .single();
-
-            if (error || !data) {
-                console.warn("No data found or error occurred:", error);
-                statusSpan.textContent = "不許可";
-                statusSpan.style.color = "red";
-                is_allowed = false;
-            }
-
-            if (error) {
-                console.error("Error fetching website allow status:", error);
-                statusSpan.textContent = "エラーが発生しました。";
-            }
-
-            if (data && data.is_allow) {
-                statusSpan.textContent = "許可";
-                statusSpan.style.color = "green";
-                is_allowed = true;
-            } else {
-                statusSpan.textContent = "不許可";
-                statusSpan.style.color = "red";
-                is_allowed = false;
-            }
-
-            document.getElementById("toggle-button").addEventListener("click", async () => {
-                const newStatus = !is_allowed;
-
-                if (data) {
-                    const { error: updateError } = await supabase
-                        .from("website_allow")
-                        .update({ is_allow: newStatus })
-                        .eq("id", data.id);
-
-                    if (updateError) {
-                        console.error("Error updating website allow status:", updateError);
-                        showCustomNotification("ステータスの更新中にエラーが発生しました。");
-                        return;
-                    }
-                } else {
-                    const { error: insertError } = await supabase
-                        .from("website_allow")
-                        .insert([{ is_allow: newStatus }]);
-
-                    if (insertError) {
-                        console.error("Error inserting new website allow status:", insertError);
-                        showCustomNotification("ステータスの挿入中にエラーが発生しました。");
-                        return;
-                    }
+                if (error) {
+                    statusEl.textContent = "エラー";
+                    return;
                 }
 
-                if (newStatus) {
-                    statusSpan.textContent = "許可";
-                    statusSpan.style.color = "green";
-                    is_allowed = true;
-                } else {
-                    statusSpan.textContent = "不許可";
-                    statusSpan.style.color = "red";
-                    is_allowed = false;
+                const active = data.filter(r => {
+                    const start = new Date(r.start_time).getTime();
+                    const end = new Date(r.end_time).getTime();
+                    return start <= nowUtc && nowUtc <= end;
+                });
+
+                console.log(data, active)
+
+                listEl.innerHTML = "";
+
+                if (active.length === 0) {
+                    listEl.innerHTML = "<li>現在有効な制限はありません</li>";
                 }
 
-                showCustomNotification("ステータスが更新されました。");
+                active.forEach(r => {
+                    const div = document.createElement("div");
+                    div.classList.add("content-list-item");
+                    const h3 = document.createElement("h3");
+                    h3.textContent = r.label;
+                    div.appendChild(h3);
+                    const time = document.createElement("p");
+                    time.innerHTML =
+                        `<i class="fa-solid fa-clock"></i>${new Date(r.start_time).toLocaleString("ja-JP")} 〜 ${new Date(r.end_time).toLocaleString("ja-JP")}`;
+                    div.appendChild(time);
+                    const mode = document.createElement("p");
+                    mode.innerHTML = `<i class="fa-solid fa-tag"></i>${r.mode}`;
+                    div.appendChild(mode);
+                    listEl.appendChild(div);
+                });
+
+                const hasRestrict = active.some(r => r.mode === "restrict");
+                const hasAllow = active.some(r => r.mode === "allow");
+
+                if (hasRestrict) {
+                    statusEl.textContent = "不許可（restrict）";
+                    statusEl.style.color = "red";
+                } else if (hasAllow) {
+                    statusEl.textContent = "許可（allow）";
+                    statusEl.style.color = "lightgreen";
+                } else {
+                    statusEl.textContent = "未設定";
+                    statusEl.style.color = "gray";
+                }
+            }
+
+            document.getElementById("add-rule").addEventListener("click", async () => {
+                const label = document.getElementById("label").value;
+                const start = document.getElementById("start-time").value;
+                const end = document.getElementById("end-time").value;
+                const mode = document.getElementById("mode").value;
+
+                if (!label || !start || !end) return;
+
+                await supabase.from("website_restrictions").insert([{
+                    label,
+                    start_time: new Date(start).toISOString(), // UTC 保存
+                    end_time: new Date(end).toISOString(),   // UTC 保存
+                    mode
+                }]);
+
+                document.getElementById("label").value = "";
+                refresh();
             });
 
-            const days = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
-            const today = new Date();
-            document.getElementById("current-day").textContent = days[today.getDay()];
+            refresh();
+            setInterval(refresh, 60000);
         });
-
     </script>
     <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
     <script type="module" src="../../script/restriction.js"></script>
     <script type="module" src="../../script/notification.js"></script>
+    <script type="module" src="../../script/notification.js"></script>
     <script src="../../script/verification.js" type="module"></script>
 
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
+
+</html>

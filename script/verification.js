@@ -35,7 +35,7 @@ function showLoginOverlay() {
     Object.assign(overlay.style, {
         position: "fixed",
         inset: "0",
-        background: "rgba(0,0,0,0.75)",
+        background: "rgba(0,0,0,1)",
         zIndex: "9999",
         display: "flex",
         alignItems: "center",

@@ -66,8 +66,8 @@
     <main>
         <section>
             <h2 id="question-title"></h2>
-            <small id="question-posted-at"></small> <!-- 質問の投稿日時表示 -->
             <p class="username" id="question-username"></p>
+            <p id="question-posted-at"></p>
             <p id="question-content"></p>
         </section>
 
@@ -124,13 +124,13 @@
                 return;
             }
 
-            document.getElementById("question-title").innerHTML = question.title;
-            document.getElementById("question-username").innerHTML = "質問者: " + question.username;
-            document.getElementById("question-username").setAttribute("data-user-id", question.user_id);
-            document.getElementById("question-content").innerHTML = question.content;
-
             const postDate = new Date(question.created_at).toLocaleString();
-            document.getElementById("question-posted-at").textContent = `投稿日時: ${postDate}`;
+
+            document.getElementById("question-title").innerHTML = question.title;
+            document.getElementById("question-username").innerHTML = `<i class="fa-solid fa-user"></i>${question.username}`;
+            document.getElementById("question-username").setAttribute("data-user-id", question.user_id);
+            document.getElementById("question-posted-at").innerHTML = `<i class="fa-solid fa-clock"></i>${postDate}`;
+            document.getElementById("question-content").innerHTML = question.content;
 
             document.getElementById("page-title").textContent = `${question.title} - みとい知恵袋 | 水戸一高附属中総合ウェブサイト`;
             document.getElementById(

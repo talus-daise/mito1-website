@@ -72,10 +72,10 @@
             <button id="search-btn">検索</button>
 
             <h3>未回答の質問</h3>
-            <ul id="unanswered-list"></ul>
+            <div id="unanswered-list" class="content-list"></div>
 
             <h3>回答済みの質問</h3>
-            <ul id="answered-list"></ul>
+            <div id="answered-list" class="content-list"></div>
         </section>
 
     </main>
@@ -117,25 +117,45 @@
             answeredList.innerHTML = "";
 
             questions.forEach(q => {
-                const li = document.createElement("li");
+                const div = document.createElement("div");
+                div.classList.add("content-list-item");
+                const a = document.createElement("a");
+                a.href = `details/?id=${q.id}`;
+                a.style.color = "inherit";
+
                 const answerDate = new Date(q.created_at).toLocaleString();
-                li.innerHTML = `<a href="details/?id=${q.id}">${q.title}</a>
-                <small>- <span class="username" data-user-id="${q.user_id}">${q.username}</span> (${answerDate})</small>`;
+
+                const title = document.createElement("h3");
+                title.textContent = q.title;
+                a.appendChild(title);
+
+                const span = document.createElement("p");
+                span.className = "username";
+                span.setAttribute("data-user-id", q.user_id);
+                span.innerHTML = `<i class="fa-solid fa-user"></i>${q.username}`;
+                a.appendChild(span);
+
+                const time = document.createElement("p");
+                time.innerHTML = `<i class="fa-solid fa-clock"></i>${answerDate}`;
+                a.appendChild(time);
+
+                div.appendChild(a);
 
                 if (q.answered) {
-                    answeredList.appendChild(li);
+                    answeredList.appendChild(div);
                 } else {
                     if (q.faster) {
-                        li.innerHTML += ` <small class="faster">至急求む!!!</small>`
+                        div.insertAdjacentHTML('beforeend', ` <small class="faster">至急求む!!!</small>`);
                     }
 
-                    unansweredList.appendChild(li);
+                    unansweredList.appendChild(div);
                 }
             });
 
             document.querySelectorAll('.username').forEach(span => {
                 span.style.cursor = 'pointer';
-                span.addEventListener('click', () => {
+                span.addEventListener('click', (e) => {
+                    e.preventDefault();
                     const userId = span.getAttribute('data-user-id');
                     window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}`;
                 });

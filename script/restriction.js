@@ -1,5 +1,4 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { showCustomAlert } from "/mito1-website/script/customAlert.js";
 
 const supabase = createClient(
     "https://mgsbwkidyxmicbacqeeh.supabase.co",
@@ -7,64 +6,116 @@ const supabase = createClient(
 );
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    let activeRules = [];
 
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
-
-    let allowData = { is_allow: false };
-    try {
+    /* ===== 制限ルール取得（UTC日時ベース） ===== */
+    async function fetchRestrictions() {
         const { data, error } = await supabase
-            .from("website_allow")
-            .select("*")
-            .gte("created_at", startOfDay.toISOString())
-            .lt("created_at", endOfDay.toISOString())
-            .limit(1);
-        if (!error) {
-            allowData = data;
+            .from("website_restrictions")
+            .select("*");
+
+        if (error) {
+            console.error("restriction fetch error:", error);
+            activeRules = [];
+            return;
         }
-    } catch (e) {
-        console.error("Supabase fetch error:", e);
+
+        const now = Date.now();
+
+        activeRules = data.filter(r => {
+            const start = new Date(r.start_time).getTime();
+            const end = new Date(r.end_time).getTime();
+            return start <= now && now <= end;
+        });
     }
 
+    await fetchRestrictions();
+    setInterval(fetchRestrictions, 60_000);
+
+    /* ===== 制限判定 ===== */
     function isRestrictedTime() {
-        const now = new Date();
-        const day = now.getDay(); // 0=日曜,6=土曜
-        if (day === 0 || day === 6 || allowData.is_allow) return false;
+        const day = new Date().getDay(); // 0=日曜,6=土曜
 
-        const currentMinutes = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+        // 土日無条件許可
+        if (day === 0 || day === 6) return false;
 
-        const ranges = [
-            [8 * 60 + 25, 11 * 60 + 29 + 59 / 60],   // 8:25 ~ 11:29:59
-            [13 * 60 + 5, 15 * 60 + 54 + 59 / 60]   // 13:05 ~ 15:54:59
-        ];
+        const hasRestrict = activeRules.some(r => r.mode === "restrict");
+        const hasAllow = activeRules.some(r => r.mode === "allow");
 
-        return ranges.some(([start, end]) => currentMinutes >= start && currentMinutes <= end);
+        if (hasRestrict) return true;
+        if (hasAllow) return false;
+
+        return false;
     }
 
-    function blackoutScreen(alertMessage) {
+    /* ===== オーバーレイ ===== */
+    function createOverlay() {
+        if (document.getElementById("time-restrict-overlay")) return;
+
         const mailBody = encodeURIComponent(
-            'ウェブサイトの利用許可をしてください。\n\nーーーーーーーーーーーーーーー\n\n以下のリンクは触らないでください。\n\nhttps://talus-daise.github.io/mito1-website/admin/'
+            "ウェブサイトの利用許可をしてください。\n\nーーーーーーーーーーーーーーー\n\n以下のリンクは触らないでください。\n\nhttps://talus-daise.github.io/mito1-website/admin/"
         );
 
-        if (!document.getElementById("custom-alert")) {
-            showCustomAlert(
-                alertMessage ||
-                `現在は利用できない時間です。<br><a href='https://talus-daise.github.io/mito1-website/timetable/'>時間割</a>は見ることができます。<br>平日の8:25~11:30, 13:05~15:55は使用が制限されます。<br>もし祝日の場合や、誤って表示された場合は、<a href='mailto:yamamoto.yuujirou@mito1-h.ibk.ed.jp?subject=ウェブサイトの利用について&body=${mailBody}' id='contact-admin'>管理者までご連絡ください。</a>`,
-                false,
-                true
-            );
-        }
+        const overlay = document.createElement("div");
+        overlay.id = "time-restrict-overlay";
+        overlay.style.cssText = `
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: sans-serif;
+        `;
+
+        const box = document.createElement("div");
+        box.style.cssText = `
+            max-width: 520px;
+            background: #111;
+            color: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            line-height: 1.7;
+        `;
+
+        const rulesText =
+            activeRules.length === 0
+                ? "現在有効な制限はありません。"
+                : activeRules
+                    .map(r =>
+                        `・${r.label}（${new Date(r.start_time).toLocaleString("ja-JP")} 〜 ${new Date(r.end_time).toLocaleString("ja-JP")}）`
+                    )
+                    .join("<br>");
+
+        box.innerHTML = `
+            <p>現在は利用できない時間です。</p>
+            <p>${rulesText}</p>
+            <p>
+                <a href="https://talus-daise.github.io/mito1-website/timetable/"
+                   style="color:#7ab7ff;">時間割</a>
+                は閲覧できます。
+            </p>
+            <p>
+                祝日、または誤表示の場合は
+                <a id="contact-admin"
+                   href="mailto:yamamoto.yuujirou@mito1-h.ibk.ed.jp?subject=ウェブサイトの利用について&body=${mailBody}"
+                   style="color:#ffb37a;">
+                   管理者までご連絡ください
+                </a>。
+            </p>
+        `;
+
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
 
         const contactLink = document.getElementById("contact-admin");
         if (!contactLink) return;
 
-        if (localStorage.getItem("lastContactedAdmin") &&
-            Date.now() - parseInt(localStorage.getItem("lastContactedAdmin")) < 120000) {
+        const last = localStorage.getItem("lastContactedAdmin");
+        if (last && Date.now() - Number(last) < 120000) {
             contactLink.style.pointerEvents = "none";
             contactLink.style.opacity = "0.6";
-            return;
         }
 
         contactLink.addEventListener("click", () => {
@@ -74,26 +125,35 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    function isAllowPage() {
-        const path = location.pathname;
-        return path.includes("admin") || path.includes("caution") || path.includes("timetable");
+    function removeOverlay() {
+        document.getElementById("time-restrict-overlay")?.remove();
     }
 
-    // 常にチェックする
+    function isAllowPage() {
+        const path = location.pathname;
+        return (
+            path.includes("admin") ||
+            path.includes("caution") ||
+            path.includes("timetable")
+        );
+    }
+
+    /* ===== 定期判定 ===== */
     setInterval(() => {
         if (isRestrictedTime() && !isAllowPage()) {
             document.body.style.display = "none";
-            blackoutScreen();
+            createOverlay();
         } else {
             document.body.style.display = "block";
+            removeOverlay();
         }
     }, 1000);
 
-    // ページロード時の即時チェック
     if (isRestrictedTime() && !isAllowPage()) {
         document.body.style.display = "none";
-        blackoutScreen();
+        createOverlay();
     } else {
         document.body.style.display = "block";
+        removeOverlay();
     }
 });
