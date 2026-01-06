@@ -1,5 +1,9 @@
 # 更新履歴
 
+## [v3.3.1](https://github.com/talus-daise/mito1-website/releases/tag/v3.3.1) (2026-01-07)
+- サイト全体のUIを改善
+- 管理画面の機能を改善
+
 ## [v3.3.0](https://github.com/talus-daise/mito1-website/releases/tag/v3.3.0) (2025-12-27)
 - サイト全体に認証機能を追加
   - 各機能へのアクセス制限を追加
