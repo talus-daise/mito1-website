@@ -1,4 +1,4 @@
-# 水戸一高附属中総合ウェブサイト
+# mito1-website
 
 ![HTML Badge](https://img.shields.io/badge/-Html5-E34F26.svg?logo=html5&style=for-the-badge&logoColor=ffffff)
 ![CSS Badge](https://img.shields.io/badge/-Css3-1572B6.svg?logo=css&style=for-the-badge)
@@ -9,7 +9,6 @@
 
 ## 概要
 
-水戸一高附属中生向けの総合ウェブサイトです。  
 掲示板や質問箱、時間割表示など、学校生活を補助する各種機能を提供します。
 
 公開URL  
