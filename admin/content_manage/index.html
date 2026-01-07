@@ -13,18 +13,6 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
     <link rel="stylesheet" href="../../script/notice/notice.css">
     <style>
-        .content-list {
-            display: grid;
-            grid-template-columns: 100%;
-            gap: 10px;
-        }
-
-        .content-item {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
         #table-modal {
             position: fixed;
             top: 0;
@@ -127,6 +115,15 @@
             background-color: #f4f4f4;
             border-bottom: 1px solid #ddd;
         }
+
+        .content {
+            display: inline-block;
+            max-width: calc(100% - 5rem);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: bottom;
+        }
     </style>
     <!--web情報-->
     <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
@@ -164,26 +161,27 @@
             <h2>コンテンツ管理</h2>
 
             <h3>目次</h3>
-            <a href="#question-list">質問一覧</a>
-            <a href="#answer-list">回答一覧</a>
-            <a href="#post-list">投稿一覧</a>
+            <p><a href="#question-list">質問一覧</a></p>
+            <p><a href="#answer-list">回答一覧</a></p>
+            <p><a href="#post-list">投稿一覧</a></p>
 
-            <label for="search-box">検索：<input type="text" id="search-box" placeholder="コンテンツを検索..."></label>
-            <button id="search-btn">検索</button><br>
+            <p><label for="search-box">検索：<input type="text" id="search-box" placeholder="コンテンツを検索..."></label>
+                <button id="search-btn">検索</button><br>
+            </p>
 
-            <button id="show-table-btn">テーブル表示</button>
+            <p><button id="show-table-btn">テーブル表示</button></p>
 
             <hr>
 
             <div id="content-list" class="content-list">
+                <h3>質問一覧</h3>
                 <div id="question-list" class="content-list">
-                    <h3>質問一覧</h3>
                 </div>
+                <h3>回答一覧</h3>
                 <div id="answer-list" class="content-list">
-                    <h3>回答一覧</h3>
                 </div>
+                <h3>投稿一覧</h3>
                 <div id="post-list" class="content-list">
-                    <h3>投稿一覧</h3>
                 </div>
             </div>
 
@@ -242,48 +240,48 @@
 
             questions.forEach(question => {
                 const questionItem = document.createElement("div");
-                questionItem.className = "content-item";
+                questionItem.className = "content-list-item";
                 questionItem.innerHTML = `
-                    <strong class="label-strong">ID: </strong><span>${question.id}</span><br>
-                    <strong class="label-strong">作成者: </strong><span>${question.username}</span><br>
-                    <strong class="label-strong">タイトル: </strong><span>${question.title}</span><br>
-                    <strong class="label-strong">内容: </strong><span>${question.content}</span><br>
-                    <strong class="label-strong">作成日時: </strong><span>${question.created_at}</span><br>
-                    <button data-question-id="${question.id}" class="edit-entry" style="width: fit-content;">質問編集</button>
+                    <p><i class="fa-solid fa-id-card"></i> ${question.id}</p>
+                    <p><i class="fa-solid fa-user"></i> ${question.username}</p>
+                    <p><i class="fa-solid fa-heading"></i> ${question.title}</p>
+                    <p><i class="fa-solid fa-comment"></i> <span class="content">${question.content.split('<br>')[0]}</span></p>
+                    <p><i class="fa-solid fa-clock"></i> ${question.created_at}</p>
+                    <p><button data-question-id="${question.id}" class="edit-entry" style="width: fit-content;">質問編集</button>
                     <button data-question-id="${question.id}" class="delete-entry" style="width: fit-content;">質問削除</button>
-                    <button data-question-id="${question.id}" class="view-entry" style="width: fit-content;">質問表示</button>
+                    <button data-question-id="${question.id}" class="view-entry" style="width: fit-content;">質問表示</button></p>
                 `;
                 questionList.appendChild(questionItem);
             });
 
             answers.forEach(answer => {
                 const answerItem = document.createElement("div");
-                answerItem.className = "content-item";
+                answerItem.className = "content-list-item";
                 answerItem.innerHTML = `
-                    <strong class="label-strong">ID: </strong><span>${answer.id}</span><br>
-                    <strong class="label-strong">作成者: </strong><span>${answer.username}</span><br>
-                    <strong class="label-strong">質問ID: </strong><span>${answer.question_id}</span><br>
-                    <strong class="label-strong">内容: </strong><span>${answer.content}</span><br>
-                    <strong class="label-strong">作成日時: </strong><span>${answer.created_at}</span><br>
-                    <button data-answer-id="${answer.id}" class="edit-entry" style="width: fit-content;">回答編集</button>
+                    <p><i class="fa-solid fa-id-card"></i> ${answer.id}</p>
+                    <p><i class="fa-solid fa-user"></i> ${answer.username}</p>
+                    <p><i class="fa-solid fa-id-card"></i> ${answer.question_id}</p>
+                    <p><i class="fa-solid fa-comment"></i> <span class="content">${answer.content.split('<br>')[0]}</span></p>
+                    <p><i class="fa-solid fa-clock"></i> ${answer.created_at}</p>
+                    <p><button data-answer-id="${answer.id}" class="edit-entry" style="width: fit-content;">回答編集</button>
                     <button data-answer-id="${answer.id}" class="delete-entry" style="width: fit-content;">回答削除</button>
-                    <button data-answer-id="${answer.id}" class="view-entry" style="width: fit-content;">回答表示</button>
+                    <button data-answer-id="${answer.id}" class="view-entry" style="width: fit-content;">回答表示</button></p>
                 `;
                 answerList.appendChild(answerItem);
             });
 
             posts.forEach(post => {
                 const postItem = document.createElement("div");
-                postItem.className = "content-item";
+                postItem.className = "content-list-item";
                 postItem.innerHTML = `
-                    <strong class="label-strong">ID: </strong><span>${post.id}</span><br>
-                    <strong class="label-strong">作成者: </strong><span>${post.username}</span><br>
-                    <strong class="label-strong">タイトル: </strong><span>${post.title}</span><br>
-                    <strong class="label-strong">内容: </strong><span>${post.content}</span><br>
-                    <strong class="label-strong">作成日時: </strong><span>${post.created_at}</span><br>
-                    <button data-post-id="${post.id}" class="edit-entry" style="width: fit-content;">投稿編集</button>
+                    <p><i class="fa-solid fa-id-card"></i> ${post.id}</p>
+                    <p><i class="fa-solid fa-user"></i> ${post.username}</p>
+                    <p><i class="fa-solid fa-heading"></i> ${post.title}</p>
+                    <p><i class="fa-solid fa-comment"></i> <span class="content">${post.content.split('<br>')[0]}</span></p>
+                    <p><i class="fa-solid fa-clock"></i> ${post.created_at}</p>
+                    <p><button data-post-id="${post.id}" class="edit-entry" style="width: fit-content;">投稿編集</button>
                     <button data-post-id="${post.id}" class="delete-entry" style="width: fit-content;">投稿削除</button>
-                    <button data-post-id="${post.id}" class="view-entry" style="width: fit-content;">投稿表示</button>
+                    <button data-post-id="${post.id}" class="view-entry" style="width: fit-content;">投稿表示</button></p>
                 `;
                 postList.appendChild(postItem);
             });
@@ -309,7 +307,7 @@
                 button.addEventListener("click", (event) => {
                     event.stopPropagation();
                     event.preventDefault();
-                    enableEdit(event.target.closest(".content-item"));
+                    enableEdit(event.target.closest(".content-list-item"));
                 });
             });
 
@@ -377,7 +375,7 @@
             });
 
             function generateTable() {
-                const items = document.querySelectorAll(".content-item");
+                const items = document.querySelectorAll(".content-list-item");
 
                 const headers = ["I/O", "ID", "種類", "作成者", "タイトル / 質問ID", "内容", "作成日時"];
                 let html = "<div class='table-header'>";
@@ -576,7 +574,7 @@
         document.getElementById("search-btn").addEventListener("click", filterContents);
         function filterContents() {
             const keyword = document.getElementById("search-box").value.toLowerCase();
-            const contentItems = document.querySelectorAll(".content-item");
+            const contentItems = document.querySelectorAll(".content-list-item");
 
             contentItems.forEach(item => {
                 const text = item.textContent.toLowerCase();

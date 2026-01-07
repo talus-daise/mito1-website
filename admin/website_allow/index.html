@@ -55,30 +55,38 @@
         <section>
             <h2>制限ルール追加</h2>
 
-            <label>
-                ラベル
-                <input id="label" type="text" placeholder="例：平日昼制限">
-            </label><br>
+            <p>
+                <label>
+                    ラベル
+                    <input id="label" type="text" placeholder="例：平日昼制限">
+                </label><br>
+            </p>
 
-            <label>
-                開始日時
-                <input id="start-time" type="datetime-local">
-            </label><br>
+            <p>
+                <label>
+                    開始日時
+                    <input id="start-time" type="datetime-local">
+                </label><br>
+            </p>
 
-            <label>
-                終了日時
-                <input id="end-time" type="datetime-local">
-            </label><br>
+            <p>
+                <label>
+                    終了日時
+                    <input id="end-time" type="datetime-local">
+                </label><br>
+            </p>
 
-            <label>
-                モード
-                <select id="mode">
-                    <option value="restrict">制限</option>
-                    <option value="allow">制限解除</option>
-                </select>
-            </label>
+            <p>
+                <label>
+                    モード
+                    <select id="mode">
+                        <option value="restrict">制限</option>
+                        <option value="allow">制限解除</option>
+                    </select>
+                </label>
+            </p>
 
-            <button id="add-rule">追加</button>
+            <p><button id="add-rule">追加</button></p>
         </section>
 
         <section>
@@ -95,12 +103,25 @@
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
         );
 
+        /* ===== 平日固定制限判定 ===== */
+        function isFixedRestricted() {
+            const now = new Date();
+            const day = now.getDay(); // 0=日,6=土
+            if (day === 0 || day === 6) return false;
+
+            const m = now.getHours() * 60 + now.getMinutes();
+            return (
+                (m >= 8 * 60 + 25 && m <= 11 * 60 + 30) ||
+                (m >= 13 * 60 + 5 && m <= 15 * 60 + 55)
+            );
+        }
+
         document.addEventListener("DOMContentLoaded", async () => {
             const statusEl = document.getElementById("current-status");
             const listEl = document.getElementById("active-rules");
 
             async function refresh() {
-                const nowUtc = Date.now(); // UTC 基準
+                const nowUtc = Date.now();
 
                 const { data, error } = await supabase
                     .from("website_restrictions")
@@ -117,42 +138,40 @@
                     return start <= nowUtc && nowUtc <= end;
                 });
 
-                console.log(data, active)
-
                 listEl.innerHTML = "";
 
                 if (active.length === 0) {
-                    listEl.innerHTML = "<li>現在有効な制限はありません</li>";
+                    listEl.innerHTML = "<p>現在有効な制限はありません</p>";
                 }
 
                 active.forEach(r => {
                     const div = document.createElement("div");
                     div.classList.add("content-list-item");
-                    const h3 = document.createElement("h3");
-                    h3.textContent = r.label;
-                    div.appendChild(h3);
-                    const time = document.createElement("p");
-                    time.innerHTML =
-                        `<i class="fa-solid fa-clock"></i>${new Date(r.start_time).toLocaleString("ja-JP")} 〜 ${new Date(r.end_time).toLocaleString("ja-JP")}`;
-                    div.appendChild(time);
-                    const mode = document.createElement("p");
-                    mode.innerHTML = `<i class="fa-solid fa-tag"></i>${r.mode}`;
-                    div.appendChild(mode);
+
+                    div.innerHTML = `
+                <h3>${r.label}</h3>
+                <p><i class="fa-solid fa-clock"></i>
+                ${new Date(r.start_time).toLocaleString("ja-JP")} 〜
+                ${new Date(r.end_time).toLocaleString("ja-JP")}</p>
+                <p><i class="fa-solid fa-tag"></i>${r.mode}</p>
+            `;
                     listEl.appendChild(div);
                 });
 
-                const hasRestrict = active.some(r => r.mode === "restrict");
                 const hasAllow = active.some(r => r.mode === "allow");
+                const hasRestrict = active.some(r => r.mode === "restrict");
+                const fixedRestricted = isFixedRestricted();
 
-                if (hasRestrict) {
-                    statusEl.textContent = "不許可（restrict）";
-                    statusEl.style.color = "red";
-                } else if (hasAllow) {
+                /* ===== 許可最優先 ===== */
+                if (hasAllow) {
                     statusEl.textContent = "許可（allow）";
                     statusEl.style.color = "lightgreen";
+                } else if (fixedRestricted || hasRestrict) {
+                    statusEl.textContent = "不許可（restrict）";
+                    statusEl.style.color = "red";
                 } else {
-                    statusEl.textContent = "未設定";
-                    statusEl.style.color = "gray";
+                    statusEl.textContent = "許可（default）";
+                    statusEl.style.color = "lightgreen";
                 }
             }
 
@@ -164,10 +183,16 @@
 
                 if (!label || !start || !end) return;
 
+                // JSTとして保存
+                function toJstIso(str) {
+                    // str: "YYYY-MM-DDTHH:mm"
+                    return str + ":00+09:00";
+                }
+
                 await supabase.from("website_restrictions").insert([{
                     label,
-                    start_time: new Date(start).toISOString(), // UTC 保存
-                    end_time: new Date(end).toISOString(),   // UTC 保存
+                    start_time: toJstIso(start),
+                    end_time: toJstIso(end),
                     mode
                 }]);
 

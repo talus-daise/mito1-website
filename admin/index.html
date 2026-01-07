@@ -82,12 +82,10 @@
                         const adminFeatures = document.createElement("section");
                         adminFeatures.innerHTML = `
                         <h2>管理者用機能</h2>
-                        <ul>
-                            <li><a href="./user_manage/"><i class="fa-solid fa-user"></i>ユーザー管理</a></li>
-                            <li><a href="./content_manage/"><i class="fa-solid fa-file"></i>コンテンツ管理</a></li>
-                            <li><a href="./website_allow/"><i class="fa-solid fa-check"></i>ウェブサイト許可管理</a></li>
-                            <li><a href="./request_music/"><i class="fa-solid fa-music"></i>リクエスト曲管理</a></li>
-                        </ul>
+                        <p><a href="./user_manage/"><i class="fa-solid fa-user"></i>ユーザー管理</a></p>
+                        <p><a href="./content_manage/"><i class="fa-solid fa-file"></i>コンテンツ管理</a></p>
+                        <p><a href="./website_allow/"><i class="fa-solid fa-check"></i>ウェブサイト許可管理</a></p>
+                        <p><a href="./request_music/"><i class="fa-solid fa-music"></i>リクエスト曲管理</a></p>
                     `;
                         document.querySelector("main").appendChild(adminFeatures);
                         break;
@@ -97,11 +95,9 @@
                         const contentManagerFeatures = document.createElement("section");
                         contentManagerFeatures.innerHTML = `
                         <h2>サイトマネージャー用機能</h2>
-                        <ul>
-                            <li><a href="./user_manage/">ユーザー管理</a></li>
-                            <li><a href="./content_manage/">コンテンツ管理</a></li>
-                            <li><a href="./website_allow/">ウェブサイト許可管理</a></li>
-                        </ul>
+                        <p><a href="./user_manage/"><i class="fa-solid fa-user"></i>ユーザー管理</a></p>
+                        <p><a href="./content_manage/"><i class="fa-solid fa-file"></i>コンテンツ管理</a></p>
+                        <p><a href="./website_allow/"><i class="fa-solid fa-check"></i>ウェブサイト許可管理</a></p>
                     `;
                         document.querySelector("main").appendChild(contentManagerFeatures);
                         break;
@@ -111,9 +107,7 @@
                         const musicManagerFeatures = document.createElement("section");
                         musicManagerFeatures.innerHTML = `
                         <h2>リクエスト曲管理者用機能</h2>
-                        <ul>
-                            <li><a href="./request_music/">リクエスト曲管理</a></li>
-                        </ul>
+                        <p><a href="./request_music/"><i class="fa-solid fa-music"></i>リクエスト曲管理</a></p>
                     `;
                         document.querySelector("main").appendChild(musicManagerFeatures);
                         break;

@@ -1,7 +1,3 @@
-/* ===============================
-   サイドメニュー（モダン調整版）
-================================ */
-
 :root {
     --aside-bg: #e3f2fd;
     --aside-text: #0a2540;
@@ -35,8 +31,7 @@
     pointer-events: none;
 
     transition:
-        opacity 0.4s var(--ease-standard),
-        visibility 0.4s var(--ease-standard);
+        opacity 0.4s var(--ease-standard)
 }
 
 /* 表示状態 */
@@ -142,10 +137,6 @@
     transition: all 0.8s ease;
 }
 
-#menuButton.closing {
-    transition-delay: ;
-}
-
 /* ===============================
    閉じるボタン
 ================================ */
@@ -161,6 +152,7 @@
     color: #3498db;
     background: transparent;
     border: none;
+    box-shadow: none;
 
     z-index: 3003;
     transform: rotate(180deg);
@@ -218,6 +210,7 @@ nav a {
 }
 
 nav a:hover {
+    color: #ffffff;
     background-color: #21618c;
     box-shadow: var(--shadow-md);
     transform: translateY(-1px);

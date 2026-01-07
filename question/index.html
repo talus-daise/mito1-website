@@ -55,7 +55,7 @@
             <p>スパムに回答されると削除が大変なので無回答にご協力ください。</p>
             <p>自分が勉強などのことで困っていることを他の人に質問できます。</p>
             <p>※プライベートな質問は個人でしてください。</p>
-            <a href="new_question/">新しい質問を投稿する</a>
+            <p><a href="new_question/">新しい質問を投稿する</a></p>
         </section>
 
         <section class="highlight">
@@ -66,10 +66,9 @@
 
         <section>
             <h2>質問一覧</h2>
-            <!-- 検索フォーム -->
+            <p><label for="search-box">検索：<input type="text" id="search-box" placeholder="質問を検索..."></label>
+            <button id="search-btn">検索</button></p>
             <hr>
-            <label for="search-box">検索：<input type="text" id="search-box" placeholder="質問を検索..."></label>
-            <button id="search-btn">検索</button>
 
             <h3>未回答の質問</h3>
             <div id="unanswered-list" class="content-list"></div>

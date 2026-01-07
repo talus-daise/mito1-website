@@ -52,6 +52,10 @@ header h1 {
     font-weight: 700;
 }
 
+header h1 a:hover {
+    color: var(--text-color-white);
+}
+
 header a {
     color: var(--text-color-white);
     text-decoration: none;
@@ -74,7 +78,7 @@ main {
 
 main>a {
     display: inline-block;
-    margin: 1rem 0;
+    margin-top: 1.5rem;
     padding: 1rem;
     color: var(--text-color-link);
     background: var(--background-color);
@@ -135,6 +139,7 @@ i {
 section {
     background-color: var(--background-color);
     border-radius: var(--radius-lg);
+    padding-bottom: 0.5rem;
     margin: 2rem auto;
     box-shadow: var(--shadow-sm);
     overflow: hidden;
@@ -148,12 +153,36 @@ section h2 {
     padding: 1.25rem 1.5rem;
 }
 
-section > *:not(h2, p) {
-    margin: 0.5rem 1rem;
+section h3 {
+    margin: 1rem 1.5rem 0.5rem 1.5rem;
+    font-weight: 600;
 }
 
-section p {
-    margin: 1rem;
+section p,
+section li {
+    margin: 0.5rem 1.5rem 0.5rem 1.5rem;
+    line-height: 1.6;
+}
+
+section hr {
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin: 1.5rem 1rem;
+}
+
+section ul {
+    padding-left: 2rem;
+    margin: 0.5rem 1.5rem 0.5rem 1.5rem;
+}
+
+section ol {
+    padding-left: 2rem;
+    margin: 0.5rem 1.5rem 0.5rem 1.5rem;
+}
+
+section img {
+    display: block;
+    margin: 1rem 1rem;
 }
 
 section.highlight {
@@ -220,7 +249,6 @@ button {
     background-color: var(--main-color);
     border: none;
     border-radius: var(--radius-sm);
-    margin: 0.5rem;
     padding: 0.5rem 1rem;
     cursor: pointer;
     box-shadow: var(--shadow-sm);
@@ -238,26 +266,6 @@ button:active {
 
 .faster {
     color: var(--accent-color);
-}
-
-.pochimon {
-    filter: drop-shadow(0px 4px 12px rgba(0, 0, 0, 0.4));
-    transition: transform 0.2s ease;
-}
-
-.pochimon:active {
-    transform: scale(0.9);
-}
-
-.pochimon__container {
-    display: flex;
-    align-items: center;
-    font-size: 1.25rem;
-}
-
-.pochimon__container img {
-    width: 100px;
-    margin: 0 1rem;
 }
 
 .thread-item {
@@ -289,7 +297,7 @@ code {
 }
 
 .content-list-item {
-    padding: 1rem;
+    padding: 1rem 1rem 0.5rem 1rem;
     border-radius: var(--radius-sm);
     background-color: var(--background-color);
     box-shadow: var(--shadow-sm);

@@ -60,7 +60,7 @@
     <main>
         <section>
             <h2>ユーザー管理</h2>
-            <div id="user-list" class="user-list"></div>
+            <div id="user-list" class="content-list"></div>
         </section>
     </main>
 
@@ -78,7 +78,7 @@
                 window.location.href = "../"; // リダイレクト先
             }
 
-            const { data, error } = await supabase.from("users").select("*");
+            const { data, error } = await supabase.from("users").select("*").order("full_name", { ascending: true });
 
             if (error) {
                 console.error("Error fetching users:", error);
@@ -93,14 +93,18 @@
 
             data.forEach(user => {
                 const userItem = document.createElement("div");
-                userItem.className = "user-item";
+                userItem.className = "content-list-item";
                 userItem.innerHTML = `
-                    <p><strong>メール:</strong> ${user.user_email}</p>
-                    <p><strong>名前:</strong> ${user.display_name}</p>
-                    <p><strong>ユーザーID:</strong> ${user.user_id}</p>
-                    <p><strong>管理者:</strong> ${user.role}</p>
-                    <button data-user-id="${user.user_id}" class="stop-user-btn" style="width: fit-content;">ユーザー停止</button>
-                    <button data-user-id="${user.user_id}" class="delete-user-btn" style="width: fit-content;">ユーザー削除</button>
+                    <p><i class="fa-solid fa-id-card"></i> ${user.user_id}</p>
+                    <p><i class="fa-solid fa-school"></i> ${user.full_name}</p>
+                    <p><i class="fa-solid fa-envelope"></i> ${user.user_email}</p>
+                    <p><i class="fa-solid fa-user"></i> ${user.display_name}</p>
+                    <p><i class="fa-solid fa-user-tag"></i> ${user.role}</p>
+                    <p>
+                        <button data-user-id="${user.user_id}" class="stop-user-btn" style="width: fit-content;">ユーザー停止</button>
+                        <button data-user-id="${user.user_id}" class="delete-user-btn" style="width: fit-content;">ユーザー削除</button>
+                        <button data-user-id="${user.user_id}" class="redirect-user-page-btn" style="width: fit-content;">ユーザー詳細</button>
+                    </p>
                 `;
 
                 const stopBtn = userItem.querySelector(".stop-user-btn");
@@ -131,6 +135,12 @@
                     }
 
                     userItem.remove();
+                });
+
+                const redirectBtn = userItem.querySelector(".redirect-user-page-btn");
+                redirectBtn.addEventListener("click", () => {
+                    const userId = redirectBtn.getAttribute("data-user-id");
+                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}`;
                 });
 
                 userList.appendChild(userItem);

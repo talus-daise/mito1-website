@@ -14,20 +14,21 @@
     <link rel="stylesheet" href="../../script/notice/notice.css">
     <style>
         .user-info {
+            width: 100%;
             display: inline-flex;
             flex-direction: row;
-            gap: 0.5rem;
             flex-wrap: wrap;
         }
 
         .user-info p {
             display: block;
-            width: calc(100% - 120px);
+            width: calc(100% - 10rem);
         }
 
         .user-info .user-name {
             font-weight: bold;
             font-size: 1.2rem;
+            margin-left: 1rem;
         }
 
         .user-info img {
@@ -37,6 +38,37 @@
         .stats {
             display: flex;
             gap: 2rem;
+        }
+
+        #user-avatar {
+            border: 1px solid #ccc;
+            margin: 0 0 0 1.5rem;
+        }
+
+        .post {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .post h3 {
+            margin: 0.5rem 0;
+            font-size: 1.1rem;
+        }
+
+        .post p {
+            margin: 0.3rem 0;
+            font-size: 0.9rem;
+        }
+
+        .post a {
+            text-decoration: none;
+            color: #3498db;
+        }
+
+        .post a:hover {
+            text-decoration: underline;
         }
     </style>
     <!--web情報-->
@@ -76,9 +108,10 @@
         <section>
             <h2>ユーザー情報</h2>
             <div class="user-info">
-                <img id="user-avatar" alt="ユーザーアイコン" width="50" height="50"><p class="user-name"><span id="user-name">とある水戸一の名無し</span></p>
-                <p class="student-id">学籍番号: <span id="student-id">0X00</span></p>
-                <p class="user-email">メールアドレス: <span id="user-email">guest@example.com</span></p>
+                <img id="user-avatar" alt="ユーザーアイコン" width="50" height="50"><p class="user-name"><span id="display-name">とある水戸一の名無し</span></p>
+                <p class="student-id"><i class="fa-solid fa-address-card"></i><span id="student-id">0X00</span></p>
+                <p><i class="fa-solid fa-school"></i><span id="user-name">とある水戸一の名無し</span></p>
+                <p class="user-email"><i class="fa-solid fa-envelope"></i><span id="user-email">guest@example.com</span></p>
             </div>
         </section>
         <section>
@@ -95,17 +128,17 @@
 
         <section>
             <h2>掲示板の投稿一覧</h2>
-            <ul id="thread-list"></ul>
+            <div id="thread-list" class="content-list"></div>
         </section>
 
         <section>
             <h2>投稿した質問一覧</h2>
-            <ul id="question-list"></ul>
+            <div id="question-list" class="content-list"></div>
         </section>
 
         <section>
             <h2>投稿した回答一覧</h2>
-            <ul id="answer-list"></ul>
+            <div id="answer-list" class="content-list"></div>
         </section>
     </main>
     <script type="module">
@@ -126,7 +159,6 @@
             document.querySelector("main").style.display = "block";
             document.querySelector("h1").textContent = "マイページ";
             document.getElementById('custom-alert')?.remove();
-            // 以降の処理は実行しない
         } else {
             document.addEventListener("DOMContentLoaded", async () => {
                 await new Promise(resolve => {
@@ -142,7 +174,7 @@
                     .single();
 
                 if (!user) {
-                    errorDiv.textContent = "ユーザーが存在しません。もしくはアップデート前に投稿されたものです。";
+                    errorDiv.textContent = "ユーザーが存在しません。もしくはアップデート前に登録されたものです。";
                     document.querySelector("main").style.display = "block";
                     document.querySelector("h1").textContent = "マイページ";
                     document.getElementById('custom-alert').remove();
@@ -177,7 +209,8 @@
 
                     document.querySelector("h1").textContent = `${user.display_name || "とある水戸一の名無し"} のマイページ`;
                     document.getElementById("user-avatar").src = user.avatar_url || "../../img/default-avatar.png";
-                    document.getElementById("user-name").textContent = user.display_name || "ゲスト";
+                    document.getElementById("display-name").textContent = user.display_name || "ゲスト";
+                    document.getElementById("user-name").textContent = user.full_name || "とある水戸一の名無し";
                     document.getElementById("user-email").textContent = textMosaic(user.user_email);
                     document.getElementById("about-me").textContent = user.about_me || "自己紹介は未設定です。";
                     document.getElementById("visit-count").textContent = user.visit_count;
@@ -186,43 +219,82 @@
                     // --- 質問一覧を取得 ---
                     const { data: questions } = await supabase
                         .from("questions")
-                        .select("id, title")
+                        .select("id, title, created_at, username")
                         .eq("user_email", user.user_email)
                         .order("created_at", { ascending: false });
 
                     const qList = document.getElementById("question-list");
                     questions?.forEach(q => {
-                        const li = document.createElement("li");
-                        li.innerHTML = `<a href="/mito1-website/question/details/?id=${q.id}">${q.title}</a>`;
-                        qList.appendChild(li);
+                        const div = document.createElement("div");
+                        div.classList.add("content-list-item");
+                        const a = document.createElement("a");
+                        a.href = `/mito1-website/question/details/?id=${q.id}`;
+                        a.style.color = "inherit";
+                        const title = document.createElement("h3");
+                        title.textContent = q.title;
+                        a.appendChild(title);
+                        const time = document.createElement("p");
+                        time.innerHTML = `<i class="fa-solid fa-clock"></i>${new Date(q.created_at).toLocaleString()}`;
+                        a.appendChild(time);
+                        const username = document.createElement("p");
+                        username.innerHTML = `<i class="fa-solid fa-user"></i>${q.username}`;
+                        a.appendChild(username);
+                        div.appendChild(a);
+                        qList.appendChild(div);
                     });
 
                     // --- 掲示板の投稿一覧を取得 ---
                     const { data: threads } = await supabase
                         .from("BBS")
-                        .select("id, thread, title")
+                        .select("id, thread, title, created_at, username")
                         .eq("user_email", user.user_email)
                         .order("created_at", { ascending: false });
 
                     const tList = document.getElementById("thread-list");
                     threads?.forEach(t => {
-                        const li = document.createElement("li");
-                        li.innerHTML = `<a href="/mito1-website/bbs/thread/?thread=${encodeURIComponent(t.thread)}&post_id=${encodeURIComponent(t.id)}">${t.title} - ${t.thread}</a>`;
-                        tList.appendChild(li);
+                        const div = document.createElement("div");
+                        div.classList.add("content-list-item");
+                        const a = document.createElement("a");
+                        a.href = `/mito1-website/bbs/thread/?thread=${encodeURIComponent(t.thread)}&post_id=${encodeURIComponent(t.id)}`;
+                        a.style.color = "inherit";
+                        const title = document.createElement("h3");
+                        title.textContent = t.title;
+                        a.appendChild(title);
+                        const time = document.createElement("p");
+                        time.innerHTML = `<i class="fa-solid fa-clock"></i>${new Date(t.created_at).toLocaleString()}`;
+                        a.appendChild(time);
+                        const username = document.createElement("p");
+                        username.innerHTML = `<i class="fa-solid fa-user"></i>${t.username}`;
+                        a.appendChild(username);
+                        div.appendChild(a);
+                        tList.appendChild(div);
                     });
 
                     // --- 回答一覧を取得 ---
                     const { data: answers } = await supabase
                         .from("answers")
-                        .select("id, question_id, content")
+                        .select("id, question_id, content, created_at, username")
                         .eq("user_email", user.user_email)
                         .order("created_at", { ascending: false });
 
                     const aList = document.getElementById("answer-list");
                     answers?.forEach(a => {
-                        const li = document.createElement("li");
-                        li.innerHTML = `<a href="/mito1-website/question/details/?id=${a.question_id}&answer_id=${a.id}">${a.content.slice(0, 20)}...</a>`;
-                        aList.appendChild(li);
+                        const div = document.createElement("div");
+                        div.classList.add("content-list-item");
+                        const aTag = document.createElement("a");
+                        aTag.href = `/mito1-website/question/details/?id=${a.question_id}&answer_id=${a.id}`;
+                        aTag.style.color = "inherit";
+                        const content = document.createElement("h3");
+                        content.textContent = a.content.slice(0, 20) + (a.content.length > 20 ? "..." : "");
+                        aTag.appendChild(content);
+                        const time = document.createElement("p");
+                        time.innerHTML = `<i class="fa-solid fa-clock"></i>${new Date(a.created_at).toLocaleString()}`;
+                        aTag.appendChild(time);
+                        const username = document.createElement("p");
+                        username.innerHTML = `<i class="fa-solid fa-user"></i>${a.username}`;
+                        aTag.appendChild(username);
+                        div.appendChild(aTag);
+                        aList.appendChild(div);
                     });
 
                     isLoading = false;

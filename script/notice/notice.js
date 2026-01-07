@@ -155,173 +155,49 @@ document.addEventListener("DOMContentLoaded", () => {
     asideMenu.insertAdjacentHTML("beforeend", "<h2>サイトマップ</h2>");
 
     const linkListWrapper = document.createElement("nav");
-    linkListWrapper.innerHTML = `
-        <ul>
-            <li id="home" class="menu-item">
-                <a href="/mito1-website/">
-                    <i class="fa-solid fa-house"></i>トップページ
-                </a>
-            </li>
-            <li id="timetable" class="menu-item">
-                <a href="/mito1-website/timetable/">
-                    <i class="fa-solid fa-calendar-days"></i>時間割
-                </a>
-            </li>
-            <li id="memberList" class="menu-item">
-                <a href="/mito1-website/member_list/">
-                    <i class="fa-solid fa-clipboard-list"></i>名簿
-                </a>
-            </li>
-            <li id="tasks" class="menu-item">
-                <a href="/mito1-website/tasks/">
-                    <i class="fa-solid fa-list-check"></i>課題
-                </a>
-            </li>
-            <li id="bbs" class="menu-item">
-                <a href="/mito1-website/bbs/">
-                    <i class="fa-solid fa-chalkboard"></i>掲示板
-                </a>
-            </li>
-            <li id="question" class="menu-item">
-                <a href="/mito1-website/question/">
-                    <i class="fa-solid fa-circle-question"></i>みとい知恵袋
-                </a>
-            </li>
-            <li id="troubleshooting" class="menu-item">
-                <a href="/mito1-website/troubleshooting/">
-                    <i class="fa-solid fa-screwdriver-wrench"></i>トラブルシューティング
-                </a>
-            </li>
-            <li id="requestMusic" class="menu-item">
-                <a href="/mito1-website/request_music/">
-                    <i class="fa-solid fa-music"></i>リクエスト曲
-                </a>
-            </li>
-        </ul>
-        <ul>
-            <li id="myPage" class="menu-item">
-                <a href="/mito1-website/mypage/">
-                    <i class="fa-solid fa-circle-user"></i>マイページ
-                </a>
-            </li>
-        </ul>
-    `;
+
+    const ul1 = document.createElement("ul");
+    [
+        { id: "home", href: "/mito1-website/", icon: "fa-house", text: "トップページ" },
+        { id: "timetable", href: "/mito1-website/timetable/", icon: "fa-calendar-days", text: "時間割" },
+        { id: "memberList", href: "/mito1-website/member_list/", icon: "fa-clipboard-list", text: "名簿" },
+        { id: "tasks", href: "/mito1-website/tasks/", icon: "fa-list-check", text: "課題" },
+        { id: "bbs", href: "/mito1-website/bbs/", icon: "fa-chalkboard", text: "掲示板" },
+        { id: "question", href: "/mito1-website/question/", icon: "fa-circle-question", text: "みとい知恵袋" },
+        { id: "troubleshooting", href: "/mito1-website/troubleshooting/", icon: "fa-screwdriver-wrench", text: "トラブルシューティング" },
+        { id: "requestMusic", href: "/mito1-website/request_music/", icon: "fa-music", text: "リクエスト曲" }
+    ].forEach(item => {
+        const li = document.createElement("li");
+        li.id = item.id;
+        li.className = "menu-item";
+        const a = document.createElement("a");
+        a.href = item.href;
+        const i = document.createElement("i");
+        i.className = `fa-solid ${item.icon}`;
+        a.appendChild(i);
+        a.appendChild(document.createTextNode(item.text));
+        li.appendChild(a);
+        ul1.appendChild(li);
+    });
+
+    const hr = document.createElement("hr");
+
+    const ul2 = document.createElement("ul");
+    const liMyPage = document.createElement("li");
+    liMyPage.id = "myPage";
+    liMyPage.className = "menu-item";
+    const aMyPage = document.createElement("a");
+    aMyPage.href = "/mito1-website/mypage/";
+    const iMyPage = document.createElement("i");
+    iMyPage.className = "fa-solid fa-circle-user";
+    aMyPage.appendChild(iMyPage);
+    aMyPage.appendChild(document.createTextNode("マイページ"));
+    liMyPage.appendChild(aMyPage);
+    ul2.appendChild(liMyPage);
+
+    linkListWrapper.appendChild(ul1);
+    linkListWrapper.appendChild(hr);
+    linkListWrapper.appendChild(ul2);
+
     asideMenu.appendChild(linkListWrapper);
-
-    // /* =========================================================
-    //  *  お知らせ欄
-    //  * ========================================================= */
-
-    // asideMenu.appendChild(document.createElement("hr"));
-    // asideMenu.insertAdjacentHTML("beforeend", `
-    //     <h2>更新内容</h2>
-    //     <h3 id="client-page"></h3>
-    //     <div id="notice-container"></div>
-    // `);
-
-    // // --- ページタイトル取得 ---
-    // let h1Content = "";
-    // let query = pd.from("notice").select("id, date, content, page").order("date", { ascending: false });
-
-    // if (document.querySelectorAll("h1")[1]) {
-    //     h1Content = document.querySelectorAll("h1")[1].textContent;
-    //     document.getElementById("client-page").textContent = h1Content;
-    //     query = query.eq("page", h1Content);
-    // } else {
-    //     document.getElementById("client-page").textContent = "一覧";
-    // }
-
-    // // --- お知らせ読み込み ---
-    // async function loadNotice() {
-    //     const { data, error } = await query;
-    //     if (error) {
-    //         console.error("エラー:", error);
-    //         return;
-    //     }
-
-    //     const noticeContainer = document.getElementById("notice-container");
-    //     noticeContainer.innerHTML = "";
-
-    //     // 日付ごとにグループ化
-    //     const grouped = data.reduce((acc, item) => {
-    //         (acc[item.date] ||= []).push(item);
-    //         return acc;
-    //     }, {});
-
-    //     Object.entries(grouped).forEach(([date, items]) => {
-    //         const group = document.createElement("div");
-    //         group.classList.add("notice-group");
-
-    //         const dateHeader = document.createElement("h4");
-    //         dateHeader.textContent = date;
-    //         group.appendChild(dateHeader);
-
-    //         const ul = document.createElement("ul");
-    //         ul.classList.add("notice-item");
-    //         items.forEach(i => {
-    //             const li = document.createElement("li");
-    //             li.textContent = i.content;
-    //             ul.appendChild(li);
-    //         });
-
-    //         group.appendChild(ul);
-    //         noticeContainer.appendChild(group);
-    //     });
-    // }
-
-    // loadNotice();
-
-    /* =========================================================
-     *  サブメニュー表示制御（PC対応）
-     * ========================================================= */
-
-    const bbs = document.getElementById("bbs");
-    const question = document.getElementById("question");
-    let subMenu = null;
-    let removeTimer = null;
-
-    function createSubMenu(event) {
-        if (removeTimer) {
-            clearTimeout(removeTimer);
-            removeTimer = null;
-        }
-
-        if (subMenu) {
-            subMenu.remove();
-            subMenu = null;
-        }
-
-        const page = event.target.innerText;
-        subMenu = document.createElement("ul");
-        subMenu.classList.add("submenu");
-
-        if (page === "掲示板") {
-            subMenu.innerHTML = `<li><a href="/mito1-website/bbs/new_post/">新規投稿</a></li>`;
-            bbs.appendChild(subMenu);
-        } else if (page === "みとい知恵袋") {
-            subMenu.innerHTML = `<li><a href="/mito1-website/question/new_question/">新規質問投稿</a></li>`;
-            question.appendChild(subMenu);
-        }
-
-        requestAnimationFrame(() => subMenu.classList.add("show"));
-    }
-
-    function removeSubMenu() {
-        if (subMenu) {
-            removeTimer = setTimeout(() => {
-                if (subMenu) {
-                    subMenu.classList.remove("show");
-                    subMenu.addEventListener("transitionend", () => {
-                        subMenu?.remove();
-                        subMenu = null;
-                    }, { once: true });
-                }
-            }, 200);
-        }
-    }
-
-    // 画面幅でPC/スマホを判定
-    function isWideScreen() {
-        return window.innerWidth >= 428;
-    }
 });
