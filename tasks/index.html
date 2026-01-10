@@ -66,7 +66,7 @@
         <section>
             <h2>課題を追加</h2>
             <form id="taskForm">
-                <select id="grade-class" required>
+                <p><select id="grade-class" required>
                     <option value="">選択してください</option>
                     <option value="1A">1A</option>
                     <option value="1B">1B</option>
@@ -74,19 +74,19 @@
                     <option value="2B">2B</option>
                     <option value="3A">3A</option>
                     <option value="3B">3B</option>
-                </select><br>
-                <input type="text" id="title" placeholder="課題名" required><br>
-                <input type="date" id="deadline" required><br>
-                <input type="text" id="description" placeholder="課題内容" required><br>
-                <input type="text" id="notes" placeholder="備考"><br>
-                <button type="submit">追加</button>
+                </select></p>
+                <p><input type="text" id="title" placeholder="課題名" required></p>
+                <p><input type="date" id="deadline" required></p>
+                <p><input type="text" id="description" placeholder="課題内容" required></p>
+                <p><input type="text" id="notes" placeholder="備考"></p>
+                <p><button type="submit">追加</button></p>
             </form>
         </section>
 
         <section>
             <h2>課題一覧</h2>
-            <label for="search-box">検索：<input type="text" id="search-box" placeholder="課題を検索..."></label>
-            <button id="search-btn">検索</button>
+            <p><label for="search-box">検索：<input type="text" id="search-box" placeholder="課題を検索..."></label>
+            <button id="search-btn">検索</button></p>
             <div class="table-container">
                 <h3>1A</h3>
                 <p class="toggle-button">▼1Aの課題を表示</p>
@@ -372,7 +372,7 @@
             }
         });
 
-        document.getElementById("search-box").addEventListener("keypress", (event) => {
+        document.getElementById("search-box").addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
                 document.getElementById("search-btn").click();
             }

@@ -58,16 +58,18 @@
                 <img id="user-avatar" alt="ユーザーアイコン" width="50" height="50">
                 <p><i class="fa-solid fa-address-card"></i><span id="student-id">0X00</span></p>
                 <p><i class="fa-solid fa-school"></i><span id="user-name">とある水戸一の名無し</span></p>
-                <p><i class="fa-solid fa-user"></i><span id="display-name">とある水戸一の名無し</span><button id="edit-display-name"
-                        style="margin: 0 0 0 1rem;">編集</button></p>
+                <p><i class="fa-solid fa-user"></i><span id="display-name">とある水戸一の名無し</span><button
+                        id="edit-display-name" style="margin: 0 0 0 1rem;">編集</button></p>
                 <p><i class="fa-solid fa-envelope"></i>メールアドレス: <span id="user-email">guest@example.com</span></p>
                 <p><i class="fa-solid fa-shield-alt"></i>権限: <span id="user-role">ゲスト</span></p>
-                <p><i class="fa-solid fa-info-circle"></i>自己紹介: <span id="about-me">自己紹介は未設定です。</span><button id="edit-about-me"
-                    style="margin: 0 0 0 1rem;">編集</button></p>
+                <p><i class="fa-solid fa-info-circle"></i>自己紹介: <span id="about-me">自己紹介は未設定です。</span><button
+                        id="edit-about-me" style="margin: 0 0 0 1rem;">編集</button></p>
             </div>
             <p><button id="logout-button">ログアウト</button></p>
             <hr>
-            <p>名前変更の際は、<a href="../faq.html#:~:text=%E8%A1%A8%E7%A4%BA%E5%90%8D%E3%81%AB%E4%BB%96%E3%81%AE%E4%BA%BA%E3%81%AE%E5%90%8D%E5%89%8D%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E3%82%82%E3%81%84%E3%81%84%E3%81%A7%E3%81%99%E3%81%8B%EF%BC%9F">よくある質問</a>をよく読んだ上で変更してください。</p>
+            <p>名前変更の際は、<a
+                    href="../faq.html#:~:text=%E8%A1%A8%E7%A4%BA%E5%90%8D%E3%81%AB%E4%BB%96%E3%81%AE%E4%BA%BA%E3%81%AE%E5%90%8D%E5%89%8D%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E3%82%82%E3%81%84%E3%81%84%E3%81%A7%E3%81%99%E3%81%8B%EF%BC%9F">よくある質問</a>をよく読んだ上で変更してください。
+            </p>
             <p><a id="my-page-link" href="#">公開中のマイページへ</a></p>
         </section>
         <section>
@@ -309,27 +311,14 @@
             if (newDisplayName === null) return;
 
             newDisplayName = newDisplayName.trim();
-            if (!newDisplayName || newDisplayName.length > 20) {
-                showCustomNotification("無効な表示名です。20文字以内で入力してください。");
-                return;
+
+            // 空白の場合はデフォルト名
+            if (!newDisplayName) {
+                newDisplayName = "とある水戸一の名無し";
             }
 
-            // 重複チェック
-            const { data: duplicate, error: dupErr } = await supabase
-                .from("users")
-                .select("user_email")
-                .ilike("display_name", newDisplayName)
-                .neq("user_email", userEmail)
-                .maybeSingle();
-
-            if (dupErr) {
-                console.error(dupErr);
-                showCustomNotification("表示名の確認中にエラーが発生しました。");
-                return;
-            }
-
-            if (duplicate) {
-                showCustomNotification("この表示名は既に使用されています。");
+            if (newDisplayName.length > 20) {
+                showCustomNotification("表示名は20文字以内で入力してください。");
                 return;
             }
 
@@ -345,23 +334,41 @@
                 return;
             }
 
-            // BBS 更新
-            await supabase
+            // BBS 更新（username が null / 空文字のケースも含め確実に更新）
+            const { error: bbsErr } = await supabase
                 .from("BBS")
                 .update({ username: newDisplayName })
                 .eq("user_email", userEmail);
 
+            if (bbsErr) {
+                console.error(bbsErr);
+                showCustomNotification("BBSの表示名更新に失敗しました。");
+                return;
+            }
+
             // questions 更新
-            await supabase
+            const { error: qErr } = await supabase
                 .from("questions")
                 .update({ username: newDisplayName })
                 .eq("user_email", userEmail);
 
+            if (qErr) {
+                console.error(qErr);
+                showCustomNotification("質問の表示名更新に失敗しました。");
+                return;
+            }
+
             // answers 更新
-            await supabase
+            const { error: aErr } = await supabase
                 .from("answers")
                 .update({ username: newDisplayName })
                 .eq("user_email", userEmail);
+
+            if (aErr) {
+                console.error(aErr);
+                showCustomNotification("回答の表示名更新に失敗しました。");
+                return;
+            }
 
             // 画面反映
             document.getElementById("display-name").textContent = newDisplayName;

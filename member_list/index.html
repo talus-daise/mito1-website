@@ -55,8 +55,8 @@
         <h1>名簿</h1>
         <section>
             <h2>検索</h2>
-            <label for="search-box">検索：<input type="text" id="search-box" placeholder="名前や番号で検索..."></label>
-            <button id="search-btn">検索</button>
+            <p><label for="search-box">検索：<input type="text" id="search-box" placeholder="名前や番号で検索..."></label>
+            <button id="search-btn">検索</button></p>
         </section>
         <section class="main__student">
             <h2>生徒</h2>
@@ -110,7 +110,7 @@
             <p>2B,3A,3B 矢崎寛子</p>
             <hr>
             <h3>理科</h3>
-            <p>R1 藤田忠弘(木村由佳)</p>
+            <p>R1 木村由佳</p>
             <p>R2 藤田忠弘</p>
             <hr>
             <h3>社会</h3>
@@ -255,7 +255,7 @@
         // Removed duplicate search handler that referenced undefined `tbody`;
         // search is handled using the roster data inside the fetch callback above.
 
-        document.getElementById("search-box").addEventListener("keypress", (event) => {
+        document.getElementById("search-box").addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
                 document.getElementById("search-btn").click();
             }

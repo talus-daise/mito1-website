@@ -34,7 +34,7 @@
     <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    
+
     <!--マニフェスト-->
     <link rel="manifest" href="../manifest.json">
 </head>
@@ -56,7 +56,7 @@
             <p>ここでは、様々なトピックについての議論や情報交換、雑談などが行われています。</p>
             <p>新しいスレッドを作成したり、既存のスレッドに投稿したりすることができます。</p>
             <p>興味のあるトピックについて気軽に投稿してください。</p>
-            <a href="new_thread/">新規スレッド作成はここ</a>
+            <p><a href="new_thread/">新規スレッド作成はここ</a></p>
         </section>
 
         <section class="highlight">
@@ -67,9 +67,10 @@
 
         <section>
             <h2>スレ一覧</h2>
-            <label for="search-box">検索：<input type="text" id="search-box" placeholder="スレッドを検索..."></label>
-            <button id="search-btn">検索</button>
-            <div id="threadList"></div>
+            <p><label for="search-box">検索：<input type="text" id="search-box" placeholder="スレッドを検索..."></label>
+                <button id="search-btn">検索</button>
+            </p>
+            <div id="threadList" class="content-list"></div>
         </section>
     </main>
 
@@ -91,16 +92,40 @@
 
             const { data: threads, error } = await supabase
                 .from("BBS")
-                .select("thread")
+                .select("thread, created_at, username")
                 .order("thread", { ascending: true });
 
             if (error) { console.error(error); return; }
 
-            const uniqueThreads = [...new Set(threads.map(t => t.thread))];
+            const threadMap = new Map();
+            threads.forEach(t => {
+                if (!threadMap.has(t.thread) || new Date(threadMap.get(t.thread).created_at) > new Date(t.created_at)) {
+                    threadMap.set(t.thread, { created_at: t.created_at, username: t.username });
+                }
+            });
 
-            threadList.innerHTML = uniqueThreads.map(t =>
-                `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${t}</a></span><hr>`
-            ).join("");
+            const elements = Array.from(threadMap.entries()).map(([thread, info]) => {
+                const span = document.createElement("span");
+                span.className = "content-list-item";
+                const a = document.createElement("a");
+                a.href = `thread/index.html?thread=${encodeURIComponent(thread)}`;
+                a.style.color = "inherit";
+                const h3 = document.createElement("h3");
+                h3.textContent = thread;
+                a.appendChild(h3);
+
+                const time = document.createElement("p");
+                time.innerHTML = `<i class='fa-regular fa-clock'></i> ${new Date(info.created_at).toLocaleString()}~`;
+                a.appendChild(time);
+
+                const user = document.createElement("p");
+                user.innerHTML = `<i class='fa-solid fa-user'></i> ${info.username}`;
+                a.appendChild(user);
+                span.appendChild(a);
+                return span;
+            });
+
+            threadList.append(...elements);
         });
 
         document.getElementById("search-btn").addEventListener("click", async () => {
@@ -145,7 +170,7 @@
             }
         });
 
-        document.getElementById("search-box").addEventListener("keypress", (e) => {
+        document.getElementById("search-box").addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
                 e.preventDefault();
                 document.getElementById("search-btn").click();

@@ -13,6 +13,17 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
     <link rel="stylesheet" href="../script/notice/notice.css">
     <style>
+        #timetable {
+            border-radius: 8px;
+            width: calc(100% - 2rem);
+            display: block;
+            margin: 1rem;
+        }
+
+        #past-timetable {
+            margin: 0 1rem;
+        }
+
         #past-timetable img {
             max-width: 100%;
             border-radius: 8px;
@@ -81,20 +92,23 @@
         </section>
         <section>
             <h2>過去の時間割一覧</h2>
-            <label for="search-box">検索：<input type="text" id="search-box" placeholder="時間割をファイル名から検索..."></label>
-            <button id="search-btn">検索</button>
+            <p><label for="search-box">検索：<input type="text" id="search-box" placeholder="時間割をファイル名から検索..."></label>
+                <button id="search-btn">検索</button>
+            </p>
             <div id="past-timetable"></div>
         </section>
         <section>
             <h2>サーバーの稼働状況</h2>
-            <p id="server-state"></p>
+            <div id="server-state"></div>
             <hr>
             <p>5分ごとにサーバーを監視し、エラーが起きた場合は再起動しています。</p>
         </section>
         <section>
             <h2>サーバーの仕様</h2>
-            <p><img src="https://img.shields.io/badge/Python-3776AB.svg?logo=python&style=for-the-badge&logoColor=ffffff">で動かしています。</p>
-            <h4>fetch error</h4>
+            <p><img
+                    src="https://img.shields.io/badge/Python-3776AB.svg?logo=python&style=for-the-badge&logoColor=ffffff">で動かしています。
+            </p>
+            <h3>fetch error</h3>
             <p>時間割画像の取得に失敗しました。再読み込みしてください。また、サーバー側の障害の場合もあるので時間を開けてもう一度お試しください。</p>
         </section>
     </main>
@@ -173,17 +187,11 @@
 
                 document.getElementById("loading")?.remove();
 
-                // ▼ 最新日の確認用表示
-                const wrapper = document.createElement("div");
-                wrapper.style.cssText = "display:flex; flex-wrap:wrap; gap:12px;";
-                timetableImg.parentNode.appendChild(wrapper);
-
                 for (const f of todayFiles) {
-                    const img = document.createElement("img");
+                    const img = document.getElementById("timetable");
                     img.src = f.url;
                     img.alt = f.filename;
                     img.style.cssText = "max-width:100%; border-radius:8px";
-                    wrapper.appendChild(img);
                 }
 
                 // ▼ 過去分
@@ -227,6 +235,39 @@
             } catch (e) {
                 console.error(e);
                 pastContainer.textContent = "画像一覧の取得に失敗しました。";
+            }
+        })();
+
+        (async () => {
+            const serverStateEl = document.getElementById("server-state");
+            try {
+                const res = await fetch("https://talus-daise.github.io/mito1-website-timetable/output/server-state.json");
+                if (!res.ok) throw new Error("サーバーステータス取得失敗");
+
+                const json = await res.json();
+                const service = json.services?.[0];
+                const timetable_sync = json.timetable_sync;
+
+                const p = document.createElement("p");
+                p.textContent = `最終更新日時: ${new Date(json.generated_at).toLocaleString()}`;
+
+                const status = document.createElement("p");
+                status.textContent = `現在のサーバーステータス: ${service?.is_active ?? "unknown"}`;
+
+                const latestSync = document.createElement("p");
+                latestSync.textContent = `最後の時間割同期: ${timetable_sync?.synced_at ? new Date(timetable_sync.synced_at).toLocaleString() : "unknown"}`;
+
+                const syncStatus = document.createElement("p");
+                syncStatus.textContent = `同期状況: ${timetable_sync?.images_synced ?? "unknown"}`;
+
+                serverStateEl.innerHTML = "";
+                serverStateEl.appendChild(p);
+                serverStateEl.appendChild(status);
+                serverStateEl.appendChild(latestSync);
+                serverStateEl.appendChild(syncStatus);
+            } catch (e) {
+                console.error(e);
+                serverStateEl.textContent = "サーバーステータスの取得に失敗しました。";
             }
         })();
 

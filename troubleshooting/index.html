@@ -34,7 +34,7 @@
     <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    
+
     <!--マニフェスト-->
     <link rel="manifest" href="../manifest.json">
 </head>
@@ -60,10 +60,13 @@
             <ul>
                 <li><a href="#electronic-blackboard">電子黒板関係</a></li>
                 <li><a href="#tablet">タブレット関係</a></li>
+                <li><a href="#google">Googleサービス関係</a></li>
+                <li><a href="#other">その他</a></li>
             </ul>
             <hr>
-            <label for="search-box">検索：<input type="text" id="search-box" placeholder="検索..."></label>
-            <button id="search-btn">検索</button>
+            <p><label for="search-box">検索：<input type="text" id="search-box" placeholder="検索..."></label>
+                <button id="search-btn">検索</button>
+            </p>
         </section>
         <section id="electronic-blackboard">
             <h2>電子黒板関係</h2>
@@ -85,7 +88,7 @@
             <h3>つないだけど背景だけが映る</h3>
             <p>・設定→デバイス→ディスプレイの「画面をミラーリングする」が有効か確認してください。</p>
         </section>
-        
+
         <section id="tablet">
             <h2>タブレット関係</h2>
             <h3>タブレットがつかない</h3>
@@ -110,9 +113,11 @@
             <p>・開いているタブを閉じてみてください。</p>
             <p>・少し重いサービスを使っているタブを閉じてみてください。（Canva、Googleサービス系など）</p>
             <p>・再起動してみてください。</p>
+        </section>
 
-            <h3>Googleサービス関係</h3>
-            <p>パスワードを忘れた</p>
+        <section id="google">
+            <h2>Googleサービス関係</h2>
+            <h3>パスワードを忘れた</h3>
             <p>・先生に相談しましょう。</p>
 
             <h3>パスワードが違うと言われる</h3>
@@ -127,7 +132,7 @@
             <p>・Google Classroomで課題を提出してしまっている可能性があります。再度編集したい場合は提出を取り消ししてください。</p>
         </section>
 
-        <section>
+        <section id="other">
             <h2>その他</h2>
             <h3>恐竜ゲームができない</h3>
             <p>・仕様です</p>

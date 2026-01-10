@@ -62,21 +62,21 @@
         <section>
             <h2>曲応募</h2>
             <form id="sendRequest">
-                <label for="student-ID">学籍番号: </label><input type="text" name="student-ID" id="studentId"><br>
-                <label for="music-name">曲名: </label><input type="text" name="music-name" id="musicName"><br>
-                <label for="url">曲のURL: </label><input type="url" name="url" id="musicUrl"><br>
-                <label for="description">おすすめポイントなど(空欄でもOK): </label><input type="text" name="description"
-                    id="description"><br>
-                <input type="submit" value="送信">
+                <p><label for="student-ID">学籍番号: </label><input type="text" name="student-ID" id="studentId"></p>
+                <p><label for="music-name">曲名: </label><input type="text" name="music-name" id="musicName"></p>
+                <p><label for="url">曲のURL: </label><input type="url" name="url" id="musicUrl"></p>
+                <p><label for="description">おすすめポイントなど(空欄でもOK): </label><input type="text" name="description"
+                    id="description"></p>
+                <p><input type="submit" value="送信"></p>
             </form>
         </section>
         <section>
             <h2>今日流す予定の曲</h2>
             <div id="container">
-                <button id="randomMusic">ランダム選曲</button>
+                <p><button id="randomMusic">ランダム選曲</button></p>
                 <div id="selectedMusic"></div>
 
-                <p id="openMusic">▼ ネタバレ防止(クリックで開きます)</p>
+                <p id="openMusic">▼ 曲名一覧(クリックで開きます)</p>
                 <div id="todayMusic"></div>
             </div>
         </section>
@@ -169,6 +169,7 @@
             }
 
 
+            const p = document.createElement("p");
             const label = document.createElement("label");
             label.textContent = "再生済み: ";
             const checkbox = document.createElement("input");
@@ -176,6 +177,7 @@
             checkbox.checked = false;
             checkbox.disabled = !isToggleable;
             label.appendChild(checkbox);
+            p.appendChild(label);
 
             const student = document.createElement("p");
             student.textContent = studentId;
@@ -191,7 +193,7 @@
                 else showNotification("更新しました！");
             });
 
-            div.append(title, videoContainer, description, label, document.createElement("hr"));
+            div.append(title, videoContainer, description, p, document.createElement("hr"));
 
             if (isOpened) videoContainer.click();
 
@@ -361,7 +363,9 @@
                 height: startHeight + "px",
                 transform: "translate(-50%, -50%)",
                 zIndex: 9999,
-                border: "none"
+                border: "none",
+                margin: 0,
+                borderRadius: "0",
             });
 
             const startTime = performance.now();
@@ -393,7 +397,7 @@
                 border: "none",
                 borderRadius: "5px",
                 padding: "5px 10px",
-                cursor: "pointer"
+                cursor: "pointer",
             });
             closeBtn.textContent = "✖";
             document.body.appendChild(closeBtn);

@@ -1,8 +1,13 @@
 /* =========================================================
- *  Googleログイン必須（オーバーレイ方式）
+ *  Googleログイン必須（完全遮断・常時監視）
  * ========================================================= */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+/* =========================================================
+ *  初期レンダリング遮断
+ * ========================================================= */
+document.body.style.setProperty("display", "none", "important");
 
 /* =========================================================
  *  Supabase 設定
@@ -10,21 +15,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const supabaseUrl = "https://mgsbwkidyxmicbacqeeh.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg";
 const supabase = createClient(supabaseUrl, supabaseKey);
-
-/* =========================================================
- *  初期チェック
- * ========================================================= */
-document.addEventListener("DOMContentLoaded", async () => {
-    const {
-        data: { session }
-    } = await supabase.auth.getSession();
-
-    if (!session?.user) {
-        showLoginOverlay();
-    } else {
-        verifyDomain(session.user);
-    }
-});
 
 /* =========================================================
  *  オーバーレイ表示
@@ -77,7 +67,7 @@ function showLoginOverlay() {
                 </div>
             </button>`;
 
-            
+
     const style = document.createElement("style");
     style.textContent = `
         .gsi-material-button {
@@ -176,44 +166,68 @@ function showLoginOverlay() {
     `;
     document.head.appendChild(style);
 
+    let oauthRunning = false;
+
     loginBtn.addEventListener("click", async () => {
+        if (oauthRunning) return;
+        oauthRunning = true;
+
         await supabase.auth.signInWithOAuth({
             provider: "google",
-            options: {
-                redirectTo: window.location.href
-            }
+            options: { redirectTo: location.href }
         });
     });
 
     box.append(title, desc, loginBtn);
     overlay.appendChild(box);
-    document.body.appendChild(overlay);
+    document.documentElement.appendChild(overlay);
 }
 
-/* =========================================================
- *  ドメイン制限
- * ========================================================= */
-async function verifyDomain(user) {
-    const email = user.email || "";
+function allowRender() {
+    document.body.style.setProperty("display", "block", "important");
+}
 
+document.body.style.setProperty("display", "none", "important");
+
+/* ===== 初回チェック（最重要）===== */
+(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    await handleSession(session);
+})();
+
+/* ===== 状態変化監視 ===== */
+supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === "SIGNED_IN") {
+        await handleSession(session);
+    }
+
+    if (event === "SIGNED_OUT") {
+        showLoginOverlay();
+    }
+});
+
+async function handleSession(session) {
+    if (location.pathname.includes("caution")) {
+        allowRender();
+        return;
+    }
+    
+    if (!session?.user) {
+        showLoginOverlay();
+        return;
+    }
+
+    const email = session.user.email ?? "";
     const allowed =
         email.endsWith("@mito1-h.ibk.ed.jp") ||
         email.endsWith(".ibk.ed.jp");
 
     if (!allowed) {
-        await supabase.auth.signOut();
-        window.location.href = "/mito1-website/caution";
+        // OAuth直後は signOut しない方が安定
+        location.replace("/mito1-website/caution");
+        return;
     }
-}
 
-/* =========================================================
- *  認証状態監視
- * ========================================================= */
-supabase.auth.onAuthStateChange((_event, session) => {
-    if (!session?.user) {
-        showLoginOverlay();
-    } else {
-        document.getElementById("login-overlay")?.remove();
-        verifyDomain(session.user);
-    }
-});
+    document.getElementById("login-overlay")?.remove();
+    allowRender();
+}

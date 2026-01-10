@@ -12,19 +12,6 @@
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
     <link rel="stylesheet" href="../../script/notice/notice.css">
-    <style>
-        .format-buttons {
-            margin-bottom: 10px;
-        }
-
-        .format-buttons button {
-            margin-right: 5px;
-            padding: 5px 10px;
-            font-size: 16px;
-            cursor: pointer;
-            width: 2.5rem;
-        }
-    </style>
     <!--web情報-->
     <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
     <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
@@ -68,8 +55,8 @@
 
         <section>
             <h2>スレッド一覧</h2>
-            <label for="search-box">検索：<input type="text" id="search-box" placeholder="スレッドを検索..."></label>
-            <button id="search-btn">検索</button>
+            <p><label for="search-box">検索：<input type="text" id="search-box" placeholder="スレッドを検索..."></label>
+            <button id="search-btn">検索</button></p>
             <ul id="threadList"></ul>
         </section>
 
@@ -77,18 +64,18 @@
             <h2>新規スレッド作成</h2>
             <form id="newThreadForm">
                 <h3>スレッド名</h3>
-                <input type="text" id="threadName" placeholder="スレッド名" required><br>
+                <p><input type="text" id="threadName" placeholder="スレッド名" required><br></p>
                 <hr>
                 <h3>最初の投稿</h3>
-                <input type="text" id="title" placeholder="タイトル" required><br>
+                <p><input type="text" id="title" placeholder="タイトル" required><br></p>
                 <div class="format-buttons">
                     <button id="bold"><strong>B</strong></button>
                     <button id="italic"><em>I</em></button>
                     <button id="strikethrough"><s>S</s></button>
                     <button id="link"><i class="fa-solid fa-link"></i></button>
                 </div>
-                <textarea id="content" placeholder="本文" required></textarea><br>
-                <button type="submit">スレッド作成＆投稿</button>
+                <p><textarea id="content" placeholder="本文" required></textarea><br></p>
+                <p><button type="submit">スレッド作成＆投稿</button></p>
             </form>
 
             <h3>プレビュー</h3>
@@ -277,7 +264,7 @@
 
         const previewArea = document.getElementById("preview");
 
-        document.getElementById("newThreadForm").addEventListener("keypress", async (e) => {
+        document.getElementById("newThreadForm").addEventListener("keydown", async (e) => {
             // === ログイン済みユーザー情報の取得 ===
             const { data: { session } } = await supabase.auth.getSession();
 
@@ -375,7 +362,7 @@
             }
         });
 
-        document.getElementById("search-box").addEventListener("keypress", (e) => {
+        document.getElementById("search-box").addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
                 e.preventDefault();
                 document.getElementById("search-btn").click();

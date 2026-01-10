@@ -12,19 +12,6 @@
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
     <link rel="stylesheet" href="../../script/notice/notice.css">
-    <style>
-        .format-buttons {
-            margin-bottom: 10px;
-        }
-
-        .format-buttons button {
-            margin-right: 5px;
-            padding: 5px 10px;
-            font-size: 16px;
-            cursor: pointer;
-            width: 2.5rem;
-        }
-    </style>
     <!--web情報-->
     <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
     <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
@@ -73,7 +60,7 @@
 
         <section>
             <h2>回答</h2>
-            <ul id="answer-list"></ul>
+            <div id="answer-list" class="content-list"></div>
             <h3>回答を投稿する</h3>
             <form id="answer-form">
                 <div class="format-buttons">
@@ -82,8 +69,8 @@
                     <button id="strikethrough" title="取り消し線"><del>S</del></button>
                     <button id="link" title="リンク"><i class="fa-solid fa-link"></i></button>
                 </div>
-                <textarea id="answer-content" placeholder="回答の内容" required></textarea><br>
-                <button type="submit">回答</button>
+                <p><textarea id="answer-content" placeholder="回答の内容" required></textarea><br></p>
+                <p><button type="submit">回答</button></p>
             </form>
 
             <h3>プレビュー</h3>
@@ -156,12 +143,23 @@
             const answerList = document.getElementById("answer-list");
             answerList.innerHTML = "";
             answers.forEach((answer) => {
-                const li = document.createElement("li");
+                const div = document.createElement("div");
+                div.classList.add("content-list-item");
+                const username = document.createElement("span");
+                username.className = "username";
+                username.setAttribute("data-user-id", answer.user_id);
+                username.innerHTML = `<i class="fa-solid fa-user"></i>${answer.username}`;
+                div.appendChild(username);
+                const br = document.createElement("br");
+                div.appendChild(br);
+                const time = document.createElement("span");
                 const answerDate = new Date(answer.created_at).toLocaleString();
-                li.innerHTML = `
-            ${answer.content} - by <span class="username" data-user-id="${answer.user_id}">${answer.username}</span>
-            <small>(${answerDate})</small>`;
-                answerList.appendChild(li);
+                time.innerHTML = `<i class="fa-solid fa-clock"></i> ${answerDate}`;
+                div.appendChild(time);
+                const content = document.createElement("p");
+                content.innerHTML = parseMarkdown(answer.content);
+                div.appendChild(content);
+                answerList.appendChild(div);
             });
 
             if (answerId) {
@@ -357,12 +355,14 @@
                     .single();
                 const content = parseMarkdown(document.getElementById("answer-content").value.trim());
                 previewArea.innerHTML = `
-        <ul>
-            <li>
-                ${content} - by <span class="username" data-user-id="${userId}">${user.display_name}</span>
-                <small>(${new Date().toLocaleString()})</small>
-            </li>
-        </ul>`;
+                <div class="content-list">
+                    <div class="content-list-item">
+                        <span class="username" data-user-id="${userId}"><i class="fa-solid fa-user"></i>${user.display_name || "とある水戸一の名無し"}</span><br>
+                        <span><i class="fa-solid fa-clock"></i>プレビュー</span>
+                        <p>${content}</p>
+                    </div>
+                </div>
+                `;
             }
         });
 

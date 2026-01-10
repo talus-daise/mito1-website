@@ -173,7 +173,7 @@
         document.getElementById("search-btn").addEventListener("click", filterQuestions);
 
         // Enterキーでも検索できるようにする
-        document.getElementById("search-box").addEventListener("keypress", (event) => {
+        document.getElementById("search-box").addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
                 filterQuestions();
             }
