@@ -146,8 +146,8 @@
                     const username = parseMarkdown(user?.display_name?.trim() || "とある水戸一の名無し");
                     const content = parseMarkdown(document.getElementById("content").value.trim());
 
-                    if (!title || !content) {
-                        showCustomNotification("タイトルと内容を入力してください。");
+                    if (!content) {
+                        showCustomNotification("内容を入力してください。");
                         return;
                     }
 
@@ -191,7 +191,6 @@
                 }
 
                 postList.innerHTML = posts
-                    .filter(post => post.title)
                     .map((post, index) => `
                 <div class="post-item">
                     <span>${index + 1}. </span>
@@ -212,7 +211,7 @@
                 });
 
                 // postId が指定されていれば該当投稿までスクロール
-                if (postId) {
+                if (postId && !window.postIdScrolled) {
                     const idx = posts.findIndex(p => String(p.id) === String(postId));
                     if (idx !== -1) {
                         const postDivs = postList.querySelectorAll('div');
@@ -223,6 +222,8 @@
                             const originalBg = target.style.backgroundColor;
                             target.style.backgroundColor = '#fffbcc';
                             setTimeout(() => { target.style.transition = 'background-color 1s'; target.style.backgroundColor = originalBg || ''; }, 500);
+                            // postIdを一度だけ使う
+                            window.postIdScrolled = true;
                         }
                     }
                 }
@@ -318,10 +319,9 @@
 
         // === ページ離脱警告 ===
         window.addEventListener('beforeunload', (event) => {
-            const title = document.getElementById('title').value.trim();
             const content = document.getElementById('content').value.trim();
             const username = document.getElementById('username').value.trim();
-            if (!title && !content && !username) return;
+            if (!content && !username) return;
             event.preventDefault();
             event.returnValue = '';
         });
