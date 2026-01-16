@@ -323,6 +323,17 @@
                 return;
             }
 
+            const { data: existingNames } = await supabase
+                .from("users")
+                .select("display_name")
+                .eq("display_name", newDisplayName)
+                .neq("user_email", userEmail);
+            
+            if (existingNames.length > 0) {
+                showCustomNotification("その表示名は既に使用されています。");
+                return;
+            }
+
             // users テーブル更新
             const { error: userUpdateErr } = await supabase
                 .from("users")
