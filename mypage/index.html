@@ -252,7 +252,7 @@
         // --- 掲示板の投稿一覧を取得 ---
         const { data: threads } = await supabase
             .from("BBS")
-            .select("id, thread, title, created_at, username")
+            .select("id, thread, created_at, username, content")
             .eq("user_email", userEmail)
             .order("created_at", { ascending: false });
 
@@ -264,7 +264,8 @@
             a.href = `/mito1-website/bbs/thread/?thread=${encodeURIComponent(t.thread)}&post_id=${encodeURIComponent(t.id)}`;
             a.style.color = "inherit";
             const title = document.createElement("h3");
-            title.textContent = t.title;
+            const plainContent = t.content.split("<br>")[0].replace(/<[^>]*>/g, "");
+            title.textContent = plainContent.slice(0, 20) + (plainContent.length > 20 ? "..." : "");
             a.appendChild(title);
             const time = document.createElement("p");
             time.innerHTML = `<i class="fa-solid fa-clock"></i>${new Date(t.created_at).toLocaleString()}`;
