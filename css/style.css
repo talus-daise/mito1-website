@@ -356,4 +356,14 @@ iframe {
     textarea {
         width: 100%;
     }
+
+    .header__breadcrumb #page-link a {
+        white-space: normal;
+        word-break: break-all;
+    }
+
+    .header__breadcrumb #threadTitle a {
+        white-space: normal;
+        word-break: break-all;
+    }
 }

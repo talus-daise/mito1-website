@@ -93,34 +93,62 @@
             const { data: threads, error } = await supabase
                 .from("BBS")
                 .select("thread, created_at, username")
-                .order("thread", { ascending: true });
+                .order("created_at", { ascending: true });
 
             if (error) { console.error(error); return; }
 
             const threadMap = new Map();
+
             threads.forEach(t => {
-                if (!threadMap.has(t.thread) || new Date(threadMap.get(t.thread).created_at) > new Date(t.created_at)) {
-                    threadMap.set(t.thread, { created_at: t.created_at, username: t.username });
+                if (!threadMap.has(t.thread)) {
+                    threadMap.set(t.thread, {
+                        first_created_at: t.created_at,
+                        latest_created_at: t.created_at,
+                        username: t.username
+                    });
+                } else {
+                    const info = threadMap.get(t.thread);
+
+                    // 最古（スレ立て）
+                    if (new Date(info.first_created_at) > new Date(t.created_at)) {
+                        info.first_created_at = t.created_at;
+                        info.username = t.username;
+                    }
+
+                    // 最新書き込み
+                    if (new Date(info.latest_created_at) < new Date(t.created_at)) {
+                        info.latest_created_at = t.created_at;
+                    }
                 }
             });
 
             const elements = Array.from(threadMap.entries()).map(([thread, info]) => {
                 const span = document.createElement("span");
                 span.className = "content-list-item";
+
                 const a = document.createElement("a");
                 a.href = `thread/index.html?thread=${encodeURIComponent(thread)}`;
                 a.style.color = "inherit";
+
                 const h3 = document.createElement("h3");
                 h3.textContent = thread;
                 a.appendChild(h3);
 
                 const time = document.createElement("p");
-                time.innerHTML = `<i class='fa-regular fa-clock'></i> ${new Date(info.created_at).toLocaleString()}~`;
+                time.innerHTML =
+                    `<i class="fa-regular fa-clock"></i> ${new Date(info.first_created_at).toLocaleString()}~`;
                 a.appendChild(time);
 
+                const latest = document.createElement("p");
+                latest.innerHTML =
+                    `<i class="fa-solid fa-clock-rotate-left"></i> ${new Date(info.latest_created_at).toLocaleString()}`;
+                a.appendChild(latest);
+
                 const user = document.createElement("p");
-                user.innerHTML = `<i class='fa-solid fa-user'></i> ${info.username}`;
+                user.innerHTML =
+                    `<i class="fa-solid fa-user"></i> ${info.username}`;
                 a.appendChild(user);
+
                 span.appendChild(a);
                 return span;
             });

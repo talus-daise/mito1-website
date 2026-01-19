@@ -63,7 +63,7 @@
         <p class="header__breadcrumb">
             <a href="../../"><i class="fa-solid fa-house"></i>トップページ</a>
             <a href="../"><i class="fa-solid fa-chalkboard"></i>掲示板</a>
-            <a href="./"><i class="fa-solid fa-pen-to-square"></i>スレッド: <span id="threadTitle"></span></a>
+            <span id="threadTitle"><a href="./"><i class="fa-solid fa-pen-to-square"></i></a></span>
         </p>
     </header>
 
@@ -124,7 +124,7 @@
             }
 
             listTitle.innerHTML = `${parseMarkdown(thread)}`;
-            document.getElementById("threadTitle").innerHTML = parseMarkdown(thread);
+            document.querySelector("#threadTitle>a").innerHTML = '<i class="fa-solid fa-pen-to-square"></i>' + parseMarkdown(thread);
 
             // === ログイン済みユーザー情報の取得 ===
             const { data: { session } } = await supabase.auth.getSession();

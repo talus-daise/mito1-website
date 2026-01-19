@@ -20,23 +20,41 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.4);
-            display: none;
+            display: flex;
             justify-content: center;
             align-items: center;
             z-index: 9999;
             margin: 0;
+            padding: 0;
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 0.35s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        #table-modal.closed {
+            opacity: 0;
+            pointer-events: none;
         }
 
         #table-modal-inner {
-            width: 90%;
-            height: 90%;
+            width: 100%;
+            height: 100%;
             border-radius: 10px;
             overflow: auto;
             position: relative;
+            background: white;
+            transform: scale(1);
+            opacity: 1;
+            transition: transform 0.35s cubic-bezier(.4, 0, .2, 1), opacity 0.35s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        #table-modal.closed #table-modal-inner {
+            transform: scale(0.96);
+            opacity: 0;
         }
 
         #table-close-btn {
-            position: absolute;
+            position: sticky;
             right: 10px;
             top: 10px;
             font-size: 18px;
@@ -46,7 +64,7 @@
         /* 全体を横スクロール可能にする */
         #table-container {
             background-color: white;
-            overflow-x: auto;
+            overflow: auto;
             display: grid;
             grid-template-rows: auto;
             border-collapse: collapse;
@@ -94,6 +112,12 @@
             text-overflow: ellipsis;
         }
 
+        .table-cell input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            margin: 0;
+        }
+
         /* 一番右のセル */
         .table-row .table-cell:last-child,
         .table-header>div:last-child {
@@ -114,6 +138,16 @@
             padding: 10px;
             background-color: #f4f4f4;
             border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+        }
+
+        #table-close-btn {
+            position: absolute;
+            z-index: 10000;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
         }
 
         .content {
@@ -123,6 +157,69 @@
             overflow: hidden;
             text-overflow: ellipsis;
             vertical-align: bottom;
+        }
+
+        .content-list-item {
+            position: relative;
+        }
+
+        .actions-menu-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #888;
+            z-index: 2;
+            box-shadow: none;
+        }
+
+        .actions-menu-btn:hover {
+            color: #333;
+            box-shadow: none;
+        }
+
+        .actions-menu-btn:active {
+            background-color: transparent;
+            color: #FE483B;
+        }
+
+        .actions-menu {
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 10px;
+            border-radius: 6px;
+            min-width: 120px;
+            z-index: 10;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .actions-menu.active {
+            display: block;
+        }
+
+        .actions-menu button {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 8px 12px;
+            background: none;
+            border: none;
+            color: #333;
+            font-size: 1rem;
+            cursor: pointer;
+            gap: 8px;
+            margin: 0;
+            border-radius: 0;
+            background-color: #eee;
+            box-shadow: none;
+        }
+
+        .actions-menu button:hover {
+            background: #999;
         }
     </style>
     <!--web情報-->
@@ -186,13 +283,13 @@
             </div>
 
             <!-- テーブル表示モーダル -->
-            <div id="table-modal">
+            <div id="table-modal" class="closed">
                 <div id="table-modal-inner">
-                    <button id="table-close-btn">✕</button>
                     <div class="table-control">
                         <input type="text" id="table-search-box" placeholder="テーブル内を検索...">
                         <button id="table-search-btn">検索</button>
                         <button id="delete-select-content">一括削除</button>
+                        <button id="table-close-btn">✕</button>
                     </div>
                     <div id="table-container">
                     </div>
@@ -208,6 +305,20 @@
             "https://mgsbwkidyxmicbacqeeh.supabase.co",
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
         );
+
+        function openModal() {
+            const tableModal = document.getElementById("table-modal");
+            tableModal.classList.remove("closed");
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeModal() {
+            const tableModal = document.getElementById("table-modal");
+            tableModal.classList.add("closed");
+            setTimeout(() => {
+                document.body.style.overflow = "auto";
+            }, 400); // CSSのtransitionより少し長め
+        }
 
         document.addEventListener("DOMContentLoaded", async () => {
             // 直前のページ（リファラ）が存在しない場合
@@ -242,14 +353,17 @@
                 const questionItem = document.createElement("div");
                 questionItem.className = "content-list-item";
                 questionItem.innerHTML = `
+                    <button class="actions-menu-btn" title="操作メニュー" tabindex="0">︙</button>
+                    <div class="actions-menu">
+                        <button class="edit-entry" data-question-id="${question.id}"><i class="fa-solid fa-pen"></i> 編集</button>
+                        <button class="delete-entry" data-question-id="${question.id}"><i class="fa-solid fa-trash"></i> 削除</button>
+                        <button class="view-entry" data-question-id="${question.id}"><i class="fa-solid fa-arrow-up-right-from-square"></i> 表示</button>
+                    </div>
                     <p><i class="fa-solid fa-id-card"></i> ${question.id}</p>
                     <p><i class="fa-solid fa-user"></i> ${question.username}</p>
                     <p><i class="fa-solid fa-heading"></i> ${question.title}</p>
                     <p><i class="fa-solid fa-comment"></i> <span class="content">${question.content.split('<br>')[0]}</span></p>
                     <p><i class="fa-solid fa-clock"></i> ${question.created_at}</p>
-                    <p><button data-question-id="${question.id}" class="edit-entry" style="width: fit-content;">質問編集</button>
-                    <button data-question-id="${question.id}" class="delete-entry" style="width: fit-content;">質問削除</button>
-                    <button data-question-id="${question.id}" class="view-entry" style="width: fit-content;">質問表示</button></p>
                 `;
                 questionList.appendChild(questionItem);
             });
@@ -258,14 +372,17 @@
                 const answerItem = document.createElement("div");
                 answerItem.className = "content-list-item";
                 answerItem.innerHTML = `
+                    <button class="actions-menu-btn" title="操作メニュー" tabindex="0">︙</button>
+                    <div class="actions-menu">
+                        <button class="edit-entry" data-answer-id="${answer.id}"><i class="fa-solid fa-pen"></i> 編集</button>
+                        <button class="delete-entry" data-answer-id="${answer.id}"><i class="fa-solid fa-trash"></i> 削除</button>
+                        <button class="view-entry" data-answer-id="${answer.id}"><i class="fa-solid fa-arrow-up-right-from-square"></i> 表示</button>
+                    </div>
                     <p><i class="fa-solid fa-id-card"></i> ${answer.id}</p>
                     <p><i class="fa-solid fa-user"></i> ${answer.username}</p>
                     <p><i class="fa-solid fa-id-card"></i> ${answer.question_id}</p>
                     <p><i class="fa-solid fa-comment"></i> <span class="content">${answer.content.split('<br>')[0]}</span></p>
                     <p><i class="fa-solid fa-clock"></i> ${answer.created_at}</p>
-                    <p><button data-answer-id="${answer.id}" class="edit-entry" style="width: fit-content;">回答編集</button>
-                    <button data-answer-id="${answer.id}" class="delete-entry" style="width: fit-content;">回答削除</button>
-                    <button data-answer-id="${answer.id}" class="view-entry" style="width: fit-content;">回答表示</button></p>
                 `;
                 answerList.appendChild(answerItem);
             });
@@ -274,14 +391,16 @@
                 const postItem = document.createElement("div");
                 postItem.className = "content-list-item";
                 postItem.innerHTML = `
+                    <button class="actions-menu-btn" title="操作メニュー" tabindex="0">︙</button>
+                    <div class="actions-menu">
+                        <button class="edit-entry" data-post-id="${post.id}"><i class="fa-solid fa-pen"></i> 編集</button>
+                        <button class="delete-entry" data-post-id="${post.id}"><i class="fa-solid fa-trash"></i> 削除</button>
+                        <button class="view-entry" data-post-id="${post.id}"><i class="fa-solid fa-arrow-up-right-from-square"></i> 表示</button>
+                    </div>
                     <p><i class="fa-solid fa-id-card"></i> ${post.id}</p>
                     <p><i class="fa-solid fa-user"></i> ${post.username}</p>
-                    <p><i class="fa-solid fa-heading"></i> ${post.title}</p>
                     <p><i class="fa-solid fa-comment"></i> <span class="content">${post.content.split('<br>')[0]}</span></p>
                     <p><i class="fa-solid fa-clock"></i> ${post.created_at}</p>
-                    <p><button data-post-id="${post.id}" class="edit-entry" style="width: fit-content;">投稿編集</button>
-                    <button data-post-id="${post.id}" class="delete-entry" style="width: fit-content;">投稿削除</button>
-                    <button data-post-id="${post.id}" class="view-entry" style="width: fit-content;">投稿表示</button></p>
                 `;
                 postList.appendChild(postItem);
             });
@@ -370,49 +489,57 @@
             // モーダル操作
             const tableModal = document.getElementById("table-modal");
             const tableContainer = document.getElementById("table-container");
-            document.getElementById("table-close-btn").addEventListener("click", () => {
-                tableModal.style.display = "none";
-            });
+            document.getElementById("table-close-btn").addEventListener("click", closeModal);
 
-            function generateTable() {
-                const items = document.querySelectorAll(".content-list-item");
-
+            function generateTable(questions, answers, posts) {
                 const headers = ["I/O", "ID", "種類", "作成者", "タイトル / 質問ID", "内容", "作成日時"];
                 let html = "<div class='table-header'>";
-
                 headers.forEach((h, index) => html += `<div data-col=${index}>${h}</div>`);
                 html += "</div><div class='table-body'>";
 
-                items.forEach(card => {
-                    // --- 全ラベルと値をまとめて取得 ---
-                    const entries = {};
-                    const labels = card.querySelectorAll("strong.label-strong");
-
-                    labels.forEach(label => {
-                        const key = label.textContent.trim();             // 例: "ID:", "作成者:", ...
-                        const valueEl = label.nextElementSibling;         // 値のノード
-                        const value = valueEl ? valueEl.textContent.trim() : "";
-                        entries[key] = value;
-                    });
-
-                    // --- 種類判定 ---
-                    let type = "不明";
-                    if (card.querySelector("button[data-question-id]")) type = "質問";
-                    if (card.querySelector("button[data-answer-id]")) type = "回答";
-                    if (card.querySelector("button[data-post-id]")) type = "投稿";
-
-                    // --- テーブル行を追加（ラベル名をキーにして値だけ採用） ---
+                // 質問
+                questions.forEach(q => {
                     html += `
-            <div class="table-row">
-                <div class="table-cell"><input type="checkbox" id="table-selection"></div>
-                <div class="table-cell">${entries["ID:"] || ""}</div>
-                <div class="table-cell">${type}</div>
-                <div class="table-cell">${entries["作成者:"] || ""}</div>
-                <div class="table-cell">${entries["タイトル:"] || entries["質問ID:"] || ""}</div>
-                <div class="table-cell wrap-content">${entries["内容:"] || ""}</div>
-                <div class="table-cell">${entries["作成日時:"] || ""}</div>
-            </div>
-        `;
+                <div class="table-row">
+                    <div class="table-cell"><input type="checkbox" class="table-selection"></div>
+                    <div class="table-cell">${q.id}</div>
+                    <div class="table-cell">質問</div>
+                    <div class="table-cell">${q.username}</div>
+                    <div class="table-cell">${q.title}</div>
+                    <div class="table-cell wrap-content">${q.content.split('<br>')[0]}</div>
+                    <div class="table-cell">${q.created_at}</div>
+                </div>
+            `;
+                });
+
+                // 回答
+                answers.forEach(a => {
+                    html += `
+                <div class="table-row">
+                    <div class="table-cell"><input type="checkbox" class="table-selection"></div>
+                    <div class="table-cell">${a.id}</div>
+                    <div class="table-cell">回答</div>
+                    <div class="table-cell">${a.username}</div>
+                    <div class="table-cell">${a.question_id}</div>
+                    <div class="table-cell wrap-content">${a.content.split('<br>')[0]}</div>
+                    <div class="table-cell">${a.created_at}</div>
+                </div>
+            `;
+                });
+
+                // 投稿
+                posts.forEach(p => {
+                    html += `
+                <div class="table-row">
+                    <div class="table-cell"><input type="checkbox" class="table-selection"></div>
+                    <div class="table-cell">${p.id}</div>
+                    <div class="table-cell">投稿</div>
+                    <div class="table-cell">${p.username}</div>
+                    <div class="table-cell">${p.thread || ""}</div>
+                    <div class="table-cell wrap-content">${p.content.split('<br>')[0]}</div>
+                    <div class="table-cell">${p.created_at}</div>
+                </div>
+            `;
                 });
 
                 html += "</div>";
@@ -420,8 +547,8 @@
             }
 
             document.getElementById("show-table-btn").addEventListener("click", () => {
-                tableContainer.innerHTML += generateTable();
-                tableModal.style.display = "flex";
+                tableContainer.innerHTML = generateTable(questions, answers, posts);
+                openModal();
 
                 initSort();
 
@@ -434,57 +561,123 @@
                 document.getElementById("table-search-btn").addEventListener("click", filterTable);
 
                 document.getElementById("delete-select-content").addEventListener("click", async () => {
-                    const tableContainer = document.getElementById("table-container");
                     const tableRows = tableContainer.querySelectorAll(".table-row");
-
                     for (const el of tableRows) {
                         const checkbox = el.querySelector('input[type=checkbox]');
                         const isChecked = checkbox?.checked;
                         const cells = el.querySelectorAll(".table-cell");
-
                         if (isChecked) {
-                            // ID を取得
                             const id = cells[1].textContent.trim();
-
-                            // 種類から Supabase のテーブル名を決定
+                            const type = cells[2].textContent.trim();
                             const table = (() => {
-                                switch (cells[2].textContent.trim()) {
-                                    case "質問":
-                                        return "questions";
-                                    case "回答":
-                                        return "answers";
-                                    case "投稿":
-                                        return "BBS";
-                                    default:
-                                        return undefined;
+                                switch (type) {
+                                    case "質問": return "questions";
+                                    case "回答": return "answers";
+                                    case "投稿": return "BBS";
+                                    default: return undefined;
                                 }
                             })();
-
-                            // テーブルが判別できなければスキップ
-                            if (!table) {
-                                console.error("対応するテーブルがありません:", cells[2].textContent);
-                                return;
-                            }
-
-                            // 削除
+                            if (!table) continue;
                             const { error: deleteError } = await supabase
                                 .from(table)
                                 .delete()
                                 .eq("id", id);
-
                             if (deleteError) {
                                 console.error(deleteError);
                                 showCustomNotification("削除中にエラーが発生しました");
                                 continue;
                             }
-
-                            // DOM から削除
                             el.remove();
                         }
                     }
                 });
+
+                const tableCells = document.querySelectorAll(".table-cell");
+                Array.from(tableCells).forEach(cell => {
+                    cell.addEventListener("dblclick", (e) => {
+                        if (cell.querySelector('textarea')) return;
+                        const oldValue = cell.textContent;
+                        const input = document.createElement("textarea");
+                        input.value = oldValue;
+                        input.style.width = "95%";
+                        input.style.fontSize = "inherit";
+                        input.style.border = "1px solid #3498db";
+                        input.style.background = "#f9f9f9";
+                        input.style.padding = "2px 4px";
+                        input.style.boxSizing = "border-box";
+                        cell.textContent = "";
+                        cell.appendChild(input);
+                        input.focus();
+                        input.select();
+
+                        // Enterで確定、Escでキャンセル
+                        input.addEventListener("keydown", (ev) => {
+                            if (ev.key === "Enter") {
+                                cell.textContent = input.value;
+                                showCustomNotification("セルの内容を変更しました。");
+                                saveInput(cell, input.value);
+                            } else if (ev.key === "Escape") {
+                                cell.textContent = oldValue;
+                            }
+                        });
+
+                        // フォーカス外れたら確定
+                        input.addEventListener("blur", () => {
+                            cell.textContent = input.value;
+                            saveInput(cell, input.value);
+                        });
+                    });
+
+                    function saveInput(cell, newValue) {
+                        const row = cell.parentElement;
+                        const cells = row.querySelectorAll(".table-cell");
+                        const id = cells[1].textContent.trim();
+                        const type = cells[2].textContent.trim();
+                        const table = (() => {
+                            switch (type) {
+                                case "質問": return "questions";
+                                case "回答": return "answers";
+                                case "投稿": return "BBS";
+                                default: return undefined;
+                            }
+                        })();
+                        const columnMap = {
+                            3: "username",
+                            4: type === "質問" ? "title" : type === "回答" ? "question_id" : "thread",
+                            5: "content",
+                        };
+                        const columnIndex = Array.from(cells).indexOf(cell);
+                        const columnName = columnMap[columnIndex];
+                        if (!table || !columnName) return;
+
+                        const updateData = {};
+                        updateData[columnName] = newValue;
+
+                        supabase
+                            .from(table)
+                            .update(updateData)
+                            .eq("id", id)
+                            .then(({ error }) => {
+                                if (error) {
+                                    console.error("更新エラー:", error);
+                                    showCustomNotification("セルの内容の保存中にエラーが発生しました。");
+                                } else {
+                                    showCustomNotification("セルの内容を保存しました。");
+                                }
+                            });
+                    }
+                });
+
             });
 
+            const actionsMenuBtn = document.querySelectorAll(".actions-menu-btn");
+            actionsMenuBtn.forEach(btn => {
+                btn.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    const menu = btn.nextElementSibling;
+                    menu.style.display = menu.style.display === "block" ? "none" : "block";
+                });
+            });
 
             // ソート状態管理
             const sortState = {};
@@ -605,8 +798,6 @@
                 }
             });
         }
-
-
     </script>
     <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
