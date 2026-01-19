@@ -95,14 +95,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // Supabase設定
     const supabaseUrl = "https://mgsbwkidyxmicbacqeeh.supabase.co";
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg";
-    const pd = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const loginBtn = document.getElementById("login-btn");
     const userInfo = document.getElementById("user-info");
 
     // --- Googleログイン ---
     loginBtn.addEventListener("click", async () => {
-        const { error } = await pd.auth.signInWithOAuth({
+        const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
                 redirectTo: `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // --- ログイン状態の監視 ---
-    pd.auth.onAuthStateChange(async (_event, session) => {
+    supabase.auth.onAuthStateChange(async (_event, session) => {
         if (session?.user) {
             const user = session.user;
             const email = user.email;
@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (!allowed) {
                 showCustomNotification("このメールアドレスのドメインではログインできません。");
-                await pd.auth.signOut();
+                await supabase.auth.signOut();
                 userInfo.textContent = "";
                 loginBtn.style.display = "inline-block";
                 return;
@@ -200,4 +200,30 @@ document.addEventListener("DOMContentLoaded", () => {
     linkListWrapper.appendChild(ul2);
 
     asideMenu.appendChild(linkListWrapper);
+
+    /* =========================================================
+     *  訪問回数+1
+     * ========================================================= */
+    (async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session || !session.user) {
+            showCustomNotification("ログインしてから投稿してください。");
+            return;
+        }
+
+        const userEmail = session.user.email;
+
+        const { data, error } = await supabase
+            .from("users")
+            .select("visit_count")
+            .eq("user_email", userEmail)
+            .single();
+
+        if (!error) {
+            await supabase
+                .from("users")
+                .update({ visit_count: data.visit_count + 1 })
+                .eq("user_email", userEmail);
+        }
+    })();
 });

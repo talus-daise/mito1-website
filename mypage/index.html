@@ -131,10 +131,9 @@
             // 新規ユーザーなら登録
             await supabase.from("users").insert([{ user_id: user.id, user_email: userEmail, visit_count: 1, avatar_url: user.user_metadata.avatar_url, full_name: user.user_metadata.full_name }]);
         } else {
-            // 訪問回数を+1
             await supabase
                 .from("users")
-                .update({ visit_count: existingUser.visit_count + 1, avatar_url: user.user_metadata.avatar_url, full_name: user.user_metadata.full_name })
+                .update({ avatar_url: user.user_metadata.avatar_url, full_name: user.user_metadata.full_name })
                 .eq("user_email", userEmail);
         }
 
@@ -212,7 +211,6 @@
         document.getElementById("display-name").textContent = updatedUser.display_name || "とある水戸一の名無し";
         document.getElementById("user-role").textContent = disprole;
         document.getElementById("visit-count").textContent = updatedUser.visit_count;
-        document.getElementById("post-count").textContent = updatedUser.post_count;
         document.getElementById("my-page-link").href = `./other/?user_id=${encodeURIComponent(updatedUser.user_id)}`;
         document.getElementById("about-me").textContent = updatedUser.about_me || "自己紹介は未設定です。";
 
@@ -230,6 +228,7 @@
             .order("created_at", { ascending: false });
 
         const qList = document.getElementById("question-list");
+        if (questions.length === 0) qList.innerHTML = "<p>投稿した質問はありません</p>"
         questions?.forEach(q => {
             const div = document.createElement("div");
             div.classList.add("content-list-item");
@@ -257,6 +256,7 @@
             .order("created_at", { ascending: false });
 
         const tList = document.getElementById("thread-list");
+        if (threads.length === 0) tList.innerHTML = "<p>掲示板への投稿はありません</p>"
         threads?.forEach(t => {
             const div = document.createElement("div");
             div.classList.add("content-list-item");
@@ -285,6 +285,7 @@
             .order("created_at", { ascending: false });
 
         const aList = document.getElementById("answer-list");
+        if (answers.length === 0) aList.innerHTML = "<p>投稿した回答はありません</p>"
         answers?.forEach(a => {
             const div = document.createElement("div");
             div.classList.add("content-list-item");
@@ -303,6 +304,9 @@
             div.appendChild(aTag);
             aList.appendChild(div);
         });
+
+        const allPost = questions.length + answers.length + threads.length;
+        document.getElementById("post-count").textContent = allPost;
 
         isLoading = false;
         document.getElementById('custom-alert').remove();
@@ -328,7 +332,7 @@
                 .select("display_name")
                 .eq("display_name", newDisplayName)
                 .neq("user_email", userEmail);
-            
+
             if (existingNames.length > 0) {
                 showCustomNotification("その表示名は既に使用されています。");
                 return;
