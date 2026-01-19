@@ -262,7 +262,7 @@
                 const redirectBtn = userItem.querySelector(".redirect-user-page-btn");
                 redirectBtn.addEventListener("click", () => {
                     const userId = redirectBtn.getAttribute("data-user-id");
-                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}`;
+                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/admin/`;
                 });
 
                 userList.appendChild(userItem);

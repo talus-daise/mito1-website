@@ -294,7 +294,7 @@
                 document.querySelector(".username").style.cursor = 'pointer';
                 document.querySelector(".username").addEventListener("click", () => {
                     const userId = document.querySelector(".username").getAttribute("data-user-id");
-                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}`;
+                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/bbs/new_thread/`;
                 });
             }
         })

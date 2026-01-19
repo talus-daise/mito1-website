@@ -156,7 +156,7 @@
                 span.addEventListener('click', (e) => {
                     e.preventDefault();
                     const userId = span.getAttribute('data-user-id');
-                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}`;
+                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/question/`;
                 });
             });
         }

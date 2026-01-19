@@ -103,7 +103,7 @@
         <h1>とある水戸一の名無し のマイページ</h1>
     </header>
     <main>
-        <a href="../../">トップページに戻る</a>
+        <a href="#" id="backLink">戻る</a>
         <div id="error-message" style="color: red; font-weight: bold;"></div>
         <section>
             <h2>ユーザー情報</h2>
@@ -161,6 +161,12 @@
             document.getElementById('custom-alert')?.remove();
         } else {
             document.addEventListener("DOMContentLoaded", async () => {
+                const redirectedURL = new URLSearchParams(window.location.search).get("redirect_url");
+
+                const back = document.getElementById("backLink");
+
+                back.href = redirectedURL ? redirectedURL : "../../";
+
                 await new Promise(resolve => {
                     showCustomAlert("読み込み中です", false);
                     resolve();
