@@ -12,6 +12,24 @@
     <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.2/css/all.css">
     <link rel="stylesheet" href="../../script/notice/notice.css">
+    <style>
+        .post-item {
+            margin: 1rem;
+        }
+
+        .post-item .username {
+            color: #2c3e50;
+        }
+
+        .post-item p {
+            white-space: pre-wrap;
+            margin: 0.5rem 0;
+        }
+
+        #postList {
+            margin-top: 2rem;
+        }
+    </style>
     <!--web情報-->
     <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
     <meta name="description" content="水戸一附属中生向けの総合ウェブサイトです。附属中向けの掲示板や質問箱を運営しています。">
@@ -56,7 +74,8 @@
         <section>
             <h2>スレッド一覧</h2>
             <p><label for="search-box">検索：<input type="text" id="search-box" placeholder="スレッドを検索..."></label>
-            <button id="search-btn">検索</button></p>
+                <button id="search-btn">検索</button>
+            </p>
             <ul id="threadList"></ul>
         </section>
 
@@ -67,7 +86,6 @@
                 <p><input type="text" id="threadName" placeholder="スレッド名" required><br></p>
                 <hr>
                 <h3>最初の投稿</h3>
-                <p><input type="text" id="title" placeholder="タイトル" required><br></p>
                 <div class="format-buttons">
                     <button id="bold"><strong>B</strong></button>
                     <button id="italic"><em>I</em></button>
@@ -118,10 +136,9 @@
 
                     const thread = parseMarkdown(document.getElementById("threadName").value.trim());
                     const username = parseMarkdown((userRecord?.display_name || "とある水戸一の名無し").trim());
-                    const title = parseMarkdown(document.getElementById("title").value.trim());
                     const content = parseMarkdown(document.getElementById("content").value.trim());
 
-                    if (!thread || !title || !content) {
+                    if (!thread || !content) {
                         showCustomNotification("必須項目を入力してください！");
                         return;
                     }
@@ -140,7 +157,6 @@
                         .insert([{
                             thread,
                             username: username || "とある水戸一の名無し",
-                            title,
                             content,
                             user_id: userId,
                             user_email: userEmail,
@@ -271,7 +287,7 @@
             if (session && session.user) {
                 const userId = session.user.id;
                 const userEmail = session.user.email;
-                
+
                 const { data: user } = await supabase
                     .from("users")
                     .select("display_name")
@@ -279,23 +295,17 @@
                     .single();
 
                 const username = parseMarkdown((user?.display_name || "とある水戸一の名無し").trim());
-                const title = parseMarkdown(document.getElementById("title").value.trim());
                 const content = parseMarkdown(document.getElementById("content").value.trim());
 
                 previewArea.innerHTML = `
-                <span>1. </span>
-                <strong class="username" data-user-id="${userId}">${username || "とある水戸一の名無し"}</strong> 
-                <small>${new Date().toLocaleString()}</small>
-                <br>
-                <strong>${title || "無題"}</strong>
-                <p>${content}</p>
+                <div class="post-item">
+                    <span>1. </span>
+                    <strong class="username" data-user-id="${userId}">${username || "とある水戸一の名無し"}</strong> 
+                    <small>${new Date().toLocaleString()}</small>
+                    <br>
+                    <p>${content}</p>
+                </div>
             `
-
-                document.querySelector(".username").style.cursor = 'pointer';
-                document.querySelector(".username").addEventListener("click", () => {
-                    const userId = document.querySelector(".username").getAttribute("data-user-id");
-                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/bbs/new_thread/`;
-                });
             }
         })
 
@@ -303,7 +313,6 @@
 
         const formElements = [
             document.getElementById('threadName'),
-            document.getElementById('title'),
             document.getElementById('content'),
         ];
 

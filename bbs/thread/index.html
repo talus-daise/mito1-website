@@ -203,10 +203,20 @@
             `).join("");
 
                 document.querySelectorAll(".username").forEach((element) => {
-                    element.style.cursor = 'pointer';
-                    element.addEventListener("click", () => {
+                    element.style.cursor = "alias";
+                    element.title = "ユーザーページを表示";
+
+                    element.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
                         const userId = element.getAttribute("data-user-id");
-                        window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/bbs/thread/?thread=${thread}`;
+                        const url = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/bbs/`;
+
+                        const w = window.open(url, "_blank");
+                        if (w) {
+                            w.opener = null;
+                        }
                     });
                 });
 

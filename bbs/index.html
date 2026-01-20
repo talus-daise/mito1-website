@@ -93,7 +93,7 @@
             const { data: threads, error } = await supabase
                 .from("BBS")
                 .select("thread, created_at, username, user_id")
-                .order("created_at", { ascending: true });
+                .order("created_at", { ascending: false });
 
             if (error) { console.error(error); return; }
 
@@ -162,12 +162,20 @@
             threadList.append(...elements);
 
             document.querySelectorAll(".username").forEach((element) => {
-                element.style.cursor = 'pointer';
+                element.style.cursor = "alias";
+                element.title = "ユーザーページを表示";
+
                 element.addEventListener("click", (e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
+                    e.preventDefault();
+                    e.stopPropagation();
+
                     const userId = element.getAttribute("data-user-id");
-                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/bbs/`;
+                    const url = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/bbs/`;
+
+                    const w = window.open(url, "_blank");
+                    if (w) {
+                        w.opener = null;
+                    }
                 });
             });
         });

@@ -34,7 +34,7 @@
     <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    
+
     <!--マニフェスト-->
     <link rel="manifest" href="../manifest.json">
 </head>
@@ -67,7 +67,8 @@
         <section>
             <h2>質問一覧</h2>
             <p><label for="search-box">検索：<input type="text" id="search-box" placeholder="質問を検索..."></label>
-            <button id="search-btn">検索</button></p>
+                <button id="search-btn">検索</button>
+            </p>
             <hr>
 
             <h3>未回答の質問</h3>
@@ -151,12 +152,21 @@
                 }
             });
 
-            document.querySelectorAll('.username').forEach(span => {
-                span.style.cursor = 'pointer';
-                span.addEventListener('click', (e) => {
+            document.querySelectorAll(".username").forEach((element) => {
+                element.style.cursor = "alias";
+                element.title = "ユーザーページを表示";
+
+                element.addEventListener("click", (e) => {
                     e.preventDefault();
-                    const userId = span.getAttribute('data-user-id');
-                    window.location.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/question/`;
+                    e.stopPropagation();
+
+                    const userId = element.getAttribute("data-user-id");
+                    const url = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/bbs/`;
+
+                    const w = window.open(url, "_blank");
+                    if (w) {
+                        w.opener = null;
+                    }
                 });
             });
         }

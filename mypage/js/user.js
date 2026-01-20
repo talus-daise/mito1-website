@@ -63,6 +63,19 @@ export async function loadUserInfo() {
         console.error("names.json 読み込み失敗", e);
     }
 
+    const dispRole = () => {
+        switch (latest.role) {
+            case "master":
+                return "マスター"
+            case "admin":
+                return "管理者"
+            case "manager":
+                return "コンテンツ管理者"
+            case "request_music_manager":
+                return "リクエスト曲管理者"
+        }
+    }
+
     document.title = `${latest.display_name || "とある水戸一の名無し"} のマイページ | 水戸一高附属中総合ウェブサイト`;
     document.getElementById("user-avatar").src = currentUser.user_metadata.avatar_url || "../img/default-avatar.png";
     document.getElementById("student-id").textContent = studentId;
@@ -72,6 +85,12 @@ export async function loadUserInfo() {
     document.getElementById("visit-count").textContent = latest.visit_count;
     document.getElementById("about-me").textContent = latest.about_me || "自己紹介は未設定です。";
     document.getElementById("my-page-link").href = `./other/?user_id=${encodeURIComponent(latest.user_id)}`;
+    document.getElementById("user-role").textContent = dispRole()
+    document.getElementById("user-role").addEventListener("click", () => {
+        if (latest.role) {
+            location.href = "/mito1-website/admin/";
+        }
+    });
 }
 
 function maskEmail(str) {
