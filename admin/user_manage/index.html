@@ -197,15 +197,21 @@
                         showCustomNotification("名前変更をキャンセルしました。");
                         return; // キャンセルされた場合
                     }
-                    
+
                     if (newName.trim() === "") {
                         newName = "とある水戸一の名無し"; // デフォルト名
                     }
-                    
+
                     const { error: updateError } = await supabase
                         .from("users")
                         .update({ display_name: newName.trim() })
                         .eq("user_id", user.user_id);
+
+                    await Promise.all([
+                        supabase.from("BBS").update({ username: newName.trim() }).eq("user_id", user.user_id),
+                        supabase.from("questions").update({ username: newName.trim() }).eq("user_id", user.user_id),
+                        supabase.from("answers").update({ username: newName.trim() }).eq("user_id", user.user_id)
+                    ]);
 
                     if (updateError) {
                         console.error("Error updating name:", updateError);
