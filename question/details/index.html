@@ -154,7 +154,7 @@
                 div.appendChild(br);
                 const time = document.createElement("span");
                 const answerDate = new Date(answer.created_at).toLocaleString();
-                time.innerHTML = `<i class="fa-solid fa-clock"></i> ${answerDate}`;
+                time.innerHTML = `<i class="fa-solid fa-clock"></i>${answerDate}`;
                 div.appendChild(time);
                 const content = document.createElement("p");
                 content.innerHTML = parseMarkdown(answer.content);

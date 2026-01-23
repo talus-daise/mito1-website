@@ -18,6 +18,38 @@ async function editDisplayName() {
     name = name.trim() || "とある水戸一の名無し";
     if (name.length > 20) return;
 
+    const { data: currentUser } = supabase.auth.getUser()
+
+    const { data: existingUsers, error: existErr } = await supabase
+        .from("users")
+        .select("display_name")
+        .eq("display_name", name);
+
+    if (existErr) {
+        showCustomNotification("エラーが発生しました");
+        return;
+    }
+    if (existingUsers.length > 0) {
+        showCustomNotification("この名前はすでに使用されています");
+        return;
+    }
+
+    const res = await fetch("/mito1-website/private/names.json");
+    if (!res.ok) {
+        showCustomNotification("名前一覧の取得に失敗しました")
+        return;
+    }
+    const namesJson = await res.json();
+
+    const allRealNames = Object.values(namesJson).flat();
+
+    const myRealName = currentUser?.user_metadata?.full_name;
+
+    if (allRealNames.includes(name) && name !== myRealName) {
+        showCustomNotification("自分以外の本名は使えません");
+        return;
+    }
+
     await supabase.from("users").update({ display_name: name }).eq("user_email", userEmail);
     await Promise.all([
         supabase.from("BBS").update({ username: name }).eq("user_email", userEmail),
@@ -26,7 +58,10 @@ async function editDisplayName() {
     ]);
 
     document.getElementById("display-name").textContent = name;
+
+    showCustomNotification("表示名を更新しました")
 }
+
 
 async function editAboutMe() {
     let text = prompt("自己紹介（100文字以内）:");
