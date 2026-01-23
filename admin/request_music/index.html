@@ -118,6 +118,25 @@
         let is_allowed = false;
 
         document.addEventListener("DOMContentLoaded", async () => {
+            const ALLOWED_ROLES = ["master", "admin", "manager"];
+
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user) {
+                location.replace("/mito1-website/");
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from("users")
+                .select("role")
+                .eq("user_id", user.id)
+                .single();
+
+            if (error || !ALLOWED_ROLES.includes(data.role)) {
+                location.replace("/mito1-website/");
+                return;
+            }
             // 直前のページ（リファラ）が存在しない場合
             if (!document.referrer.includes("/mito1-website/admin/")) {
                 window.location.href = "../"; // リダイレクト先

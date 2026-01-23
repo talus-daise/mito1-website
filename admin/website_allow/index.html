@@ -117,6 +117,26 @@
         }
 
         document.addEventListener("DOMContentLoaded", async () => {
+            const ALLOWED_ROLES = ["master", "admin", "manager"];
+
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user) {
+                location.replace("/mito1-website/");
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from("users")
+                .select("role")
+                .eq("user_id", user.id)
+                .single();
+
+            if (error || !ALLOWED_ROLES.includes(data.role)) {
+                location.replace("/mito1-website/");
+                return;
+            }
+            
             const statusEl = document.getElementById("current-status");
             const listEl = document.getElementById("active-rules");
 

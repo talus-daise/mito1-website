@@ -123,6 +123,25 @@
         );
 
         document.addEventListener("DOMContentLoaded", async () => {
+            const ALLOWED_ROLES = ["master", "admin", "manager"];
+
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user) {
+                location.replace("/mito1-website/");
+                return;
+            }
+
+            const { data: roleData, roleError } = await supabase
+                .from("users")
+                .select("role")
+                .eq("user_id", user.id)
+                .single();
+
+            if (roleError || !ALLOWED_ROLES.includes(roleData.role)) {
+                location.replace("/mito1-website/");
+                return;
+            }
             // 直前のページ（リファラ）が存在しない場合
             if (!document.referrer.includes("/mito1-website/admin/")) {
                 window.location.href = "../"; // リダイレクト先
@@ -160,11 +179,11 @@
                             <i class="fa-solid fa-arrow-up-right-from-square"></i> 詳細
                         </button>
                     </div>
-                    <p><i class="fa-solid fa-id-card"></i> ${user.user_id}</p>
-                    <p><i class="fa-solid fa-school"></i> ${user.full_name}</p>
-                    <p><i class="fa-solid fa-envelope"></i> ${user.user_email}</p>
-                    <p><i class="fa-solid fa-user"></i> ${user.display_name}</p>
-                    <p><i class="fa-solid fa-user-tag"></i> ${user.role === null ? "visitor" : user.role}</p>
+                    <p><i class="fa-solid fa-id-card"></i>${user.user_id}</p>
+                    <p><i class="fa-solid fa-school"></i>${user.full_name}</p>
+                    <p><i class="fa-solid fa-envelope"></i>${user.user_email}</p>
+                    <p><i class="fa-solid fa-user"></i>${user.display_name}</p>
+                    <p><i class="fa-solid fa-user-tag"></i>${user.role === null ? "visitor" : user.role}</p>
                 `;
 
                 // メニュー開閉制御

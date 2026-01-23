@@ -68,17 +68,16 @@
         <section>
             <h2>質問情報</h2>
             <form id="question-form">
-                <input type="text" id="question-title" placeholder="質問のタイトル" required><br>
+                <p><input type="text" id="question-title" placeholder="質問のタイトル" required></p>
                 <div class="format-buttons">
                     <button id="bold"><strong>B</strong></button>
                     <button id="italic"><em>I</em></button>
                     <button id="strikethrough"><s>S</s></button>
                     <button id="link"><i class="fa-solid fa-link"></i></button>
                 </div>
-                <textarea id="question-content" placeholder="質問の内容" required></textarea><br>
-                <input type="checkbox" id="faster">
-                <label for="faster">至急求む</label><br>
-                <button type="submit">投稿する</button>
+                <p><textarea id="question-content" placeholder="質問の内容" required></textarea></p>
+                <p><input type="checkbox" id="faster">至急求む</p>
+                <p><button type="submit">投稿する</button></p>
             </form>
             <h3>プレビュー</h3>
         </section>
@@ -253,9 +252,9 @@
 
             previewArea.innerHTML = `
         <h2>${title}</h2>
-        <p>質問者: <span id="user-name">${displayName}</span></p>
+        <p id="user-name"><i class="fa-solid fa-user"></i>${displayName}</p>
+        <p><i class="fa-solid fa-clock"></i>${new Date().toLocaleString()}</p>
         <p>${content}</p>
-        <small>${new Date().toLocaleString()}</small>
     `;
 
             document.getElementById("user-name").addEventListener("click", () => {

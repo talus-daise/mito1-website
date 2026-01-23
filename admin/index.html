@@ -52,70 +52,76 @@
     <script type="module">
         import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+        /* ===== Supabase ===== */
         const supabase = createClient(
             "https://mgsbwkidyxmicbacqeeh.supabase.co",
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
         );
 
+        /* ===== 管理者チェック ===== */
         async function checkAdmin() {
-            const user = await supabase.auth.getUser();
             const authStatus = document.getElementById("auth-status");
 
-            if (user.data.user) {
-                const { data: users, error } = await supabase
-                    .from("users")
-                    .select("role")
-                    .eq("user_id", user.data.user.id)
-                    .single();
+            const { data: { user }, error: authError } =
+                await supabase.auth.getUser();
 
-                if (error) {
-                    authStatus.textContent = "エラーが発生しました。";
-                    console.error("プロフィール取得エラー:", error);
-                    return;
-                }
-
-                switch (users.role) {
-                    case "master":
-                    case "admin":
-                        authStatus.textContent = "管理者として認証されました。";
-                        // 管理者用機能を表示するコードをここに追加
-                        const adminFeatures = document.createElement("section");
-                        adminFeatures.innerHTML = `
-                        <h2>管理者用機能</h2>
-                        <p><a href="./user_manage/"><i class="fa-solid fa-user"></i>ユーザー管理</a></p>
-                        <p><a href="./content_manage/"><i class="fa-solid fa-file"></i>コンテンツ管理</a></p>
-                        <p><a href="./website_allow/"><i class="fa-solid fa-check"></i>ウェブサイト許可管理</a></p>
-                        <p><a href="./request_music/"><i class="fa-solid fa-music"></i>リクエスト曲管理</a></p>
-                    `;
-                        document.querySelector("main").appendChild(adminFeatures);
-                        break;
-                    case "manager":
-                        authStatus.textContent = "サイトマネージャーとして認証されました。";
-                        // コンテンツ管理者用機能を表示するコードをここに追加
-                        const contentManagerFeatures = document.createElement("section");
-                        contentManagerFeatures.innerHTML = `
-                        <h2>サイトマネージャー用機能</h2>
-                        <p><a href="./user_manage/"><i class="fa-solid fa-user"></i>ユーザー管理</a></p>
-                        <p><a href="./content_manage/"><i class="fa-solid fa-file"></i>コンテンツ管理</a></p>
-                        <p><a href="./website_allow/"><i class="fa-solid fa-check"></i>ウェブサイト許可管理</a></p>
-                    `;
-                        document.querySelector("main").appendChild(contentManagerFeatures);
-                        break;
-                    case "request_music_manager":
-                        authStatus.textContent = "リクエスト曲管理者として認証されました。";
-                        // リクエスト曲管理者用機能を表示するコードをここに追加
-                        const musicManagerFeatures = document.createElement("section");
-                        musicManagerFeatures.innerHTML = `
-                        <h2>リクエスト曲管理者用機能</h2>
-                        <p><a href="./request_music/"><i class="fa-solid fa-music"></i>リクエスト曲管理</a></p>
-                    `;
-                        document.querySelector("main").appendChild(musicManagerFeatures);
-                        break;
-                    default:
-                        authStatus.textContent = "管理者権限がありません。";
-                }
-            } else {
+            if (!user || authError) {
                 authStatus.textContent = "ログインしていません。";
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from("users")
+                .select("role")
+                .eq("user_id", user.id)
+                .single();
+
+            if (error || !data) {
+                authStatus.textContent = "権限情報を取得できません。";
+                console.error("users 取得エラー:", error);
+                return;
+            }
+
+            const main = document.querySelector("main");
+
+            switch (data.role) {
+                case "master":
+                case "admin":
+                    authStatus.textContent = "管理者として認証されました。";
+                    main.insertAdjacentHTML("beforeend", `
+        <section>
+          <h2>管理者用機能</h2>
+          <p><a href="./user_manage/"><i class="fa-solid fa-user"></i>ユーザー管理</a></p>
+          <p><a href="./content_manage/"><i class="fa-solid fa-file"></i>コンテンツ管理</a></p>
+          <p><a href="./website_allow/"><i class="fa-solid fa-check"></i>ウェブサイト許可管理</a></p>
+          <p><a href="./request_music/"><i class="fa-solid fa-music"></i>リクエスト曲管理</a></p>
+        </section>
+      `);
+                    break;
+
+                case "manager":
+                    authStatus.textContent = "サイトマネージャーとして認証されました。";
+                    main.insertAdjacentHTML("beforeend", `
+        <section>
+          <h2>サイトマネージャー用機能</h2>
+          <p><a href="./content_manage/"><i class="fa-solid fa-file"></i>コンテンツ管理</a></p>
+          <p><a href="./website_allow/"><i class="fa-solid fa-check"></i>ウェブサイト許可管理</a></p>
+        </section>
+      `);
+                    break;
+
+                case "request_music_manager":
+                    authStatus.textContent = "リクエスト曲管理者として認証されました。";
+                    main.insertAdjacentHTML("beforeend", `
+        <section>
+          <h2>リクエスト曲管理者用機能</h2>
+          <p><a href="./request_music/"><i class="fa-solid fa-music"></i>リクエスト曲管理</a></p>
+        </section>
+      `);
+                    break;
+
+                default:
+                    authStatus.textContent = "管理者権限がありません。";
             }
         }
 

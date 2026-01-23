@@ -321,6 +321,25 @@
         }
 
         document.addEventListener("DOMContentLoaded", async () => {
+            const ALLOWED_ROLES = ["master", "admin", "manager"];
+
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user) {
+                location.replace("/mito1-website/");
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from("users")
+                .select("role")
+                .eq("user_id", user.id)
+                .single();
+
+            if (error || !ALLOWED_ROLES.includes(data.role)) {
+                location.replace("/mito1-website/");
+                return;
+            }
             // 直前のページ（リファラ）が存在しない場合
             if (!document.referrer.includes("/mito1-website/admin/")) {
                 window.location.href = "../"; // リダイレクト先
@@ -359,11 +378,11 @@
                         <button class="delete-entry" data-question-id="${question.id}"><i class="fa-solid fa-trash"></i> 削除</button>
                         <button class="view-entry" data-question-id="${question.id}"><i class="fa-solid fa-arrow-up-right-from-square"></i> 表示</button>
                     </div>
-                    <p><i class="fa-solid fa-id-card"></i> ${question.id}</p>
-                    <p><i class="fa-solid fa-user"></i> ${question.username}</p>
-                    <p><i class="fa-solid fa-heading"></i> ${question.title}</p>
+                    <p><i class="fa-solid fa-id-card"></i>${question.id}</p>
+                    <p><i class="fa-solid fa-user"></i>${question.username}</p>
+                    <p><i class="fa-solid fa-heading"></i>${question.title}</p>
                     <p><i class="fa-solid fa-comment"></i> <span class="content">${question.content.split('<br>')[0]}</span></p>
-                    <p><i class="fa-solid fa-clock"></i> ${question.created_at}</p>
+                    <p><i class="fa-solid fa-clock"></i>${question.created_at}</p>
                 `;
                 questionList.appendChild(questionItem);
             });
@@ -378,11 +397,11 @@
                         <button class="delete-entry" data-answer-id="${answer.id}"><i class="fa-solid fa-trash"></i> 削除</button>
                         <button class="view-entry" data-answer-id="${answer.id}"><i class="fa-solid fa-arrow-up-right-from-square"></i> 表示</button>
                     </div>
-                    <p><i class="fa-solid fa-id-card"></i> ${answer.id}</p>
-                    <p><i class="fa-solid fa-user"></i> ${answer.username}</p>
-                    <p><i class="fa-solid fa-id-card"></i> ${answer.question_id}</p>
+                    <p><i class="fa-solid fa-id-card"></i>${answer.id}</p>
+                    <p><i class="fa-solid fa-user"></i>${answer.username}</p>
+                    <p><i class="fa-solid fa-id-card"></i>${answer.question_id}</p>
                     <p><i class="fa-solid fa-comment"></i> <span class="content">${answer.content.split('<br>')[0]}</span></p>
-                    <p><i class="fa-solid fa-clock"></i> ${answer.created_at}</p>
+                    <p><i class="fa-solid fa-clock"></i>${answer.created_at}</p>
                 `;
                 answerList.appendChild(answerItem);
             });
@@ -397,10 +416,10 @@
                         <button class="delete-entry" data-post-id="${post.id}"><i class="fa-solid fa-trash"></i> 削除</button>
                         <button class="view-entry" data-post-id="${post.id}"><i class="fa-solid fa-arrow-up-right-from-square"></i> 表示</button>
                     </div>
-                    <p><i class="fa-solid fa-id-card"></i> ${post.id}</p>
-                    <p><i class="fa-solid fa-user"></i> ${post.username}</p>
+                    <p><i class="fa-solid fa-id-card"></i>${post.id}</p>
+                    <p><i class="fa-solid fa-user"></i>${post.username}</p>
                     <p><i class="fa-solid fa-comment"></i> <span class="content">${post.content.split('<br>')[0]}</span></p>
-                    <p><i class="fa-solid fa-clock"></i> ${post.created_at}</p>
+                    <p><i class="fa-solid fa-clock"></i>${post.created_at}</p>
                 `;
                 postList.appendChild(postItem);
             });

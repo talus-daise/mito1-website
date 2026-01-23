@@ -73,6 +73,7 @@
 
         <section>
             <h2 id="listTitle">投稿一覧</h2>
+            <p><a href="#" id="goToLastPost">一番下へ</a></p>
             <div id="postList"></div>
         </section>
 
@@ -177,6 +178,10 @@
                 });
             }
 
+            function formatContent(content) {
+                return content.replace(/>>(\d+)/g, '<a href="#" class="goToPost" data-post-index="$1">>>$1</a>');
+            }
+
             // === 投稿一覧表示 ===
             async function loadPosts() {
                 const { data: posts, error } = await supabase
@@ -190,14 +195,18 @@
                     return;
                 }
 
+                document.getElementById("goToLastPost").addEventListener("click", () => {
+                    smoothScroll(document.getElementById(`index-${posts.length}`))
+                })
+
                 postList.innerHTML = posts
                     .map((post, index) => `
-                <div class="post-item">
+                <div class="post-item" id="index-${index + 1}">
                     <span>${index + 1}. </span>
                     <strong class="username" data-user-id="${post.user_id}">${post.username?.trim() || "とある水戸一の名無し"}</strong>
                     <small>${new Date(post.created_at).toLocaleString()}</small>
                     <br>
-                    <p>${post.content}</p>
+                    <p>${formatContent(post.content)}</p>
                 </div>
                 <hr>
             `).join("");
@@ -227,16 +236,19 @@
                         const postDivs = postList.querySelectorAll('div');
                         const target = postDivs[idx];
                         if (target) {
-                            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            // 簡単なハイライト
-                            const originalBg = target.style.backgroundColor;
-                            target.style.backgroundColor = '#fffbcc';
-                            setTimeout(() => { target.style.transition = 'background-color 1s'; target.style.backgroundColor = originalBg || ''; }, 500);
+                            smoothScroll(target)
                             // postIdを一度だけ使う
                             window.postIdScrolled = true;
                         }
                     }
                 }
+
+                document.querySelectorAll(".goToPost").forEach((elem) => {
+                    elem.addEventListener("click", (e) => {
+                        e.preventDefault()
+                        smoothScroll(document.getElementById(`index-${elem.dataset.postIndex}`))
+                    })
+                })
             }
 
             await loadPosts();
@@ -325,7 +337,58 @@
                     `;
                 }
             });
+
+            const channel = supabase
+                .channel('BBS')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'BBS',
+                        filter: `thread=eq.${thread}`
+                    },
+                    (payload) => {
+                        appendPost(payload.new);
+                    }
+                )
+                .subscribe();
+
+            function appendPost(post) {
+                const index = document.querySelectorAll('.post-item').length + 1;
+
+                const div = document.createElement('div');
+                div.className = 'post-item';
+                div.id = `index-${index}`;
+
+                div.innerHTML = `
+    <span>${index}. </span>
+    <strong class="username" data-user-id="${post.user_id}">
+      ${post.username || "とある水戸一の名無し"}
+    </strong>
+    <small>${new Date(post.created_at).toLocaleString()}</small>
+    <br>
+    <p>${formatContent(post.content)}</p>
+  `;
+
+                postList.appendChild(div);
+                postList.appendChild(document.createElement('hr'));
+
+                // 自動スクロール（下にいる場合のみ）
+                if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
+                    smoothScroll(div)
+                }
+            }
         });
+
+        function smoothScroll(target) {
+            if (!target) return;
+            target.scrollIntoView({ behavior: "smooth", block: "center" });
+            // 簡単なハイライト
+            const originalBg = target.style.backgroundColor;
+            target.style.backgroundColor = '#fffbcc';
+            setTimeout(() => { target.style.transition = 'background-color 1s'; target.style.backgroundColor = originalBg || ''; }, 1000);
+        }
 
         // === ページ離脱警告 ===
         window.addEventListener('beforeunload', (event) => {

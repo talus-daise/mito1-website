@@ -140,19 +140,19 @@
 
                 const time = document.createElement("p");
                 time.innerHTML =
-                    `<i class="fa-regular fa-clock"></i> ${new Date(info.first_created_at).toLocaleString()}~`;
+                    `<i class="fa-regular fa-clock"></i>${new Date(info.first_created_at).toLocaleString()}~`;
                 a.appendChild(time);
 
                 const latest = document.createElement("p");
                 latest.innerHTML =
-                    `<i class="fa-solid fa-clock-rotate-left"></i> ${new Date(info.latest_created_at).toLocaleString()}`;
+                    `<i class="fa-solid fa-clock-rotate-left"></i>${new Date(info.latest_created_at).toLocaleString()}`;
                 a.appendChild(latest);
 
                 const user = document.createElement("p");
                 user.classList.add("username")
                 user.setAttribute("data-user-id", info.userId)
                 user.innerHTML =
-                    `<i class="fa-solid fa-user"></i> ${info.username}`;
+                    `<i class="fa-solid fa-user"></i>${info.username}`;
                 a.appendChild(user);
 
                 span.appendChild(a);
