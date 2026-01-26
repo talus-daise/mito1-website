@@ -167,7 +167,6 @@
                     }
 
                     postForm.reset();
-                    await loadPosts();
                 });
             } else {
                 // 未ログイン時
@@ -355,29 +354,28 @@
                 .subscribe();
 
             function appendPost(post) {
-                const index = document.querySelectorAll('.post-item').length + 1;
+                // すでに同じIDの投稿があれば何もしない
+                if (document.querySelector(`[data-post-id="${post.id}"]`)) return;
+
+                const index = postList.querySelectorAll('.post-item').length + 1;
 
                 const div = document.createElement('div');
                 div.className = 'post-item';
                 div.id = `index-${index}`;
+                div.dataset.postId = post.id;
 
                 div.innerHTML = `
-    <span>${index}. </span>
-    <strong class="username" data-user-id="${post.user_id}">
-      ${post.username || "とある水戸一の名無し"}
-    </strong>
-    <small>${new Date(post.created_at).toLocaleString()}</small>
-    <br>
-    <p>${formatContent(post.content)}</p>
-  `;
+        <span>${index}. </span>
+        <strong class="username" data-user-id="${post.user_id}">
+            ${post.username || "とある水戸一の名無し"}
+        </strong>
+        <small>${new Date(post.created_at).toLocaleString()}</small>
+        <br>
+        <p>${formatContent(post.content)}</p>
+    `;
 
                 postList.appendChild(div);
                 postList.appendChild(document.createElement('hr'));
-
-                // 自動スクロール（下にいる場合のみ）
-                if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
-                    smoothScroll(div)
-                }
             }
         });
 
