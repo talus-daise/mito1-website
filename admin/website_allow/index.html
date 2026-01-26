@@ -87,6 +87,22 @@
             </p>
 
             <p><button id="add-rule">追加</button></p>
+
+            <hr>
+
+            <h3>テンプレートから選ぶ</h3>
+            <p>
+                <label>
+                    テンプレート
+                    <select id="template">
+                        <option value="" selected disabled>テンプレートから選択</option>
+                        <option value="6hAllow">6時間目許可</option>
+                        <option value="holidayAllow">祝日許可</option>
+                    </select>
+                </label>
+            </p>
+
+            <p><button id="template-reset">リセット</button></p>
         </section>
 
         <section>
@@ -111,8 +127,8 @@
 
             const m = now.getHours() * 60 + now.getMinutes();
             return (
-                (m >= 8 * 60 + 25 && m <= 11 * 60 + 30) ||
-                (m >= 13 * 60 + 5 && m <= 15 * 60 + 55)
+                (m >= 8 * 60 + 25 && m <= 11 * 60 + 29) ||
+                (m >= 13 * 60 + 5 && m <= 15 * 60 + 54)
             );
         }
 
@@ -223,6 +239,39 @@
             refresh();
             setInterval(refresh, 60000);
         });
+
+        document.getElementById('template').addEventListener('change', (e) => {
+            const label = document.getElementById('label');
+            const startTime = document.getElementById('start-time');
+            const endTime = document.getElementById('end-time');
+            const mode = document.getElementById('mode');
+
+            const today = new Date().toISOString().split("T")[0]
+
+            console.log(today)
+
+            switch (e.currentTarget.value) {
+                case '6hAllow':
+                    label.value = '6時間目許可';
+                    startTime.value = today + "T14:45:00";
+                    endTime.value = today + "T15:54:00";
+                    mode.value = "allow";
+                    return;
+                
+                case 'holidayAllow':
+                    label.value = '祝日許可'
+                    startTime.value = today + "T08:25:00";
+                    endTime.value = today + "T15:54:00";
+                    mode.value = "allow";
+                    return;
+            }
+        })
+
+        document.getElementById('template-reset').addEventListener('click', () => {
+            document.querySelectorAll('input').forEach(el => {
+                el.value = ""
+            })
+        })
     </script>
     <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
