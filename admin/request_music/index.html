@@ -118,7 +118,7 @@
         let is_allowed = false;
 
         document.addEventListener("DOMContentLoaded", async () => {
-            const ALLOWED_ROLES = ["master", "admin", "manager"];
+            const ALLOWED_ROLES = ["master", "admin", "request_music_manager"];
 
             const { data: { user } } = await supabase.auth.getUser();
 
