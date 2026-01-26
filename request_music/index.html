@@ -88,10 +88,6 @@
         </p>
     </footer>
 
-
-    <script src="../script/verification.js" type="module"></script>
-
-    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <script type="module">
         import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -101,13 +97,16 @@
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
         );
 
-        const { data: user, error: userError } = await supabase.auth.getUser();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError) {
             console.error("ユーザー情報の取得に失敗しました:", userError);
             showCustomAlert("ログインしてください", false)
         } else {
             console.log("ユーザー情報:", user);
         }
+
+        const userEmail = user.email;
+        const currentUser = user;
 
         const { data } = await supabase
             .from("users")
@@ -206,7 +205,7 @@
 
             checkbox.addEventListener("change", async () => {
                 const { error } = await supabase
-                    .from("request-music")
+                    .from("request_music")
                     .update({ isplayed: checkbox.checked })
                     .eq("musicName", musicName)
                     .eq("url", url);
@@ -225,7 +224,7 @@
         // ===== データ取得 =====
         async function getTodayMusic() {
             const { data, error } = await supabase
-                .from("request-music")
+                .from("request_music")
                 .select("*")
                 .order("musicName", { ascending: true })
                 .eq("isplayed", false);
@@ -277,13 +276,14 @@
             try {
                 const res = await fetch("/mito1-website/private/names.json");
                 const namesJson = await res.json();
-                studentId = getStudentId(namesJson, user.user.user_metadata.full_name);
+                studentId = getStudentId(namesJson, user.user_metadata.full_name);
             } catch (e) {
                 console.error("names.json 読み込み失敗", e);
             }
             const musicName = document.getElementById("musicName").value.trim();
             const url = document.getElementById("musicUrl").value.trim();
             const desc = document.getElementById("description").value.trim();
+            const userId = data.user_id;
 
             if (!studentId || !musicName || !url || (!url.includes("watch?v=") && !url.includes("youtu.be/"))) {
                 showNotification("正しく入力してください");
@@ -291,14 +291,14 @@
             }
 
             const { data: existingData, error: existingError } = await supabase
-                .from("request-music")
+                .from("request_music")
                 .select("*")
                 .or(`musicName.eq.${musicName},url.eq.${url}`);
 
             if (existingError) return showNotification("確認中にエラー：" + existingError.message);
             if (existingData && existingData.length > 0) return showNotification("この曲はすでに登録されています。");
 
-            const { error } = await supabase.from("request-music").insert([{ studentId, musicName, url, desc }]);
+            const { error } = await supabase.from("request_music").insert([{ studentId, musicName, url, desc, user_id: userId }]);
             if (error) return showNotification("送信に失敗しました：" + error.message);
 
             showNotification("送信しました！");
