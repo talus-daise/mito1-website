@@ -62,11 +62,10 @@
         <section>
             <h2>曲応募</h2>
             <form id="sendRequest">
-                <p><label for="student-ID">学籍番号: </label><input type="text" name="student-ID" id="studentId"></p>
                 <p><label for="music-name">曲名: </label><input type="text" name="music-name" id="musicName"></p>
                 <p><label for="url">曲のURL: </label><input type="url" name="url" id="musicUrl"></p>
                 <p><label for="description">おすすめポイントなど(空欄でもOK): </label><input type="text" name="description"
-                    id="description"></p>
+                        id="description"></p>
                 <p><input type="submit" value="送信"></p>
             </form>
         </section>
@@ -108,6 +107,29 @@
             showCustomAlert("ログインしてください", false)
         } else {
             console.log("ユーザー情報:", user);
+        }
+
+        const { data } = await supabase
+            .from("users")
+            .select("*")
+            .eq("user_email", userEmail)
+            .single();
+
+        if (!data) {
+            await supabase.from("users").insert([{
+                user_id: currentUser.id,
+                user_email: userEmail,
+                visit_count: 1,
+                avatar_url: currentUser.user_metadata.avatar_url,
+                full_name: currentUser.user_metadata.full_name
+            }]);
+        } else {
+            await supabase.from("users")
+                .update({
+                    avatar_url: currentUser.user_metadata.avatar_url,
+                    full_name: currentUser.user_metadata.full_name
+                })
+                .eq("user_email", userEmail);
         }
 
         // ===== 要素参照 =====
@@ -221,6 +243,17 @@
             });
         }
 
+        function getStudentId(namesJson, fullName) {
+            for (const [cls, list] of Object.entries(namesJson)) {
+                if (!Array.isArray(list)) continue;
+                const index = list.indexOf(fullName);
+                if (index !== -1) {
+                    return `${cls}${String(index + 1).padStart(2, "0")}`;
+                }
+            }
+            return "0A00";
+        }
+
         // ===== 送信処理 =====
         sendForm.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -239,7 +272,15 @@
                 return;
             }
 
-            const studentId = document.getElementById("studentId").value.trim();
+            // --- 学籍番号取得 ---
+            let studentId = "0A00";
+            try {
+                const res = await fetch("/mito1-website/private/names.json");
+                const namesJson = await res.json();
+                studentId = getStudentId(namesJson, user.user.user_metadata.full_name);
+            } catch (e) {
+                console.error("names.json 読み込み失敗", e);
+            }
             const musicName = document.getElementById("musicName").value.trim();
             const url = document.getElementById("musicUrl").value.trim();
             const desc = document.getElementById("description").value.trim();
