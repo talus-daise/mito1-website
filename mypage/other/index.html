@@ -220,7 +220,6 @@
                     document.getElementById("user-email").textContent = textMosaic(user.user_email);
                     document.getElementById("about-me").textContent = user.about_me || "自己紹介は未設定です。";
                     document.getElementById("visit-count").textContent = user.visit_count;
-                    document.getElementById("post-count").textContent = user.post_count;
 
                     // --- 質問一覧を取得 ---
                     const { data: questions } = await supabase
@@ -304,6 +303,8 @@
                         aList.appendChild(div);
                     });
 
+                    document.getElementById('post-count').textContent = threads.length + questions.length + answers.length
+
                     isLoading = false;
                     document.getElementById('custom-alert').remove();
 
@@ -311,6 +312,7 @@
                         return str.slice(0, 5) + "*".repeat(10) + str.slice(-5);
                     }
                 }
+
             });
         }
     </script>
