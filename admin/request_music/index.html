@@ -146,7 +146,7 @@
             const listContainer = document.getElementById("request-music-list");
             try {
                 const { data: musicRequests, error } = await supabase
-                    .from("request-music")
+                    .from("request_music")
                     .select("*")
                     .order("created_at", { ascending: false });
                 if (error) throw error;
@@ -161,7 +161,7 @@
                     isPlayed.checked = request.isplayed;
                     isPlayed.addEventListener("change", async () => {
                         const { error: updateError } = await supabase
-                            .from("request-music")
+                            .from("request_music")
                             .update({ isplayed: isPlayed.checked })
                             .eq("id", request.id);
                         if (updateError) {
@@ -192,7 +192,7 @@
                     deleteButton.textContent = "削除";
                     deleteButton.addEventListener("click", async () => {
                         const { error: deleteError } = await supabase
-                            .from("request-music")
+                            .from("request_music")
                             .delete()
                             .eq("id", request.id);
                         if (deleteError) {
