@@ -158,6 +158,8 @@
             };
         }
 
+        let isPastLoaded = false;
+
         async function loadTimetable() {
             const pastContainer = document.getElementById("past-timetable");
 
@@ -166,7 +168,10 @@
             const bar = document.createElement("progress");
             bar.max = 100;
             bar.value = 0;
-            pastContainer.append(progress, bar);
+
+            if (!isPastLoaded) {
+                pastContainer.insertAdjacentElement("beforebegin", progress, bar);
+            }
 
             try {
                 const res = await fetch(JSON_URL);
@@ -193,6 +198,8 @@
                     img.alt = f.filename;
                     img.style.cssText = "max-width:100%; border-radius:8px";
                 }
+
+                if (isPastLoaded) return;
 
                 // ▼ 過去分
                 const others = files.filter(f => f.dateKey !== latestDateKey);
@@ -232,6 +239,7 @@
                 progress.remove();
                 bar.remove();
 
+                isPastLoaded = true;
             } catch (e) {
                 console.error(e);
                 pastContainer.textContent = "画像一覧の取得に失敗しました。";
@@ -240,7 +248,7 @@
 
         loadTimetable()
 
-        setInterval(loadTimetable, 500)
+        setInterval(loadTimetable, 1000);
 
         (async () => {
             const serverStateEl = document.getElementById("server-state");

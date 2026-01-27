@@ -101,12 +101,6 @@ footer a:hover {
     color: var(--text-color-white);
 }
 
-::selection,
-::-moz-selection {
-    color: var(--text-color-white);
-    background: var(--main-color);
-}
-
 a {
     color: var(--text-color-link);
     text-decoration: none;

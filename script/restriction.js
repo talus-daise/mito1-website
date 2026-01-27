@@ -15,7 +15,7 @@ let adminMails = [];
 async function fetchAdminMails() {
     const { data, error } = await supabase
         .from("users")
-        .select("email, role")
+        .select("user_email, role")
         .in("role", ["master", "admin", "manager"]);
 
     if (error) {
@@ -24,7 +24,7 @@ async function fetchAdminMails() {
         return;
     }
 
-    adminMails = data.map(u => u.email).filter(Boolean);
+    adminMails = data.map(u => u.user_email).filter(Boolean);
 }
 
 /* ===== 制限ルール取得 ===== */
