@@ -211,7 +211,7 @@ async function handleSession(session) {
         allowRender();
         return;
     }
-    
+
     if (!session?.user) {
         showLoginOverlay();
         return;
@@ -231,3 +231,94 @@ async function handleSession(session) {
     document.getElementById("login-overlay")?.remove();
     allowRender();
 }
+
+// メインの JS ファイル
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-app.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-messaging.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDEIzqtDVN5sCc9niXCdtiIS2RnvUqQrdg",
+    authDomain: "mito1-website.firebaseapp.com",
+    projectId: "mito1-website",
+    storageBucket: "mito1-website.firebasestorage.app",
+    messagingSenderId: "1055511991325",
+    appId: "1:1055511991325:web:e9f253698c3d5806b2a2f4",
+    measurementId: "G-M1EEHEX6K4"
+};
+
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+async function requestPermissionAndGetToken() {
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+            console.error("通知権限が拒否されました");
+            return;
+        }
+
+        // Service Worker を登録
+        const registration = await navigator.serviceWorker.register("/mito1-website/firebase-messaging-sw.js");
+        console.log("Service Worker registered with scope:", registration.scope);
+
+        // トークン取得 (VAPIDキーと登録情報を渡す)
+        const token = await getToken(messaging, {
+            vapidKey: "BPxlXtztYGrRRnwpvtzsF1MS3mvfNlHDk9qohVd5sN9gM6I0bzxlGWqJUsxvetlsCpyrbs6QLv24Y63UHsITM_k",
+            serviceWorkerRegistration: registration
+        });
+
+        if (token) {
+            console.log("Device token:", token);
+            // Supabase に保存
+            const { error } = await supabase
+                .from("push_tokens")
+                .upsert({ token: token }, { onConflict: 'token' });
+
+            if (error) console.error("Supabase Save Error:", error);
+        }
+    } catch (err) {
+        console.error("Error setting up notifications:", err);
+    }
+}
+
+function isIOS() {
+    return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function isPWA() {
+    return window.matchMedia('(display-mode: standalone)').matches
+        || window.navigator.standalone === true;
+}
+
+function showIOSNotificationOverlay() {
+    const overlay = document.createElement("div");
+    overlay.id = "iosNotificationOverlay";
+    overlay.innerHTML = `
+        <div class="overlay-content">
+            <h2>通知を有効にしますか？</h2>
+            <p>学校からの重要なお知らせを受け取れます。</p>
+            <button id="iosEnableBtn">通知を有効にする</button>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    document.getElementById("iosEnableBtn").addEventListener("click", async () => {
+        await requestPermissionAndGetToken();
+        overlay.remove();
+    });
+}
+
+if (isIOS() && isPWA()) {
+    if (Notification.permission !== "granted") {
+        showIOSNotificationOverlay();
+    }
+} else {
+    requestPermissionAndGetToken();
+}
+
+// フォアグラウンド通知の待機
+onMessage(messaging, (payload) => {
+    console.log("Foreground message received:", payload);
+    new Notification(payload.notification.title, { body: payload.notification.body });
+});

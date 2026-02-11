@@ -34,7 +34,7 @@
     <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    
+
     <!--マニフェスト-->
     <link rel="manifest" href="../manifest.json">
 </head>
@@ -56,7 +56,8 @@
         <section>
             <h2>検索</h2>
             <p><label for="search-box">検索：<input type="text" id="search-box" placeholder="名前や番号で検索..."></label>
-            <button id="search-btn">検索</button></p>
+                <button id="search-btn">検索</button>
+            </p>
         </section>
         <section class="main__student">
             <h2>生徒</h2>
@@ -149,7 +150,7 @@
     <script src="../script/customAlert.js" type="module"></script>
     <script type="module" src="../script/restriction.js"></script>
     <script type="module" src="../script/notification.js"></script>
-    
+
     <script src="../script/verification.js" type="module"></script>
 
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
@@ -161,104 +162,86 @@
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
         );
 
-        function makeHeaders(user, pass) {
-            const token = btoa(`${user}:${pass}`);
-            return {
-                Authorization: `Basic ${token}`,
-                'bypass-tunnel-reminder': 'true',
-                'User-Agent': 'CustomClient/1.0',
-            };
-        }
+        document.addEventListener("DOMContentLoaded", async () => {
+            const rosterBody = document.getElementById('roster');
+            const searchBox = document.getElementById('search-box');
+            const searchBtn = document.getElementById('search-btn');
 
-        fetch('/mito1-website/private/names.json', {
-            headers: makeHeaders("talus", "talus"),
-            cache: "no-store",
-        })
-            .then(response => response.json())
-            .then(async data => {
-                const rosterBody = document.getElementById('roster');
-                const searchBox = document.getElementById('search-box');
-                const searchBtn = document.getElementById('search-btn');
+            // 🔐 セッション確認
+            const { data: { session } } = await supabase.auth.getSession();
 
-                const { data: { session } } = await supabase.auth.getSession();
-
-                if (!session || !session.user) {
-                    showCustomAlert("名簿を見るにはログインが必要です。", false);
-                    document.getElementById("teachers").style.display = "none";
-                    return;
-                }
-
-                let students = [];
-
-                // クラスごとの生徒データを結合
-                for (const className in data) {
-                    const names = data[className];
-                    names.forEach((name, index) => {
-                        if (name !== "teacher") {
-                            students.push({
-                                number: `${className}${String(index + 1).padStart(2, '0')}`,
-                                name: name
-                            });
-                        }
-                    });
-                }
-
-                // 名簿表示関数
-                async function displayRoster(filteredStudents) {
-                    const { data: users, error } = await supabase
-                        .from("users")
-                        .select("full_name, user_id");
-
-                    rosterBody.innerHTML = '';
-                    filteredStudents.forEach(student => {
-                        const row = document.createElement('tr');
-                        const numberCell = document.createElement('td');
-                        const nameCell = document.createElement('td');
-
-                        numberCell.textContent = student.number;
-                        nameCell.textContent = student.name;
-
-                        if (student.name === session.user.user_metadata.full_name) {
-                            row.style.backgroundColor = '#fffbcc'; // ハイライト色
-                        }
-
-                        const user = users.find(u => u.full_name === student.name);
-                        if (user) {
-                            const userLink = document.createElement('a');
-                            userLink.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(user.user_id)}`;
-                            userLink.textContent = student.name;
-                            nameCell.innerHTML = ''; // Clear the cell
-                            nameCell.appendChild(userLink);
-                        }
-
-                        row.appendChild(numberCell);
-                        row.appendChild(nameCell);
-                        rosterBody.appendChild(row);
-                    });
-                }
-
-                // 初期表示
-                displayRoster(students);
-
-                // 検索機能
-                searchBtn.addEventListener('click', () => {
-                    const query = searchBox.value.toLowerCase();
-                    const filteredStudents = students.filter(student =>
-                        student.name.toLowerCase().includes(query) ||
-                        student.number.toLowerCase().includes(query)
-                    );
-                    displayRoster(filteredStudents);
-                });
-            })
-            .catch(error => console.error('Error loading names:', error));
-
-        // Removed duplicate search handler that referenced undefined `tbody`;
-        // search is handled using the roster data inside the fetch callback above.
-
-        document.getElementById("search-box").addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-                document.getElementById("search-btn").click();
+            if (!session || !session.user) {
+                showCustomAlert("名簿を見るにはログインが必要です。", false);
+                document.getElementById("teachers").style.display = "none";
+                return;
             }
+
+            // 🔐 studentsテーブルから取得
+            const { data: students, error } = await supabase
+                .from("students")
+                .select("student_id, name")
+                .order("student_id", { ascending: true });
+
+            if (error) {
+                console.error(error);
+                return;
+            }
+
+            // usersテーブル取得（リンク用）
+            const { data: users } = await supabase
+                .from("users")
+                .select("full_name, user_id");
+
+            function displayRoster(filteredStudents) {
+                rosterBody.innerHTML = '';
+
+                filteredStudents.forEach(student => {
+                    const row = document.createElement('tr');
+                    const numberCell = document.createElement('td');
+                    const nameCell = document.createElement('td');
+
+                    numberCell.textContent = student.student_id;
+
+                    // 自分をハイライト
+                    if (student.name === session.user.user_metadata.full_name) {
+                        row.style.backgroundColor = '#fffbcc';
+                    }
+
+                    const user = users?.find(u => u.full_name === student.name);
+
+                    if (user) {
+                        const userLink = document.createElement('a');
+                        userLink.href = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(user.user_id)}`;
+                        userLink.textContent = student.name;
+                        nameCell.appendChild(userLink);
+                    } else {
+                        nameCell.textContent = student.name;
+                    }
+
+                    row.appendChild(numberCell);
+                    row.appendChild(nameCell);
+                    rosterBody.appendChild(row);
+                });
+            }
+
+            // 初期表示
+            displayRoster(students);
+
+            // 検索機能
+            searchBtn.addEventListener('click', () => {
+                const query = searchBox.value.toLowerCase();
+                const filtered = students.filter(student =>
+                    student.name.toLowerCase().includes(query) ||
+                    student.student_id.toLowerCase().includes(query)
+                );
+                displayRoster(filtered);
+            });
+
+            searchBox.addEventListener("keydown", (event) => {
+                if (event.key === "Enter") {
+                    searchBtn.click();
+                }
+            });
         });
     </script>
 </body>

@@ -160,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
     [
         { id: "home", href: "/mito1-website/", icon: "fa-house", text: "トップページ" },
         { id: "timetable", href: "/mito1-website/timetable/", icon: "fa-calendar-days", text: "時間割" },
-        { id: "memberList", href: "/mito1-website/member_list/", icon: "fa-clipboard-list", text: "名簿" },
+        { id: "memberList", href: "/mito1-website/students/", icon: "fa-clipboard-list", text: "名簿" },
         { id: "tasks", href: "/mito1-website/tasks/", icon: "fa-list-check", text: "課題" },
         { id: "bbs", href: "/mito1-website/bbs/", icon: "fa-chalkboard", text: "掲示板" },
         { id: "question", href: "/mito1-website/question/", icon: "fa-circle-question", text: "みとい知恵袋" },

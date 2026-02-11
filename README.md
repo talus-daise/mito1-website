@@ -39,7 +39,7 @@ https://talus-daise.github.io/mito1-website/
 ├── docs
 ├── img
 ├── math
-├── member_list
+├── students
 ├── mypage
 ├── otter
 ├── question
