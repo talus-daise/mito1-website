@@ -274,11 +274,19 @@
             // --- 学籍番号取得 ---
             let studentId = "0A00";
             try {
-                const res = await fetch("/mito1-website/private/names.json");
-                const namesJson = await res.json();
-                studentId = getStudentId(namesJson, user.user_metadata.full_name);
+                // 🔐 studentsテーブルから取得
+                const { data: student, error } = await supabase
+                    .from("students")
+                    .select("student_id")
+                    .eq("name", user.user_metadata.full_name)
+                    .single();
+                if (error) {
+                    console.error(error);
+                    return;
+                }
+                studentId = student.student_id;
             } catch (e) {
-                console.error("names.json 読み込み失敗", e);
+                console.error("名前より学籍番号 読み込み失敗", e);
             }
             const musicName = document.getElementById("musicName").value.trim();
             const url = document.getElementById("musicUrl").value.trim();

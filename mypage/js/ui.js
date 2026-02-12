@@ -34,14 +34,15 @@ async function editDisplayName() {
         return;
     }
 
-    const res = await fetch("/mito1-website/private/names.json");
-    if (!res.ok) {
-        showCustomNotification("名前一覧の取得に失敗しました")
+    const { data: allRealNames, error } = await supabase
+        .from("students")
+        .select("student_id, name")
+        .order("student_id", { ascending: true });
+
+    if (error) {
+        console.error(error);
         return;
     }
-    const namesJson = await res.json();
-
-    const allRealNames = Object.values(namesJson).flat();
 
     const myRealName = currentUser?.user_metadata?.full_name;
 

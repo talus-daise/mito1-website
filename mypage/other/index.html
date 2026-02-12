@@ -108,10 +108,12 @@
         <section>
             <h2>ユーザー情報</h2>
             <div class="user-info">
-                <img id="user-avatar" alt="ユーザーアイコン" width="50" height="50"><p class="user-name"><span id="display-name">とある水戸一の名無し</span></p>
+                <img id="user-avatar" alt="ユーザーアイコン" width="50" height="50">
+                <p class="user-name"><span id="display-name">とある水戸一の名無し</span></p>
                 <p class="student-id"><i class="fa-solid fa-address-card"></i><span id="student-id">0X00</span></p>
                 <p><i class="fa-solid fa-school"></i><span id="user-name">とある水戸一の名無し</span></p>
-                <p class="user-email"><i class="fa-solid fa-envelope"></i><span id="user-email">guest@example.com</span></p>
+                <p class="user-email"><i class="fa-solid fa-envelope"></i><span id="user-email">guest@example.com</span>
+                </p>
             </div>
         </section>
         <section>
@@ -188,30 +190,21 @@
                     document.title = `${user.display_name || "とある水戸一の名無し"} のマイページ | 水戸一高附属中総合ウェブサイト`;
 
                     // --- 学籍番号取得 ---
-                    fetch("/mito1-website/private/names.json")
-                        .then(response => response.json())
-                        .then(data => {
-                            const classes = Object.keys(data);
-                            let studentId = "0A00";
+                    // 🔐 studentsテーブルから取得
+                    const { data: student, error } = await supabase
+                        .from("students")
+                        .select("student_id")
+                        .eq("name", user.full_name)
+                        .single();
 
-                            for (const cls of classes) {
-                                const index = data[cls].indexOf(user.full_name);
-                                console.log("Checking class:", cls, "Index:", index);
-                                console.log(user.user_name);
-                                if (index !== -1) {
-                                    const classCode = cls;
-                                    const attendanceNumber = (index + 1).toString().padStart(2, '0');
-                                    studentId = classCode + attendanceNumber;
-                                    console.log("Found student ID:", studentId);
-                                    break;
-                                }
-                            }
+                    if (error) {
+                        console.error("Error fetching database:", error);
+                        return;
+                    };
 
-                            document.getElementById("student-id").textContent = studentId;
-                        })
-                        .catch(error => {
-                            console.error("Error fetching names.json:", error);
-                        });
+                    const studentId = student?.student_id || "0A00";
+
+                    document.getElementById("student-id").textContent = studentId;
 
                     document.querySelector("h1").textContent = `${user.display_name || "とある水戸一の名無し"} のマイページ`;
                     document.getElementById("user-avatar").src = user.avatar_url || "../../img/default-avatar.png";

@@ -4,23 +4,6 @@ import { currentUser, userEmail } from "./auth.js";
 
 export let updatedUser = null;
 
-/**
- * 氏名から学籍番号を算出
- * @param {Object} namesJson
- * @param {string} fullName
- * @returns {string} 学籍番号（例: 1A05） / 未検出時は 0A00
- */
-function getStudentId(namesJson, fullName) {
-    for (const [cls, list] of Object.entries(namesJson)) {
-        if (!Array.isArray(list)) continue;
-        const index = list.indexOf(fullName);
-        if (index !== -1) {
-            return `${cls}${String(index + 1).padStart(2, "0")}`;
-        }
-    }
-    return "0A00";
-}
-
 export async function loadUserInfo() {
     const { data } = await supabase
         .from("users")
@@ -56,11 +39,19 @@ export async function loadUserInfo() {
     // --- 学籍番号取得 ---
     let studentId = "0A00";
     try {
-        const res = await fetch("/mito1-website/private/names.json");
-        const namesJson = await res.json();
-        studentId = getStudentId(namesJson, currentUser.user_metadata.full_name);
+        const { data: student, error } = await supabase
+            .from("students")
+            .select("student_id")
+            .eq("name", currentUser.user_metadata.full_name)
+            .single();
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+        studentId = student.student_id;
     } catch (e) {
-        console.error("names.json 読み込み失敗", e);
+        console.error("名簿からの学籍番号 読み込み失敗", e);
     }
 
     const dispRole = () => {

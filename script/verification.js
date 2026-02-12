@@ -345,7 +345,7 @@ function showIOSNotificationOverlay() {
 }
 
 if (isIOS() && isPWA()) {
-    if (Notification.permission !== "granted") {
+    if (Notification.permission === "default") {
         showIOSNotificationOverlay();
     }
 } else {
