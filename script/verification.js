@@ -293,20 +293,55 @@ function isPWA() {
 function showIOSNotificationOverlay() {
     const overlay = document.createElement("div");
     overlay.id = "iosNotificationOverlay";
-    overlay.innerHTML = `
-        <div class="overlay-content">
-            <h2>通知を有効にしますか？</h2>
-            <p>学校からの重要なお知らせを受け取れます。</p>
-            <button id="iosEnableBtn">通知を有効にする</button>
-        </div>
-    `;
+    Object.assign(overlay.style, {
+        position: "fixed",
+        inset: "0",
+        background: "rgba(0,0,0,1)",
+        zIndex: "9999",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+    });
 
-    document.body.appendChild(overlay);
+    const box = document.createElement("div");
+    Object.assign(box.style, {
+        background: "#f8f8f8",
+        padding: "30px",
+        borderRadius: "10px",
+        textAlign: "center",
+        boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
+        minWidth: "280px"
+    });
 
-    document.getElementById("iosEnableBtn").addEventListener("click", async () => {
+    const title = document.createElement("h2");
+    title.textContent = "通知を有効にしますか？";
+
+    const description = document.createElement("p");
+    description.textContent = "学校からの重要なお知らせを受け取れます。";
+
+    const button = document.createElement("button");
+    button.textContent = "通知を有効にする";
+    Object.assign(button.style, {
+        marginTop: "15px",
+        padding: "10px 20px",
+        border: "none",
+        borderRadius: "6px",
+        background: "#007bff",
+        color: "#fff",
+        fontSize: "14px",
+        cursor: "pointer"
+    });
+
+    button.addEventListener("click", async () => {
         await requestPermissionAndGetToken();
         overlay.remove();
     });
+
+    box.appendChild(title);
+    box.appendChild(description);
+    box.appendChild(button);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
 }
 
 if (isIOS() && isPWA()) {
