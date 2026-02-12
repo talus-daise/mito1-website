@@ -1,5 +1,10 @@
 # 更新履歴
 
+## [v3.3.2](https://github.com/talus-daise/mito1-website/releases/tag/v3.3.2) (2026-02-12)
+- 通知機能を追加
+  - 掲示板、みとい知恵袋
+- デザインとバグの細かな修正
+
 ## [v3.3.1](https://github.com/talus-daise/mito1-website/releases/tag/v3.3.1) (2026-01-07)
 - サイト全体のUIを改善
 - 管理画面の機能を改善
