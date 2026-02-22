@@ -355,5 +355,26 @@ if (isIOS() && isPWA()) {
 // フォアグラウンド通知の待機
 onMessage(messaging, (payload) => {
     console.log("Foreground message received:", payload);
-    new Notification(payload.notification.title, { body: payload.notification.body });
+
+    const title = payload.notification?.title || "新着通知";
+    const options = {
+        body: payload.notification?.body,
+        icon: "/icon.png", // 必要であればアイコン指定
+        data: {
+            // ここで data.url を通知オブジェクトに持たせる
+            url: payload.data?.url
+        }
+    };
+
+    const notification = new Notification(title, options);
+
+    // クリックイベントを直接登録
+    notification.onclick = (event) => {
+        event.preventDefault(); // ブラウザのデフォルト動作を抑止
+        const targetUrl = event.target.data.url;
+        if (targetUrl) {
+            window.open(targetUrl, '_blank');
+        }
+        notification.close();
+    };
 });

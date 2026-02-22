@@ -13,6 +13,26 @@ firebase.initializeApp({
     measurementId: "G-M1EEHEX6K4"
 });
 
-// インスタンスを取得するだけでOK。
-// SDKがバックグラウンドでの通知表示を自動でハンドリングします。
 const messaging = firebase.messaging();
+
+self.addEventListener("notificationclick", function (event) {
+    event.notification.close();
+
+    // 送信側で data: { url: "..." } としているので、ここに入る
+    const url = event.notification.data?.url || '/';
+
+    event.waitUntil(
+        clients.matchAll({ type: "window", includeUncontrolled: true })
+            .then((clientList) => {
+                for (const client of clientList) {
+                    // URLが一致、または含まれていればフォーカス
+                    if (client.url.includes(url) && "focus" in client) {
+                        return client.focus();
+                    }
+                }
+                if (clients.openWindow) {
+                    return clients.openWindow(url);
+                }
+            })
+    );
+});

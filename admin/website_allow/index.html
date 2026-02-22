@@ -34,7 +34,6 @@
     <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    <script src="../../script/" type="module"></script>
     <!--マニフェスト-->
     <link rel="manifest" href="../../manifest.json">
 </head>
@@ -168,6 +167,8 @@
                     return;
                 }
 
+                console.log(data);
+
                 const active = data.filter(r => {
                     const start = new Date(r.start_time).getTime();
                     const end = new Date(r.end_time).getTime();
@@ -233,6 +234,9 @@
                 }]);
 
                 document.getElementById("label").value = "";
+                document.getElementById("start-time").value = "";
+                document.getElementById("end-time").value = "";
+                document.getElementById("mode").value = "restrict";
                 refresh();
             });
 
@@ -246,22 +250,27 @@
             const endTime = document.getElementById('end-time');
             const mode = document.getElementById('mode');
 
-            const today = new Date().toISOString().split("T")[0]
+            const today = new Date().toLocaleString("ja-JP", { timeZone: 'Asia/Tokyo' }).split(" ")[0];
 
-            console.log(today)
+            const formatDate = (date) => {
+                const [year, month, day] = date.split("/");
+                return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+            };
+
+            const formattedToday = formatDate(today);
 
             switch (e.currentTarget.value) {
                 case '6hAllow':
                     label.value = '6時間目許可';
-                    startTime.value = today + "T14:45:00";
-                    endTime.value = today + "T15:54:00";
+                    startTime.value = formattedToday + "T14:45:00";
+                    endTime.value = formattedToday + "T15:54:00";
                     mode.value = "allow";
                     return;
                 
                 case 'holidayAllow':
                     label.value = '祝日許可'
-                    startTime.value = today + "T08:25:00";
-                    endTime.value = today + "T15:54:00";
+                    startTime.value = formattedToday + "T08:25:00";
+                    endTime.value = formattedToday + "T15:54:00";
                     mode.value = "allow";
                     return;
             }
@@ -276,7 +285,6 @@
     <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>
     <script type="module" src="../../script/restriction.js"></script>
-    <script type="module" src="../../script/notification.js"></script>
     <script type="module" src="../../script/notification.js"></script>
     <script src="../../script/verification.js" type="module"></script>
 
