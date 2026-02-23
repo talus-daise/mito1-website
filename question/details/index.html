@@ -60,6 +60,8 @@
             <p class="username" id="question-username"></p>
             <p id="question-posted-at"></p>
             <div id="question-content"></div>
+            <div id="control-div"></div>
+            <div id="thank-message"></div>
         </section>
 
         <section>
@@ -111,6 +113,40 @@
             container.innerHTML = safeHtml;
         }
 
+        function parseMarkdown(text) {
+            const rawHtml = md.render(text || "");
+            return DOMPurify.sanitize(rawHtml);
+        }
+
+        async function checkCount(answerId) {
+            const { data, error } = await supabase
+                .from("answer_reactions")
+                .select("type")
+                .eq("answer_id", answerId);
+            
+            if (error) {
+                console.error("リアクションの取得に失敗:", error);
+                return;
+            }
+
+            const naruhodoCount = data.filter(r => r.type === "naruhodo").length;
+            const arigatoCount = data.filter(r => r.type === "arigato").length;
+
+            const { error: updateError } = await supabase
+                .from("answers")
+                .update({
+                    naruhodo_count: naruhodoCount,
+                    arigato_count: arigatoCount
+                })
+                .eq("id", answerId);
+            
+            if (updateError) {
+                console.error("カウントの更新に失敗:", updateError);
+            }
+
+            fetchAnswers();
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
         const questionId = urlParams.get("id");
         const answerId = urlParams.get("answer_id");
@@ -146,6 +182,64 @@
             document.getElementById("page-link").innerHTML =
                 `<a href="?id=${questionId}"><i class="fa-solid fa-circle-info"></i>質問「${question.title}」の詳細</a>`;
 
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (user && user.id === question.user_id) {
+                const controlDiv = document.getElementById("control-div");
+
+                controlDiv.innerHTML = "<h3>質問を管理する</h3>";
+
+                const p = document.createElement("p");
+                const toggleBtn = document.createElement("button");
+                toggleBtn.textContent = question.answered_stop ? "回答受付を再開" : "回答受付を停止";
+                p.appendChild(toggleBtn);
+
+                toggleBtn.addEventListener("click", async () => {
+                    await supabase
+                        .from("questions")
+                        .update({ answered_stop: !question.answered_stop })
+                        .eq("id", questionId);
+
+                    fetchQuestion();
+                });
+
+                const hr = document.createElement("hr");
+
+                controlDiv.appendChild(p);
+                controlDiv.appendChild(hr);
+
+                // 感謝メッセージ入力欄
+                const thankP = document.createElement("p");
+                const thankInput = document.createElement("textarea");
+                thankInput.placeholder = "感謝メッセージ";
+                thankInput.value = question.thank_message || "";
+
+                const saveP = document.createElement("p");
+                const saveBtn = document.createElement("button");
+                saveBtn.textContent = "感謝メッセージ保存";
+
+                saveBtn.addEventListener("click", async () => {
+                    await supabase
+                        .from("questions")
+                        .update({ thank_message: thankInput.value })
+                        .eq("id", questionId);
+
+                    showCustomNotification("保存しました");
+                });
+
+                thankP.appendChild(thankInput);
+                saveP.appendChild(saveBtn);
+
+                controlDiv.appendChild(thankP);
+                controlDiv.appendChild(saveP);
+            }
+
+            if (question.thank_message) {
+                const thanks = document.getElementById("thank-message");
+                thanks.className = "thank-message";
+                renderMarkdown(thanks, question.thank_message);
+            }
+
             fetchAnswers();
         }
 
@@ -165,26 +259,73 @@
                 const div = document.createElement("div");
                 div.classList.add("content-list-item");
 
-                const username = document.createElement("span");
+                const username = document.createElement("p");
                 username.className = "username";
                 username.setAttribute("data-user-id", answer.user_id);
-                username.innerHTML = `<i class="fa-solid fa-user"></i>${answer.username}`;
+                username.innerHTML = `<i class="fa-solid fa-user"></i>${parseMarkdown(answer.username).replace(/<p[^>]*>(.*?)<\/p>/g, "$1")}`;
+                username.style.marginLeft = "0";
 
-                const br = document.createElement("br");
-
-                const time = document.createElement("span");
+                const time = document.createElement("p");
                 time.innerHTML =
                     `<i class="fa-solid fa-clock"></i>${new Date(answer.created_at).toLocaleString()}`;
+                time.style.marginLeft = "0";
 
                 const content = document.createElement("div");
                 renderMarkdown(content, answer.content);
 
                 div.appendChild(username);
-                div.appendChild(br);
                 div.appendChild(time);
                 div.appendChild(content);
                 answerList.appendChild(div);
+
+                const reactions = document.createElement("div");
+
+                const naruhodoP = document.createElement("p");
+                const naruhodoBtn = document.createElement("button");
+                naruhodoBtn.textContent = `なるほど (${answer.naruhodo_count || 0})`;
+
+                naruhodoBtn.onclick = async () => {
+                    const { error } = await supabase.rpc("increment_naruhodo", {
+                        answer_id_input: answer.id
+                    });
+
+                    checkCount(answer.id);
+
+                    if (error) {
+                        showCustomNotification(error.message);
+                        return;
+                    }
+
+                    fetchAnswers();
+                };
+
+                naruhodoP.appendChild(naruhodoBtn);
+
+                const arigatoP = document.createElement("p");
+                const arigatoBtn = document.createElement("button");
+                arigatoBtn.textContent = `ありがとう (${answer.arigato_count || 0})`;
+
+                arigatoBtn.onclick = async () => {
+                    const { error } = await supabase.rpc("increment_arigato", {
+                        answer_id_input: answer.id
+                    });
+
+                    checkCount(answer.id);
+
+                    if (error) {
+                        showCustomNotification(error.message);
+                        return;
+                    }
+
+                    fetchAnswers();
+                };
+                arigatoP.appendChild(arigatoBtn);
+
+                reactions.appendChild(naruhodoP);
+                reactions.appendChild(arigatoP);
+                div.appendChild(reactions);
             });
+
         }
 
         document.getElementById("answer-form").addEventListener("submit", async (event) => {
@@ -194,6 +335,19 @@
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 showCustomAlert("回答を投稿するにはログインが必要です", false);
+                event.target.disabled = false;
+                return;
+            }
+
+            // 質問の状態取得
+            const { data: questionState } = await supabase
+                .from("questions")
+                .select("answered_stop")
+                .eq("id", questionId)
+                .single();
+
+            if (questionState?.answered_stop) {
+                showCustomNotification("この質問は回答受付を終了しています");
                 event.target.disabled = false;
                 return;
             }
