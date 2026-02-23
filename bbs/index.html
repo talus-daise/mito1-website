@@ -32,6 +32,8 @@
     <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
     <!--マニフェスト-->
     <link rel="manifest" href="../manifest.json">
 </head>
@@ -93,6 +95,18 @@
             "https://mgsbwkidyxmicbacqeeh.supabase.co",
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
         );
+
+        // --- Markdown初期化 ---
+        const md = window.markdownit({
+            html: false,
+            linkify: true,
+            breaks: true
+        });
+
+        function renderMarkdown(text) {
+            const raw = md.render(text || "");
+            return DOMPurify.sanitize(raw);
+        }
 
         const threadList = document.getElementById("threadList");
 
@@ -219,7 +233,7 @@
                 a.style.color = "inherit";
 
                 const h3 = document.createElement("h3");
-                h3.textContent = thread.title;
+                h3.innerHTML = renderMarkdown(thread.title).replace(/<p[^>]*>(.*?)<\/p>/g, "$1");
                 a.appendChild(h3);
 
                 if (!categoryId) {
@@ -237,7 +251,7 @@
 
                 const createdBy = document.createElement("p");
                 createdBy.innerHTML =
-                    `<i class="fa-solid fa-user"></i> ${user?.display_name || "とある水戸一の名無し"}`;
+                    `<i class="fa-solid fa-user"></i> ${renderMarkdown(user?.display_name).replace(/<p[^>]*>(.*?)<\/p>/g, "$1") || "とある水戸一の名無し"}`;
                 a.appendChild(createdBy);
 
                 const lastUpdate = document.createElement("p");

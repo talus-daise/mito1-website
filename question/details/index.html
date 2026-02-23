@@ -32,9 +32,14 @@
     <!--Android-->
     <meta name="theme-color" content="#3498db">
     <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
-    <!--CDN-->
+
+    <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    <script src="../../script/" type="module"></script>
+
+    <!-- Markdown + Sanitizer -->
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+
     <!--マニフェスト-->
     <link rel="manifest" href="../../manifest.json">
 </head>
@@ -46,7 +51,6 @@
             <a href="../../"><i class="fa-solid fa-house"></i>トップページ</a>
             <a href="../"><i class="fa-solid fa-list-check"></i>みとい知恵袋</a>
             <span id="page-link"></span>
-
         </p>
     </header>
 
@@ -55,12 +59,13 @@
             <h2 id="question-title"></h2>
             <p class="username" id="question-username"></p>
             <p id="question-posted-at"></p>
-            <p id="question-content"></p>
+            <div id="question-content"></div>
         </section>
 
         <section>
             <h2>回答</h2>
             <div id="answer-list" class="content-list"></div>
+
             <h3>回答を投稿する</h3>
             <form id="answer-form">
                 <div class="format-buttons">
@@ -86,322 +91,202 @@
     </footer>
 
     <script type="module">
-        // Supabase ライブラリをインポート
         import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-        const pd = createClient(
+        const supabase = createClient(
             "https://mgsbwkidyxmicbacqeeh.supabase.co",
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
         );
+
+        // Markdown初期化
+        const md = window.markdownit({
+            html: false,
+            linkify: true,
+            breaks: true
+        });
+
+        function renderMarkdown(container, text) {
+            const rawHtml = md.render(text || "");
+            const safeHtml = DOMPurify.sanitize(rawHtml);
+            container.innerHTML = safeHtml;
+        }
 
         const urlParams = new URLSearchParams(window.location.search);
         const questionId = urlParams.get("id");
         const answerId = urlParams.get("answer_id");
 
-        // 質問データの取得
         async function fetchQuestion() {
-            const { data: question, error } = await pd
+            const { data: question, error } = await supabase
                 .from("questions")
                 .select("*")
                 .eq("id", questionId)
                 .single();
 
-            if (error) {
-                console.error("Error fetching question:", error);
-                return;
-            }
+            if (error) return;
 
             const postDate = new Date(question.created_at).toLocaleString();
 
-            document.getElementById("question-title").innerHTML = question.title;
-            document.getElementById("question-username").innerHTML = `<i class="fa-solid fa-user"></i>${question.username}`;
-            document.getElementById("question-username").setAttribute("data-user-id", question.user_id);
-            document.getElementById("question-posted-at").innerHTML = `<i class="fa-solid fa-clock"></i>${postDate}`;
-            document.getElementById("question-content").innerHTML = question.content;
+            document.getElementById("question-title").textContent = question.title;
 
-            document.getElementById("page-title").textContent = `${question.title} - みとい知恵袋 | 水戸一高附属中総合ウェブサイト`;
-            document.getElementById(
-                "page-link"
-            ).innerHTML = `<a href="?id=${questionId}"><i class="fa-solid fa-circle-info"></i>質問「${question.title}」の詳細</a>`;
+            const usernameEl = document.getElementById("question-username");
+            usernameEl.innerHTML = `<i class="fa-solid fa-user"></i>${question.username}`;
+            usernameEl.setAttribute("data-user-id", question.user_id);
+
+            document.getElementById("question-posted-at").innerHTML =
+                `<i class="fa-solid fa-clock"></i>${postDate}`;
+
+            renderMarkdown(
+                document.getElementById("question-content"),
+                question.content
+            );
+
+            document.getElementById("page-title").textContent =
+                `${question.title} - みとい知恵袋 | 水戸一高附属中総合ウェブサイト`;
+
+            document.getElementById("page-link").innerHTML =
+                `<a href="?id=${questionId}"><i class="fa-solid fa-circle-info"></i>質問「${question.title}」の詳細</a>`;
 
             fetchAnswers();
         }
 
-        // 回答一覧を取得
         async function fetchAnswers() {
-            const { data: answers, error } = await pd
+            const { data: answers, error } = await supabase
                 .from("answers")
                 .select("*")
                 .eq("question_id", questionId)
                 .order("created_at", { ascending: false });
 
-            if (error) {
-                console.error("Error fetching answers:", error);
-                return;
-            }
+            if (error) return;
 
             const answerList = document.getElementById("answer-list");
             answerList.innerHTML = "";
+
             answers.forEach((answer) => {
                 const div = document.createElement("div");
                 div.classList.add("content-list-item");
+
                 const username = document.createElement("span");
                 username.className = "username";
                 username.setAttribute("data-user-id", answer.user_id);
                 username.innerHTML = `<i class="fa-solid fa-user"></i>${answer.username}`;
-                div.appendChild(username);
+
                 const br = document.createElement("br");
-                div.appendChild(br);
+
                 const time = document.createElement("span");
-                const answerDate = new Date(answer.created_at).toLocaleString();
-                time.innerHTML = `<i class="fa-solid fa-clock"></i>${answerDate}`;
+                time.innerHTML =
+                    `<i class="fa-solid fa-clock"></i>${new Date(answer.created_at).toLocaleString()}`;
+
+                const content = document.createElement("div");
+                renderMarkdown(content, answer.content);
+
+                div.appendChild(username);
+                div.appendChild(br);
                 div.appendChild(time);
-                const content = document.createElement("p");
-                content.innerHTML = parseMarkdown(answer.content);
                 div.appendChild(content);
                 answerList.appendChild(div);
             });
-
-            if (answerId) {
-                // 対象の回答オブジェクトを探す
-                const target = answers.find((a) => String(a.id) === String(answerId));
-                if (target) {
-                    // テキスト比較用のHTML除去ヘルパー
-                    const stripHtml = (s) => (s || "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
-                    const expected = `${stripHtml(target.content)} - by ${target.username} (${new Date(
-                        target.created_at
-                    ).toLocaleString()})`;
-
-                    // li を走査して一致する要素を探す
-                    const items = Array.from(document.querySelectorAll("#answer-list li"));
-                    const found = items.find((li) => stripHtml(li.textContent).includes(expected));
-
-                    if (found) {
-                        found.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        // 簡単なハイライト
-                        const originalBg = found.style.backgroundColor;
-                        found.style.backgroundColor = '#fffbcc';
-                        setTimeout(() => { found.style.transition = 'background-color 1s'; found.style.backgroundColor = originalBg || ''; }, 500);
-                    }
-                }
-            }
-
-            document.querySelectorAll(".username").forEach((element) => {
-                element.style.cursor = "alias";
-                element.title = "ユーザーページを表示";
-
-                element.addEventListener("click", (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    const userId = element.getAttribute("data-user-id");
-                    const url = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/bbs/`;
-
-                    const w = window.open(url, "_blank");
-                    if (w) {
-                        w.opener = null;
-                    }
-                });
-            });
         }
 
-        // 回答投稿処理
         document.getElementById("answer-form").addEventListener("submit", async (event) => {
             event.preventDefault();
             event.target.disabled = true;
 
-            // 🔒 ログイン済みユーザーを取得
-            const { data: { user }, error: userError } = await pd.auth.getUser();
-            if (userError || !user) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
                 showCustomAlert("回答を投稿するにはログインが必要です", false);
                 event.target.disabled = false;
                 return;
             }
 
-            // 🌟 表示名を取得
             let displayName = "とある水戸一の名無し";
-            const { data: userRecord, error: userRecordError } = await pd
+            const { data: userRecord } = await supabase
                 .from("users")
                 .select("display_name")
                 .eq("user_id", user.id)
                 .single();
-            if (!userRecordError && userRecord && userRecord.display_name) {
+
+            if (userRecord?.display_name) {
                 displayName = userRecord.display_name;
             }
-            console.log(displayName);
 
-            const content = parseMarkdown(document.getElementById("answer-content").value.trim());
+            const rawContent = document.getElementById("answer-content").value.trim();
 
-            if (!content) {
-                showCustomNotification("すべてのフィールドを入力してください");
-                event.target.disabled = false;
-                return;
-            }
-            if (content.length < 20) {
-                showCustomNotification("回答は20文字以上にしてください（スパム対策です）");
+            if (!rawContent || rawContent.length < 20) {
+                showCustomNotification("回答は20文字以上にしてください");
                 event.target.disabled = false;
                 return;
             }
 
-            const lastAnswerTime = localStorage.getItem("lastAnswerTime") || 0;
-            const now = Date.now();
-            if (now - lastAnswerTime < 60000) {
-                showCustomNotification("短時間での連続投稿はできません。少し待ってから再度投稿してください");
-                event.target.disabled = false;
-                return;
-            }
+            await supabase.from("answers").insert([{
+                question_id: questionId,
+                content: rawContent,
+                username: displayName,
+                created_at: new Date(),
+                user_id: user.id,
+                user_email: user.email,
+            }]);
 
-            isFormDirty = false;
-
-            // 💾 回答を挿入（user_id, user_email, display_nameも含む）
-            const { error } = await pd.from("answers").insert([
-                {
-                    question_id: questionId,
-                    content,
-                    username: displayName,
-                    created_at: new Date(),
-                    user_id: user.id,
-                    user_email: user.email,
-                },
-            ]);
-
-            if (error) {
-                console.error("Error posting answer:", error);
-                showCustomNotification("回答の投稿に失敗しました");
-            } else {
-                showCustomNotification("回答が投稿されました");
-                localStorage.setItem("lastAnswerTime", now);
-                markAsAnswered(questionId);
-                fetchAnswers();
-                document.getElementById("answer-content").value = "";
-            }
-
-            setTimeout(() => {
-                event.target.disabled = false;
-            }, 5000);
+            document.getElementById("answer-content").value = "";
+            fetchAnswers();
+            event.target.disabled = false;
         });
-
-        // 回答済みフラグ
-        async function markAsAnswered(questionId) {
-            const { error } = await pd.from("questions").update({ answered: true }).eq("id", questionId);
-            if (error) console.error("回答済みフラグ更新エラー:", error);
-        }
-
-        fetchQuestion();
-
-        document.querySelectorAll(".username").forEach((element) => {
-            element.style.cursor = "alias";
-            element.title = "ユーザーページを表示";
-
-            element.addEventListener("click", (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const userId = element.getAttribute("data-user-id");
-                const url = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/bbs/`;
-
-                const w = window.open(url, "_blank");
-                if (w) {
-                    w.opener = null;
-                }
-            });
-        });
-
-        fetchQuestion();
-        function parseMarkdown(text) {
-            text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-            text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
-            text = text.replace(/~~(.*?)~~/g, "<del>$1</del>");
-            const placeholders = {};
-            let index = 0;
-            text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, label, url) => {
-                const key = `__URL_${index++}__`;
-                placeholders[key] = `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
-                return key;
-            });
-            text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-            text = text.replace(/\n/g, "<br>");
-            text = text.replace(/\`(.*?)\`/g, (_, code) => `<code>${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code>`);
-            Object.keys(placeholders).forEach((k) => (text = text.replace(k, placeholders[k])));
-            return text;
-        }
 
         // --- 入力補助 ---
         const textarea = document.getElementById("answer-content");
 
-        function insertAtCursor(textarea, before, after, selectText = "") {
+        function insertAtCursor(before, after, selectText = "") {
             const start = textarea.selectionStart;
             const end = textarea.selectionEnd;
             const text = textarea.value;
             const selected = text.slice(start, end) || selectText;
-            const newText = text.slice(0, start) + before + selected + after + text.slice(end);
-            textarea.value = newText;
+            textarea.value =
+                text.slice(0, start) +
+                before + selected + after +
+                text.slice(end);
             textarea.focus();
-            textarea.setSelectionRange(start + before.length, start + before.length + selected.length);
+            textarea.setSelectionRange(
+                start + before.length,
+                start + before.length + selected.length
+            );
         }
 
-        document.getElementById("bold").addEventListener("click", (e) => {
+        document.getElementById("bold").addEventListener("click", e => {
             e.preventDefault();
-            insertAtCursor(textarea, "**", "**", " ");
+            insertAtCursor("**", "**", " ");
         });
-        document.getElementById("italic").addEventListener("click", (e) => {
+
+        document.getElementById("italic").addEventListener("click", e => {
             e.preventDefault();
-            insertAtCursor(textarea, "*", "*", " ");
+            insertAtCursor("*", "*", " ");
         });
-        document.getElementById("strikethrough").addEventListener("click", (e) => {
+
+        document.getElementById("strikethrough").addEventListener("click", e => {
             e.preventDefault();
-            insertAtCursor(textarea, "~~", "~~", " ");
+            insertAtCursor("~~", "~~", " ");
         });
-        document.getElementById("link").addEventListener("click", (e) => {
+
+        document.getElementById("link").addEventListener("click", e => {
             e.preventDefault();
-            insertAtCursor(textarea, "[", "](URL)", "リンクテキスト");
+            insertAtCursor("[", "](URL)", "リンクテキスト");
         });
 
         // --- プレビュー ---
         const previewArea = document.getElementById("preview");
-        document.getElementById("answer-form").addEventListener("keyup", async (e) => {
-            const { data: { session } } = await pd.auth.getSession();
 
-            if (session && session.user) {
-                const userId = session.user.id;
-                const userEmail = session.user.email;
-
-                const { data: user } = await pd
-                    .from("users")
-                    .select("display_name")
-                    .eq("user_id", userId)
-                    .single();
-                const content = parseMarkdown(document.getElementById("answer-content").value.trim());
-                previewArea.innerHTML = `
-                <div class="content-list">
-                    <div class="content-list-item">
-                        <span class="username" data-user-id="${userId}"><i class="fa-solid fa-user"></i>${user.display_name || "とある水戸一の名無し"}</span><br>
-                        <span><i class="fa-solid fa-clock"></i>プレビュー</span>
-                        <p>${content}</p>
-                    </div>
-                </div>
-                `;
-            }
+        textarea.addEventListener("input", () => {
+            previewArea.innerHTML = "";
+            const content = document.createElement("div");
+            renderMarkdown(content, textarea.value.trim());
+            previewArea.appendChild(content);
         });
 
-        // --- 未保存警告 ---
-        let isFormDirty = false;
-        document.getElementById("answer-content").addEventListener("input", () => {
-            isFormDirty = true;
-        });
-        window.addEventListener("beforeunload", (event) => {
-            if (isFormDirty) {
-                event.preventDefault();
-                event.returnValue = "";
-            }
-        });
+        fetchQuestion();
     </script>
+
     <script type="module" src="../../script/notice/notice.js" defer></script>
     <script src="../../script/customAlert.js" type="module"></script>
     <script type="module" src="../../script/restriction.js"></script>
     <script type="module" src="../../script/notification.js"></script>
-    <!--マニフェスト-->
-    <link rel="manifest" href="../../manifest.json">
     <script src="../../script/verification.js" type="module"></script>
 
     <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>

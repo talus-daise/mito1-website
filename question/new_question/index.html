@@ -45,9 +45,11 @@
     <!--Android-->
     <meta name="theme-color" content="#3498db">
     <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!-- Markdown + Sanitizer -->
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    <script src="../../script/" type="module"></script>
     <!--マニフェスト-->
     <link rel="manifest" href="../../manifest.json">
 </head>
@@ -96,7 +98,7 @@
         // Supabase クライアント作成
         import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-        const pd = createClient(
+        const supabase = createClient(
             'https://mgsbwkidyxmicbacqeeh.supabase.co',
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg'
         );
@@ -110,7 +112,7 @@
             event.target.disabled = true;
 
             // ログインユーザー情報取得
-            const { data: { user }, error: userError } = await pd.auth.getUser();
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
             if (userError || !user) {
                 showCustomAlert('投稿するにはログインが必要です', false);
                 event.target.disabled = false;
@@ -118,7 +120,7 @@
             }
 
             // 表示名取得（users テーブルから）
-            const { data: profile, error: profileError } = await pd
+            const { data: profile, error: profileError } = await supabase
                 .from('users')
                 .select('display_name')
                 .eq('user_email', user.email)
@@ -126,17 +128,18 @@
 
             const displayName = profile?.display_name || 'とある水戸一の名無し';
 
-            const title = parseMarkdown(document.getElementById('question-title').value.trim());
-            const content = parseMarkdown(document.getElementById('question-content').value.trim());
+            const rawTitle = document.getElementById("question-title").value.trim();
+            const rawContent = document.getElementById("question-content").value.trim();
+
             const faster = document.getElementById('faster').checked;
 
             // スパム対策
-            if (!title || !content) {
+            if (!rawTitle || !rawContent) {
                 showCustomNotification('すべてのフィールドを入力してください');
                 event.target.disabled = false;
                 return;
             }
-            if (title.length < 8 || content.length < 20) {
+            if (rawTitle.length < 8 || rawContent.length < 20) {
                 showCustomNotification('タイトルは8文字以上、内容は20文字以上にしてください');
                 event.target.disabled = false;
                 return;
@@ -152,11 +155,11 @@
             isFormDirty = false;
 
             // 投稿内容とユーザー情報を一緒に保存
-            const { error } = await pd
+            const { error } = await supabase
                 .from('questions')
                 .insert([{
-                    title,
-                    content,
+                    title: rawTitle,
+                    content: rawContent,
                     username: displayName,
                     faster,
                     created_at: new Date(),
@@ -243,10 +246,10 @@
             const content = parseMarkdown(document.getElementById("question-content").value.trim());
 
             // 表示名をリアルタイムで取得（キャッシュ代わり）
-            const { data: { user } } = await pd.auth.getUser();
+            const { data: { user } } = await supabase.auth.getUser();
             let displayName = "とある水戸一の名無し";
             if (user) {
-                const { data: profile } = await pd.from("users").select("display_name").eq("user_email", user.email).single();
+                const { data: profile } = await supabase.from("users").select("display_name").eq("user_email", user.email).single();
                 displayName = profile?.display_name || displayName;
             }
 

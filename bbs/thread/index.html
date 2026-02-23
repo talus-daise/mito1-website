@@ -52,7 +52,8 @@
     <link rel="icon" type="image/png" href="../../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-    <script src="../../script/" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
     <!--マニフェスト-->
     <link rel="manifest" href="../../manifest.json">
 </head>
@@ -110,6 +111,18 @@
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
         );
 
+        // --- Markdown初期化 ---
+        const md = window.markdownit({
+            html: false,      // HTMLタグ禁止（重要）
+            linkify: true,    // URL自動リンク
+        });
+
+        function renderMarkdown(text) {
+            const escaped = (text || "").replace(/>>(\d+)/g, "&gt;&gt;$1");
+            const raw = md.render(escaped);
+            return DOMPurify.sanitize(raw);
+        }
+
         document.addEventListener("DOMContentLoaded", async () => {
             const params = new URLSearchParams(window.location.search);
             const threadId = params.get("id");   // ← 変更
@@ -138,9 +151,9 @@
 
             const threadTitle = threadData.title;
 
-            listTitle.innerHTML = parseMarkdown(threadTitle);
+            listTitle.innerHTML = renderMarkdown(threadTitle).replace(/<p[^>]*>(.*?)<\/p>/g, "$1");
             document.querySelector("#threadTitle>a").innerHTML =
-                '<i class="fa-solid fa-pen-to-square"></i>' + parseMarkdown(threadTitle);
+                '<i class="fa-solid fa-pen-to-square"></i>' + renderMarkdown(threadTitle).replace(/<p[^>]*>(.*?)<\/p>/g, "$1");
 
             // === ログイン済みユーザー情報の取得 ===
             const { data: { session } } = await supabase.auth.getSession();
@@ -159,8 +172,8 @@
                 // === 投稿フォーム送信 ===
                 postForm.addEventListener("submit", async (e) => {
                     e.preventDefault();
-                    const username = parseMarkdown(user?.display_name?.trim() || "とある水戸一の名無し");
-                    const content = parseMarkdown(document.getElementById("content").value.trim());
+                    const username = user?.display_name?.trim() || "とある水戸一の名無し";
+                    const content = document.getElementById("content").value.trim();
 
                     if (!content) {
                         showCustomNotification("内容を入力してください。");
@@ -193,7 +206,7 @@
             }
 
             function formatContent(content) {
-                return content.replace(/>>(\d+)/g, '<a href="#" class="goToPost" data-post-index="$1">>>$1</a>');
+                return content.replace(/&gt;&gt;(\d+)/g, '<a href="#" class="goToPost" data-post-index="$1">>>$1</a>');
             }
 
             // === 投稿一覧表示 ===
@@ -220,7 +233,7 @@
             <strong class="username" data-user-id="${post.user_id}">${post.username?.trim() || "とある水戸一の名無し"}</strong>
             <small>${new Date(post.created_at).toLocaleString()}</small>
             <br>
-            <p>${formatContent(post.content)}</p>
+            <p>${formatContent(renderMarkdown(post.content))}</p>
         </div>
         <hr>
         `).join("");
@@ -268,30 +281,6 @@
 
             await loadPosts();
 
-            // === マークダウン整形 ===
-            function parseMarkdown(text) {
-                if (!text) return "";
-                text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-                text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
-                const placeholders = {};
-                let index = 0;
-                text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, label, url) => {
-                    const key = `__URL_PLACEHOLDER_${index++}__`;
-                    placeholders[key] = `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
-                    return key;
-                });
-                text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-                text = text.replace(/\n/g, '<br>');
-                text = text.replace(/\`(.*?)\`/g, (match, code) =>
-                    `<code>${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code>`
-                );
-                Object.keys(placeholders).forEach(key => {
-                    text = text.replace(key, placeholders[key]);
-                });
-                return text;
-            }
-
             // === 書式ボタン ===
             const textarea = document.getElementById("content");
             const buttons = {
@@ -338,8 +327,8 @@
                         .eq("user_id", userId)
                         .single();
 
-                    const username = parseMarkdown(user.display_name);
-                    const content = parseMarkdown(document.getElementById("content").value.trim());
+                    const username = renderMarkdown(user.display_name);
+                    const content = renderMarkdown(document.getElementById("content").value.trim());
                     previewArea.innerHTML = `
         <div class="post-item">
             <span>x. </span>
@@ -383,11 +372,11 @@
                 div.innerHTML = `
         <span>${index}. </span>
         <strong class="username" data-user-id="${post.user_id}">
-            ${post.username || "とある水戸一の名無し"}
+            ${renderMarkdown(post.username || "とある水戸一の名無し")}
         </strong>
         <small>${new Date(post.created_at).toLocaleString()}</small>
         <br>
-        <p>${formatContent(post.content)}</p>
+        <p>${formatContent(renderMarkdown(post.content))}</p>
         `;
 
                 postList.appendChild(div);
