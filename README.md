@@ -1,4 +1,4 @@
-# mito1-website
+# <img src="https://talus-daise.github.io/mito1-website/img/mitoichi-fuzoku-180x180.png" width="64" height="64"> mito1-website
 
 ![HTML Badge](https://img.shields.io/badge/-Html5-E34F26.svg?logo=html5&style=for-the-badge&logoColor=ffffff)
 ![CSS Badge](https://img.shields.io/badge/-Css3-1572B6.svg?logo=css&style=for-the-badge)
