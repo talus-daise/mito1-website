@@ -1,5 +1,12 @@
 # 更新履歴
 
+## [v3.3.3](https://github.com/talus-daise/mito1-website/releases/tag/v3.3.3) (2026-02-23)
+- リクエスト曲機能を改善
+  - リクエストを2Aのみに制限
+  - リクエスト曲の表示を改善
+- 掲示板をジャンル分け可能に
+- サイト全体のUIを改善
+
 ## [v3.3.2](https://github.com/talus-daise/mito1-website/releases/tag/v3.3.2) (2026-02-12)
 - 通知機能を追加
   - 掲示板、みとい知恵袋
