@@ -243,7 +243,7 @@
 
                     // --- 掲示板の投稿一覧を取得 ---
                     const { data: threads } = await supabase
-                        .from("BBS")
+                        .from("bbs")
                         .select("id, thread, created_at, username, content")
                         .eq("user_email", user.user_email)
                         .order("created_at", { ascending: false });

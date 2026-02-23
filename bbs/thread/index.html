@@ -5,7 +5,7 @@
     <!--文字コード・互換モード-->
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
-    <title>新規投稿 - 掲示板 | 水戸一高附属中総合ウェブサイト</title>
+    <title>掲示板 | 水戸一高附属中総合ウェブサイト</title>
     <!--ビューポート-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!--css-->
@@ -68,7 +68,7 @@
     </header>
 
     <main>
-        <h1>掲示板</h1>
+        <h1 id="pageTitle">掲示板</h1>
         <a href="../">掲示板トップへ</a>
 
         <section>
@@ -86,7 +86,7 @@
                     <button id="strikethrough"><s>S</s></button>
                     <button id="link"><i class="fa-solid fa-link"></i></button>
                 </div>
-                <p><textarea id="content" placeholder="本文" required></textarea><br></p>
+                <p><textarea id="content" placeholder="本文" required></textarea></p>
                 <p><button type="submit">投稿</button></p>
             </form>
 
@@ -112,20 +112,35 @@
 
         document.addEventListener("DOMContentLoaded", async () => {
             const params = new URLSearchParams(window.location.search);
-            const thread = params.get("thread");
+            const threadId = params.get("id");   // ← 変更
             const postId = params.get("post_id");
+
+            if (!threadId) {
+                listTitle.textContent = "スレッドが指定されていません";
+                return;
+            }
+
             const listTitle = document.getElementById("listTitle");
             const postList = document.getElementById("postList");
             const postForm = document.getElementById("postForm");
             const usernameInput = document.getElementById("username");
 
-            if (!thread) {
-                listTitle.textContent = "スレッドが指定されていません";
+            const { data: threadData, error: threadError } = await supabase
+                .from("bbs_thread")
+                .select("title")
+                .eq("id", threadId)
+                .single();
+
+            if (threadError || !threadData) {
+                listTitle.textContent = "スレッドが見つかりません";
                 return;
             }
 
-            listTitle.innerHTML = `${parseMarkdown(thread)}`;
-            document.querySelector("#threadTitle>a").innerHTML = '<i class="fa-solid fa-pen-to-square"></i>' + parseMarkdown(thread);
+            const threadTitle = threadData.title;
+
+            listTitle.innerHTML = parseMarkdown(threadTitle);
+            document.querySelector("#threadTitle>a").innerHTML =
+                '<i class="fa-solid fa-pen-to-square"></i>' + parseMarkdown(threadTitle);
 
             // === ログイン済みユーザー情報の取得 ===
             const { data: { session } } = await supabase.auth.getSession();
@@ -152,9 +167,9 @@
                         return;
                     }
 
-                    const { error } = await supabase.from("BBS").insert([{
-                        thread,
-                        username: username || "とある水戸一の名無し",
+                    const { error } = await supabase.from("bbs").insert([{
+                        thread_id: threadId,   // ← 変更
+                        username,
                         content,
                         user_id: userId,
                         user_email: userEmail
@@ -184,9 +199,9 @@
             // === 投稿一覧表示 ===
             async function loadPosts() {
                 const { data: posts, error } = await supabase
-                    .from("BBS")
+                    .from("bbs")
                     .select("*")
-                    .eq("thread", thread)
+                    .eq("thread_id", threadId)   // ← 変更
                     .order("created_at", { ascending: true });
 
                 if (error) {
@@ -200,15 +215,15 @@
 
                 postList.innerHTML = posts
                     .map((post, index) => `
-                <div class="post-item" id="index-${index + 1}">
-                    <span>${index + 1}. </span>
-                    <strong class="username" data-user-id="${post.user_id}">${post.username?.trim() || "とある水戸一の名無し"}</strong>
-                    <small>${new Date(post.created_at).toLocaleString()}</small>
-                    <br>
-                    <p>${formatContent(post.content)}</p>
-                </div>
-                <hr>
-            `).join("");
+        <div class="post-item" id="index-${index + 1}">
+            <span>${index + 1}. </span>
+            <strong class="username" data-user-id="${post.user_id}">${post.username?.trim() || "とある水戸一の名無し"}</strong>
+            <small>${new Date(post.created_at).toLocaleString()}</small>
+            <br>
+            <p>${formatContent(post.content)}</p>
+        </div>
+        <hr>
+        `).join("");
 
                 document.querySelectorAll(".username").forEach((element) => {
                     element.style.cursor = "alias";
@@ -219,7 +234,8 @@
                         e.stopPropagation();
 
                         const userId = element.getAttribute("data-user-id");
-                        const url = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/bbs/`;
+                        const url =
+                            `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/bbs/`;
 
                         const w = window.open(url, "_blank");
                         if (w) {
@@ -325,15 +341,15 @@
                     const username = parseMarkdown(user.display_name);
                     const content = parseMarkdown(document.getElementById("content").value.trim());
                     previewArea.innerHTML = `
-                    <div class="post-item">
-                        <span>x. </span>
-                        <strong>${username || "とある水戸一の名無し"}</strong>
-                        <small>${new Date().toLocaleString()}</small>
-                        <br>
-                        <p>${content}</p>
-                    </div>
-                    <hr>
-                    `;
+        <div class="post-item">
+            <span>x. </span>
+            <strong>${username || "とある水戸一の名無し"}</strong>
+            <small>${new Date().toLocaleString()}</small>
+            <br>
+            <p>${content}</p>
+        </div>
+        <hr>
+        `;
                 }
             });
 
@@ -342,10 +358,10 @@
                 .on(
                     'postgres_changes',
                     {
-                        event: 'INSERT',
+                        event: '*',
                         schema: 'public',
-                        table: 'BBS',
-                        filter: `thread=eq.${thread}`
+                        table: 'bbs',
+                        filter: `thread_id=eq.${threadId}`  // ← 変更
                     },
                     (payload) => {
                         appendPost(payload.new);
@@ -372,7 +388,7 @@
         <small>${new Date(post.created_at).toLocaleString()}</small>
         <br>
         <p>${formatContent(post.content)}</p>
-    `;
+        `;
 
                 postList.appendChild(div);
                 postList.appendChild(document.createElement('hr'));
@@ -385,7 +401,10 @@
             // 簡単なハイライト
             const originalBg = target.style.backgroundColor;
             target.style.backgroundColor = '#fffbcc';
-            setTimeout(() => { target.style.transition = 'background-color 1s'; target.style.backgroundColor = originalBg || ''; }, 1000);
+            setTimeout(() => {
+                target.style.transition = 'background-color 1s'; target.style.backgroundColor = originalBg ||
+                    '';
+            }, 1000);
         }
 
         // === ページ離脱警告 ===

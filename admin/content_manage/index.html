@@ -347,7 +347,7 @@
 
             const { data: questions, error: questionError } = await supabase.from("questions").select("*").order("created_at", { ascending: false });
             const { data: answers, error: answerError } = await supabase.from("answers").select("*").order("created_at", { ascending: false });
-            const { data: posts, error: postError } = await supabase.from("BBS").select("*").order("created_at", { ascending: false });
+            const { data: posts, error: postError } = await supabase.from("bbs").select("*").order("created_at", { ascending: false });
 
             if (questionError) {
                 console.error("Error fetching questions:", questionError);
@@ -456,7 +456,7 @@
                     let type = "";
                     if (button.hasAttribute("data-question-id")) type = "questions";
                     else if (button.hasAttribute("data-answer-id")) type = "answers";
-                    else if (button.hasAttribute("data-post-id")) type = "BBS";
+                    else if (button.hasAttribute("data-post-id")) type = "bbs";
 
                     if (confirm("本当に削除しますか？この操作は元に戻せません。")) {
                         const { error } = await supabase.from(type).delete().eq("id", id);
@@ -493,7 +493,7 @@
                             }
                         });
                     } else if (type === "post") {
-                        supabase.from("BBS").select("thread").eq("id", id).then(({ data, error }) => {
+                        supabase.from("bbs").select("thread").eq("id", id).then(({ data, error }) => {
                             if (error) {
                                 showCustomNotification("エラーが発生しました。");
                                 console.error("取得エラー:", error);
@@ -592,7 +592,7 @@
                                 switch (type) {
                                     case "質問": return "questions";
                                     case "回答": return "answers";
-                                    case "投稿": return "BBS";
+                                    case "投稿": return "bbs";
                                     default: return undefined;
                                 }
                             })();
@@ -656,7 +656,7 @@
                             switch (type) {
                                 case "質問": return "questions";
                                 case "回答": return "answers";
-                                case "投稿": return "BBS";
+                                case "投稿": return "bbs";
                                 default: return undefined;
                             }
                         })();

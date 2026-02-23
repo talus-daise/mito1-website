@@ -227,7 +227,7 @@
                         .eq("user_id", user.user_id);
 
                     await Promise.all([
-                        supabase.from("BBS").update({ username: newName.trim() }).eq("user_id", user.user_id),
+                        supabase.from("bbs").update({ username: newName.trim() }).eq("user_id", user.user_id),
                         supabase.from("questions").update({ username: newName.trim() }).eq("user_id", user.user_id),
                         supabase.from("answers").update({ username: newName.trim() }).eq("user_id", user.user_id)
                     ]);

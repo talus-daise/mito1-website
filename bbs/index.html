@@ -27,14 +27,11 @@
     <!--windows-->
     <meta name="msapplication-config" content="none">
     <meta name="msapplication-TileImage" content="../img/mitoichi-fuzoku.png">
-    <!--safari-->
-    <link rel="mask-icon" href="">
     <!--Android-->
     <meta name="theme-color" content="#3498db">
     <link rel="icon" type="image/png" href="../img/mitoichi-fuzoku-192x192.png" sizes="192x192">
     <!--CDN-->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
-
     <!--マニフェスト-->
     <link rel="manifest" href="../manifest.json">
 </head>
@@ -50,6 +47,7 @@
 
     <main>
         <h1>掲示板</h1>
+
         <section>
             <h2>ページ概要</h2>
             <p>掲示板です。</p>
@@ -66,8 +64,12 @@
         </section>
 
         <section>
-            <h2>スレ一覧</h2>
-            <p><label for="search-box">検索：<input type="text" id="search-box" placeholder="スレッドを検索..."></label>
+            <h2 id="listTitle">スレ一覧</h2>
+            <p>
+                <label for="search-box">
+                    検索：
+                    <input type="text" id="search-box" placeholder="スレッドを検索...">
+                </label>
                 <button id="search-btn">検索</button>
             </p>
             <div id="threadList" class="content-list"></div>
@@ -77,149 +79,184 @@
     <footer>
         <p>&copy; 2025 talus</p>
         <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意ください。</p>
-        <p><a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">茨城県立水戸第一高等学校附属中学校HP</a>
+        <p>
+            <a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener noreferrer">
+                茨城県立水戸第一高等学校附属中学校HP
+            </a>
         </p>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.4"></script>
     <script type="module">
         import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-        const supabase = createClient("https://mgsbwkidyxmicbacqeeh.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg");
+        const supabase = createClient(
+            "https://mgsbwkidyxmicbacqeeh.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nc2J3a2lkeXhtaWNiYWNxZWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NDA0MjIsImV4cCI6MjA1NTUxNjQyMn0.fNkFQykD9ezBirtJM_fOB7XEIlGU1ZFoejCgrYObElg"
+        );
 
-        document.addEventListener("DOMContentLoaded", async () => {
-            const threadList = document.getElementById("threadList");
+        const threadList = document.getElementById("threadList");
 
-            const { data: threads, error } = await supabase
-                .from("BBS")
-                .select("thread, created_at, username, user_id")
-                .order("created_at", { ascending: false });
+        async function loadCategories() {
+            const { data: categories, error } = await supabase
+                .from("bbs_category")
+                .select("id, name")
+                .order("name");
 
-            if (error) { console.error(error); return; }
+            if (error) {
+                console.error(error);
+                return;
+            }
 
-            const threadMap = new Map();
+            threadList.innerHTML = "";
 
-            threads.forEach(t => {
-                if (!threadMap.has(t.thread)) {
-                    threadMap.set(t.thread, {
-                        first_created_at: t.created_at,
-                        latest_created_at: t.created_at,
-                        username: t.username,
-                        userId: t.user_id
-                    });
-                } else {
-                    const info = threadMap.get(t.thread);
+            document.getElementById("listTitle").textContent = "カテゴリ一覧";
 
-                    // 最古（スレ立て）
-                    if (new Date(info.first_created_at) > new Date(t.created_at)) {
-                        info.first_created_at = t.created_at;
-                        info.username = t.username;
-                        info.userId = t.user_id;
-                    }
+            // 全カテゴリ表示ボタン
+            const allSpan = document.createElement("span");
+            allSpan.className = "content-list-item";
+            const allA = document.createElement("a");
+            allA.style.color = "inherit";
+            const allH3 = document.createElement("h3");
+            allH3.innerHTML = `全てのスレッド`;
+            const { count: allCount, error: allCountError } = await supabase
+                .from("bbs_thread")
+                .select("*", { count: "exact", head: true });
 
-                    // 最新書き込み
-                    if (new Date(info.latest_created_at) < new Date(t.created_at)) {
-                        info.latest_created_at = t.created_at;
-                    }
-                }
-            });
+            const allP = document.createElement("p");
+            allP.innerHTML = `<i class="fa-solid fa-hashtag"></i> ${allCount || 0}件のスレッド`;
+            allA.appendChild(allH3);
+            allA.appendChild(allP);
+            allSpan.appendChild(allA);
+            allA.onclick = () => loadThreads();
+            threadList.appendChild(allSpan);
 
-            console.log(threads)
-
-            const elements = Array.from(threadMap.entries()).map(([thread, info]) => {
+            for (const category of categories) {
                 const span = document.createElement("span");
                 span.className = "content-list-item";
 
                 const a = document.createElement("a");
-                a.href = `thread/index.html?thread=${encodeURIComponent(thread)}`;
+                a.style.color = "inherit";
+                a.style.cursor = "pointer";
+
+                const h3 = document.createElement("h3");
+                h3.textContent = category.name;
+                a.appendChild(h3);
+
+                const num = document.createElement("p");
+
+                const { count, error: countError } = await supabase
+                    .from("bbs_thread")
+                    .select("*", { count: "exact", head: true })
+                    .eq("category_id", category.id);
+
+                if (countError) {
+                    console.error(countError);
+                } else {
+                    num.innerHTML =
+                        `<i class="fa-solid fa-hashtag"></i> ${count || 0}件のスレッド`;
+                    a.appendChild(num);
+                }
+
+                span.appendChild(a);
+                threadList.appendChild(span);
+
+                a.onclick = () => loadThreads("", category.id);
+            }
+        }
+
+        async function loadThreads(query = "", categoryId = null) {
+            document.getElementById("listTitle").textContent = "スレッド一覧";
+
+            let queryBuilder = supabase
+                .from("bbs_thread")
+                .select(`
+            id,
+            title,
+            created_at,
+            created_by,
+            bbs_category ( id, name ),
+            bbs ( created_at )
+        `)
+                .order("created_at", { ascending: false });
+
+            if (categoryId) {
+                queryBuilder = queryBuilder.eq("category_id", categoryId);
+            }
+
+            const { data: threads, error } = await queryBuilder;
+
+            if (error) {
+                console.error(error);
+                return;
+            }
+
+            threadList.innerHTML = "";
+
+            const backButton = document.createElement("button");
+            backButton.textContent = "カテゴリ選択に戻る";
+            backButton.onclick = loadCategories;
+            threadList.appendChild(backButton);
+
+            let filtered = threads;
+
+            if (query) {
+                filtered = threads.filter(t =>
+                    t.title.toLowerCase().includes(query)
+                );
+            }
+
+            if (filtered.length === 0) {
+                threadList.innerHTML = "<p>該当するスレッドが見つかりませんでした。</p>";
+                return;
+            }
+
+            for (const thread of filtered) {
+                const span = document.createElement("span");
+                span.className = "content-list-item";
+
+                const a = document.createElement("a");
+                a.href = `thread/index.html?id=${thread.id}`;
                 a.style.color = "inherit";
 
                 const h3 = document.createElement("h3");
-                h3.textContent = thread;
+                h3.textContent = thread.title;
                 a.appendChild(h3);
 
-                const time = document.createElement("p");
-                time.innerHTML =
-                    `<i class="fa-regular fa-clock"></i>${new Date(info.first_created_at).toLocaleString()}~`;
-                a.appendChild(time);
+                if (!categoryId) {
+                    const category = document.createElement("p");
+                    category.innerHTML =
+                        `<i class="fa-solid fa-folder"></i> ${thread.bbs_category?.name || "未分類"}`;
+                    a.appendChild(category);
+                }
 
-                const latest = document.createElement("p");
-                latest.innerHTML =
-                    `<i class="fa-solid fa-clock-rotate-left"></i>${new Date(info.latest_created_at).toLocaleString()}`;
-                a.appendChild(latest);
+                const { data: user, error: userError } = await supabase
+                    .from("users")
+                    .select("display_name")
+                    .eq("user_id", thread.created_by)
+                    .single();
 
-                const user = document.createElement("p");
-                user.classList.add("username")
-                user.setAttribute("data-user-id", info.userId)
-                user.innerHTML =
-                    `<i class="fa-solid fa-user"></i>${info.username}`;
-                a.appendChild(user);
+                const createdBy = document.createElement("p");
+                createdBy.innerHTML =
+                    `<i class="fa-solid fa-user"></i> ${user?.display_name || "とある水戸一の名無し"}`;
+                a.appendChild(createdBy);
+
+                const lastUpdate = document.createElement("p");
+                lastUpdate.innerHTML =
+                    `<i class="fa-solid fa-clock-rotate-left"></i> ${new Date(thread.created_at).toLocaleString()}`;
+                a.appendChild(lastUpdate);
 
                 span.appendChild(a);
-                return span;
-            });
+                threadList.appendChild(span);
+            };
+        }
 
-            threadList.append(...elements);
-
-            document.querySelectorAll(".username").forEach((element) => {
-                element.style.cursor = "alias";
-                element.title = "ユーザーページを表示";
-
-                element.addEventListener("click", (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    const userId = element.getAttribute("data-user-id");
-                    const url = `/mito1-website/mypage/other/?user_id=${encodeURIComponent(userId)}&redirect_url=/mito1-website/bbs/`;
-
-                    const w = window.open(url, "_blank");
-                    if (w) {
-                        w.opener = null;
-                    }
-                });
-            });
+        document.addEventListener("DOMContentLoaded", async () => {
+            await loadCategories();
         });
 
         document.getElementById("search-btn").addEventListener("click", async () => {
             const query = document.getElementById("search-box").value.trim().toLowerCase();
-
-            if (!query) {
-                // 空のクエリなら全スレッド表示
-                const { data: threads, error } = await supabase
-                    .from("BBS")
-                    .select("thread")
-                    .order("thread", { ascending: true });
-
-                if (error) { console.error(error); return; }
-
-                const uniqueThreads = [...new Set(threads.map(t => t.thread))];
-
-                const threadList = document.getElementById("threadList");
-                threadList.innerHTML = uniqueThreads.map(t =>
-                    `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${t}</a></span><hr>`
-                ).join("");
-                return;
-            }
-
-            const { data: threads, error } = await supabase
-                .from("BBS")
-                .select("thread")
-                .order("thread", { ascending: true });
-
-            if (error) { console.error(error); return; }
-
-            const uniqueThreads = [...new Set(threads.map(t => t.thread))];
-
-            const filteredThreads = uniqueThreads.filter(t => t.toLowerCase().includes(query));
-
-            const threadList = document.getElementById("threadList");
-            if (filteredThreads.length === 0) {
-                threadList.innerHTML = "<p>該当するスレッドが見つかりませんでした。</p>";
-            } else {
-                threadList.innerHTML = filteredThreads.map(t =>
-                    `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${t}</a></span><hr>`
-                ).join("");
-            }
+            await loadThreads(query);
         });
 
         document.getElementById("search-box").addEventListener("keydown", (e) => {
@@ -229,6 +266,7 @@
             }
         });
     </script>
+
     <script type="module" src="../script/notice/notice.js"></script>
     <script src="../script/customAlert.js" type="module"></script>
     <script type="module" src="../script/restriction.js"></script>

@@ -159,15 +159,18 @@
 
             const title = document.createElement("h3");
             title.textContent = musicName;
-
+        
+            const requester = document.createElement("p");
+            requester.innerHTML = `<i class="fa-solid fa-user"></i> ${studentId}`;
+            
             const description = document.createElement("p");
             description.textContent = desc;
-
+            
             const videoContainer = document.createElement("div");
             const toggleText = document.createElement("p");
             if (isToggleable) toggleText.textContent = "▼クリックで開く";
             videoContainer.appendChild(toggleText);
-
+            
             const iframe = document.createElement("iframe");
             Object.assign(iframe, {
                 src: convertEmbedLink(url),
@@ -188,8 +191,8 @@
             } else {
                 videoContainer.appendChild(iframe);
             }
-
-
+            
+            
             const p = document.createElement("p");
             const label = document.createElement("label");
             label.textContent = "再生済み: ";
@@ -199,9 +202,6 @@
             checkbox.disabled = !isToggleable;
             label.appendChild(checkbox);
             p.appendChild(label);
-
-            const student = document.createElement("p");
-            student.textContent = studentId;
 
             checkbox.addEventListener("change", async () => {
                 const { error } = await supabase
@@ -214,7 +214,7 @@
                 else showNotification("更新しました！");
             });
 
-            div.append(title, videoContainer, description, p, document.createElement("hr"));
+            div.append(title, requester, videoContainer, description, p, document.createElement("hr"));
 
             if (isOpened) videoContainer.click();
 
@@ -292,6 +292,11 @@
             const url = document.getElementById("musicUrl").value.trim();
             const desc = document.getElementById("description").value.trim();
             const userId = data.user_id;
+
+            if (!studentId.startsWith("2A")) {
+                showNotification("2A組の生徒のみがリクエストできます。");
+                return;
+            }
 
             if (!studentId || !musicName || !url || (!url.includes("watch?v=") && !url.includes("youtu.be/"))) {
                 showNotification("正しく入力してください");

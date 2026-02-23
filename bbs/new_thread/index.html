@@ -84,6 +84,11 @@
             <form id="newThreadForm">
                 <h3>スレッド名</h3>
                 <p><input type="text" id="threadName" placeholder="スレッド名" required><br></p>
+                <p>カテゴリ: <select id="category" required></select></p>
+                <p><small>新規カテゴリの作成は<a
+                            href="mailto:yamamoto.yuujirou@mito1-h.ibk.ed.jp?subject=ウェブサイトについての要望&body=要望の内容:%0D%0A%0D%0A不具合の報告の場合は以下の情報もご記入ください。%0D%0A- 使用端末（例: Windows PC, iPad, スマートフォンなど）%0D%0A- 使用ブラウザ（例: Chrome, Safari, Edgeなど）%0D%0A- 発生日時（例: 2025年2月28日 14:30頃）%0D%0A- スクリーンショットなどがあると尚良いです。%0D%0A- 不具合の詳細な説明:"
+                            target="_blank" rel="noopener noreferrer">yamamoto.yuujirou@mito1-h.ibk.ed.jp</a>まで</small>
+                </p>
                 <hr>
                 <h3>最初の投稿</h3>
                 <div class="format-buttons">
@@ -134,65 +139,110 @@
                 document.getElementById("newThreadForm").addEventListener("submit", async (e) => {
                     e.preventDefault();
 
-                    const thread = parseMarkdown(document.getElementById("threadName").value.trim());
-                    const username = parseMarkdown((userRecord?.display_name || "とある水戸一の名無し").trim());
-                    const content = parseMarkdown(document.getElementById("content").value.trim());
+                    const title = document.getElementById("threadName").value.trim();
+                    const contentRaw = document.getElementById("content").value.trim();
+                    const categoryId = document.getElementById("category").value; // selectでカテゴリ取得
 
-                    if (!thread || !content) {
+                    if (!title || !contentRaw || !categoryId) {
                         showCustomNotification("必須項目を入力してください！");
                         return;
                     }
 
                     const { data: { session } } = await supabase.auth.getSession();
-                    if (!session || !session.user) {
-                        showCustomNotification("ログインしてから投稿してください。");
+                    if (!session) {
+                        showCustomNotification("ログインしてください。");
                         return;
                     }
 
                     const userId = session.user.id;
                     const userEmail = session.user.email;
 
-                    const { error } = await supabase
-                        .from("BBS")
-                        .insert([{
-                            thread,
-                            username: username || "とある水戸一の名無し",
-                            content,
-                            user_id: userId,
-                            user_email: userEmail,
-                        }]);
+                    const { data: user } = await supabase
+                        .from("users")
+                        .select("display_name")
+                        .eq("user_id", userId)
+                        .single();
 
-                    if (error) {
-                        console.error(error);
+                    const username = user?.display_name || "とある水戸一の名無し";
+
+                    // ① スレッド作成
+                    const { data: threadData, error: threadError } = await supabase
+                        .from("bbs_thread")
+                        .insert([{
+                            title,
+                            category_id: categoryId,
+                            created_by: userId,
+                        }])
+                        .select()
+                        .single();
+
+                    if (threadError) {
+                        console.error(threadError);
                         showCustomNotification("スレッド作成に失敗しました");
                         return;
                     }
 
+                    // ② 最初の投稿を作成
+                    const { error: postError } = await supabase
+                        .from("bbs")
+                        .insert([{
+                            thread_id: threadData.id,
+                            content: contentRaw,
+                            username,
+                            user_id: userId,
+                            user_email: userEmail
+                        }]);
+
+                    if (postError) {
+                        console.error(postError);
+                        showCustomNotification("投稿に失敗しました");
+                        return;
+                    }
+
+                    // 変更フラグを解除
+                    isFormDirty = false;
+
+                    // beforeunload を無効化
+                    window.removeEventListener('beforeunload', beforeUnloadHandler);
+
                     showCustomAlert("スレッド作成完了！");
-                    window.location.href = `../thread/index.html?thread=${encodeURIComponent(thread)}`;
+                    window.location.href = `../thread/index.html?thread=${encodeURIComponent(threadData.id)}`;
                 });
             }
         });
 
         function loadThreads() {
             document.addEventListener("DOMContentLoaded", async () => {
-                const threadList = document.getElementById("threadList");
 
                 const { data: threads, error } = await supabase
-                    .from("BBS")
-                    .select("thread")
-                    .order("thread", { ascending: true });
+                    .from("bbs_thread")
+                    .select(`
+                id,
+                title,
+                created_at,
+                bbs_category (
+                    name
+                )
+            `)
+                    .order("created_at", { ascending: false });
 
-                if (error) { console.error(error); return; }
+                if (error) {
+                    console.error(error);
+                    return;
+                }
 
+                const threadList = document.getElementById("threadList");
                 threadList.innerHTML = "";
-                const uniqueThreads = [...new Set(threads.map(t => t.thread))];
-                uniqueThreads.forEach(thread => {
+
+                threads.forEach(thread => {
                     const li = document.createElement("li");
-                    const a = document.createElement("a");
-                    a.href = `../thread/index.html?thread=${encodeURIComponent(thread)}`;
-                    a.innerHTML = parseMarkdown(thread);
-                    li.appendChild(a);
+                    li.innerHTML = `
+                <a href="../thread/index.html?id=${thread.id}">
+                    ${parseMarkdown(thread.title)}
+                </a>
+                <small>(${thread.bbs_category?.name || "未分類"})</small>
+                <hr>
+            `;
                     threadList.appendChild(li);
                 });
             });
@@ -322,53 +372,43 @@
             });
         });
 
-        window.addEventListener('beforeunload', (event) => {
+        function beforeUnloadHandler(event) {
             if (isFormDirty) {
                 event.preventDefault();
                 event.returnValue = '';
             }
-        });
+        }
+
+        window.addEventListener('beforeunload', beforeUnloadHandler);
 
         document.getElementById("search-btn").addEventListener("click", async () => {
-            const query = document.getElementById("search-box").value.trim().toLowerCase();
+            const query = document.getElementById("search-box").value.trim();
 
-            if (!query) {
-                // 空のクエリなら全スレッド表示
-                const { data: threads, error } = await supabase
-                    .from("BBS")
-                    .select("thread")
-                    .order("thread", { ascending: true });
+            const { data: threads, error } = await supabase
+                .from("bbs_thread")
+                .select("id, title")
+                .ilike("title", `%${query}%`)
+                .order("created_at", { ascending: false });
 
-                if (error) { console.error(error); return; }
-
-                const uniqueThreads = [...new Set(threads.map(t => t.thread))];
-
-                const threadList = document.getElementById("threadList");
-                threadList.innerHTML = uniqueThreads.map(t =>
-                    `<span class="thread-item"><a href="thread/index.html?thread=${encodeURIComponent(t)}">${parseMarkdown(t)}</a></span><hr>`
-                ).join("");
+            if (error) {
+                console.error(error);
                 return;
             }
 
-            const { data: threads, error } = await supabase
-                .from("BBS")
-                .select("thread")
-                .order("thread", { ascending: true });
-
-            if (error) { console.error(error); return; }
-
-            const uniqueThreads = [...new Set(threads.map(t => t.thread))];
-
-            const filteredThreads = uniqueThreads.filter(t => t.toLowerCase().includes(query));
-
             const threadList = document.getElementById("threadList");
-            if (filteredThreads.length === 0) {
+
+            if (threads.length === 0) {
                 threadList.innerHTML = "<p>該当するスレッドが見つかりませんでした。</p>";
-            } else {
-                threadList.innerHTML = filteredThreads.map(t =>
-                    `<li><a href="thread/index.html?thread=${encodeURIComponent(t)}">${parseMarkdown(t)}</a></li>`
-                ).join("");
+                return;
             }
+
+            threadList.innerHTML = threads.map(t => `
+        <li>
+            <a href="thread/index.html?id=${t.id}">
+                ${parseMarkdown(t.title)}
+            </a>
+        </li>
+    `).join("");
         });
 
         document.getElementById("search-box").addEventListener("keydown", (e) => {
@@ -377,6 +417,34 @@
                 document.getElementById("search-btn").click();
             }
         });
+
+        async function loadCategories() {
+            const { data, error } = await supabase
+                .from("bbs_category")
+                .select("id, name")
+                .order("name", { ascending: true });
+
+            if (error) {
+                console.error(error);
+                return;
+            }
+
+            const select = document.getElementById("category");
+            const defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            defaultOption.textContent = "カテゴリを選択";
+            select.appendChild(defaultOption);
+            data.forEach(category => {
+                const option = document.createElement("option");
+                option.value = category.id;
+                option.textContent = category.name;
+                select.appendChild(option);
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", loadCategories);
     </script>
     <script type="module" src="../../script/notice/notice.js"></script>
     <script src="../../script/customAlert.js" type="module"></script>

@@ -53,7 +53,7 @@ async function editDisplayName() {
 
     await supabase.from("users").update({ display_name: name }).eq("user_email", userEmail);
     await Promise.all([
-        supabase.from("BBS").update({ username: name }).eq("user_email", userEmail),
+        supabase.from("bbs").update({ username: name }).eq("user_email", userEmail),
         supabase.from("questions").update({ username: name }).eq("user_email", userEmail),
         supabase.from("answers").update({ username: name }).eq("user_email", userEmail)
     ]);

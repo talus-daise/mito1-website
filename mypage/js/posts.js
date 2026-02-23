@@ -7,7 +7,7 @@ export async function loadAllPosts() {
         .eq("user_email", userEmail)
         .order("created_at", { ascending: false });
 
-    const t = await supabase.from("BBS")
+    const t = await supabase.from("bbs")
         .select("id, thread, created_at, content")
         .eq("user_email", userEmail)
         .order("created_at", { ascending: false });
