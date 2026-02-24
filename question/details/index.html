@@ -61,6 +61,7 @@
             <p id="question-posted-at"></p>
             <div id="question-content"></div>
             <div id="control-div"></div>
+            <h3>質問者からのメッセージ</h3>
             <div id="thank-message"></div>
         </section>
 
@@ -123,7 +124,7 @@
                 .from("answer_reactions")
                 .select("type")
                 .eq("answer_id", answerId);
-            
+
             if (error) {
                 console.error("リアクションの取得に失敗:", error);
                 return;
@@ -139,7 +140,7 @@
                     arigato_count: arigatoCount
                 })
                 .eq("id", answerId);
-            
+
             if (updateError) {
                 console.error("カウントの更新に失敗:", updateError);
             }
@@ -187,7 +188,10 @@
             if (user && user.id === question.user_id) {
                 const controlDiv = document.getElementById("control-div");
 
-                controlDiv.innerHTML = "<h3>質問を管理する</h3>";
+                controlDiv.innerHTML = ""; // 既存の内容をクリア
+
+                const h3 = document.createElement("h3");
+                h3.textContent = "質問管理";
 
                 const p = document.createElement("p");
                 const toggleBtn = document.createElement("button");
@@ -197,41 +201,44 @@
                 toggleBtn.addEventListener("click", async () => {
                     await supabase
                         .from("questions")
-                        .update({ answered_stop: !question.answered_stop })
+                        .update({ answered_stop: !question.answered_stop, closed_at: question.answered_stop ? null : new Date() })
                         .eq("id", questionId);
 
                     fetchQuestion();
                 });
 
-                const hr = document.createElement("hr");
-
-                controlDiv.appendChild(p);
-                controlDiv.appendChild(hr);
+                controlDiv.append(document.createElement("hr"), h3, p, document.createElement("hr"));
 
                 // 感謝メッセージ入力欄
-                const thankP = document.createElement("p");
-                const thankInput = document.createElement("textarea");
-                thankInput.placeholder = "感謝メッセージ";
-                thankInput.value = question.thank_message || "";
+                if (question.answered_stop) {
+                    const thankH3 = document.createElement("h3");
+                    thankH3.textContent = "感謝メッセージ";
+                    controlDiv.appendChild(thankH3);
+                    const thankP = document.createElement("p");
+                    const thankInput = document.createElement("textarea");
+                    thankInput.placeholder = "感謝メッセージ";
+                    thankInput.value = question.thank_message || "";
 
-                const saveP = document.createElement("p");
-                const saveBtn = document.createElement("button");
-                saveBtn.textContent = "感謝メッセージ保存";
+                    const saveP = document.createElement("p");
+                    const saveBtn = document.createElement("button");
+                    saveBtn.textContent = "感謝メッセージ保存";
 
-                saveBtn.addEventListener("click", async () => {
-                    await supabase
-                        .from("questions")
-                        .update({ thank_message: thankInput.value })
-                        .eq("id", questionId);
+                    saveBtn.addEventListener("click", async () => {
+                        await supabase
+                            .from("questions")
+                            .update({ thank_message: thankInput.value })
+                            .eq("id", questionId);
 
-                    showCustomNotification("保存しました");
-                });
+                        showCustomNotification("保存しました！");
+                    });
 
-                thankP.appendChild(thankInput);
-                saveP.appendChild(saveBtn);
+                    thankP.appendChild(thankInput);
+                    saveP.appendChild(saveBtn);
 
-                controlDiv.appendChild(thankP);
-                controlDiv.appendChild(saveP);
+                    controlDiv.appendChild(thankP);
+                    controlDiv.appendChild(saveP);
+                    controlDiv.appendChild(document.createElement("hr"));
+                }
             }
 
             if (question.thank_message) {
@@ -435,6 +442,23 @@
         });
 
         fetchQuestion();
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const { data, error } = await supabase
+                .from("questions")
+                .select("answered_stop, closed_at")
+                .eq("id", questionId)
+                .single();
+
+            const form = document.getElementById("answer-form")
+            const p = document.createElement("p");
+            if (data?.answered_stop) {
+                form.textContent = "";
+                const time = data.closed_at ? new Date(data.closed_at).toLocaleString() : null;
+                p.textContent = `この質問は${time ? time + "に" : ""}回答受付を終了しています`;
+                form.appendChild(p);
+            }
+        });
     </script>
 
     <script type="module" src="../../script/notice/notice.js" defer></script>

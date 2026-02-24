@@ -139,6 +139,17 @@
                 time.innerHTML = `<i class="fa-solid fa-clock"></i>${answerDate}`;
                 a.appendChild(time);
 
+                const stop = document.createElement("p");
+                if (q.answered_stop) {
+                    stop.innerHTML = `<i class="fa-solid fa-bell"></i>回答終了`;
+                    stop.style.color = "red";
+                    a.appendChild(stop);
+                } else {
+                    stop.innerHTML = `<i class="fa-solid fa-bell"></i>回答受付中`;
+                    stop.style.color = "green";
+                    a.appendChild(stop);
+                }
+
                 div.appendChild(a);
 
                 if (q.answered) {
