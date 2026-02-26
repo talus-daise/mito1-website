@@ -68,7 +68,7 @@ function isRestrictedTime() {
 
 function isAllowPage() {
     const p = location.pathname;
-    return p.includes("admin") || p.includes("caution") || p.includes("timetable") || p.includes("tasks");
+    return p.includes("admin") || p.includes("caution") || p.includes("timetable");
 }
 
 /* ===== Body制御 ===== */
@@ -130,8 +130,7 @@ function createOverlay() {
             <p>現在は利用できない時間です。</p>
             <p>${rulesText}</p>
             <p>
-                <a href="/mito1-website/timetable/" style="color:#7ab7ff;">時間割</a>と
-                <a href="/mito1-website/tasks/" style="color:#7ab7ff;">課題</a>
+                <a href="/mito1-website/timetable/" style="color:#7ab7ff;">時間割</a>
                 は閲覧できます。
             </p>
             <p>
