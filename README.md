@@ -19,7 +19,6 @@ https://talus-daise.github.io/mito1-website/
 ## 主な機能
 
 - 時間割表示・過去一覧表示
-- 名簿
 - 課題
 - 掲示板
 - 質問箱
@@ -39,7 +38,6 @@ https://talus-daise.github.io/mito1-website/
 ├── docs
 ├── img
 ├── math
-├── students
 ├── mypage
 ├── otter
 ├── question
