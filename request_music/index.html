@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!--文字コード・互換モード-->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
+    <title>リクエスト曲 | 水戸一高附属中総合ウェブサイト</title>
+    <!--ビューポート-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--css-->
+    <link rel="stylesheet" href="/mito1-website/css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v7.2.0/css/all.css">
+    <link rel="stylesheet" href="/mito1-website/src/notice/notice.css">
+    <style>
+        .show {
+            display: block;
+        }
+
+        .hide {
+            display: none;
+        }
+    </style>
+    <!--web情報-->
+    <meta name="keywords" content="水戸一, 水戸一附属, 水戸一附属中, 一学年,">
+    <meta name="description" content="水戸一附属中四期生向けの総合ウェブサイトです。附属中向けのテストの情報などを配信しています。">
+    <meta name="author" content="©️ 2025 talus">
+    <!--更新日時-->
+    <meta name="date" content="2025-02-28">
+    <meta name="creation_date" content="2025-02-19">
+<meta name="robots" content="noindex, nofollow">
+    <!--URL-->
+    <link rel="canonical" href="https://talus-yujiro.github.io/two-grade-website/">
+    <!--アイコン-->
+    <link rel="shortcut icon" href="/mito1-website/img/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="/mito1-website/img/mitoichi-fuzoku-180x180.png" sizes="180x180">
+    <!--windows-->
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileImage" content="/mito1-website/img/mitoichi-fuzoku.png">
+    <!--safari-->
+    <link rel="mask-icon" href="">
+    <!--Android-->
+    <meta name="theme-color" content="#3498db">
+    <link rel="icon" type="image/png" href="/mito1-website/img/mitoichi-fuzoku-192x192.png" sizes="192x192">
+    <!--CDN-->
+
+    <!--マニフェスト-->
+    <link rel="manifest" href="/mito1-website/manifest.json">
+</head>
+
+<body>
+    <header>
+        <h1><a href="/mito1-website/">水戸一高附属中総合ウェブサイト</a></h1>
+        <p class="header__breadcrumb">
+            <a href="/mito1-website/"><i class="fa-solid fa-house"></i>トップページ</a>
+            <a href="/mito1-website/request_music/"><i class="fa-solid fa-music"></i>リクエスト曲一覧</a>
+        </p>
+    </header>
+
+    <main>
+        <h1>リクエスト曲一覧</h1>
+        <section>
+            <h2>曲応募</h2>
+            <form id="sendRequest">
+                <p><label for="music-name">曲名: </label><input type="text" name="music-name" id="musicName"></p>
+                <p><label for="url">曲のURL: </label><input type="url" name="url" id="musicUrl"></p>
+                <p><label for="description">おすすめポイントなど(空欄でもOK): </label><input type="text" name="description"
+                        id="description"></p>
+                <p><input type="submit" value="送信"></p>
+            </form>
+        </section>
+        <section>
+            <h2>今日流す予定の曲</h2>
+            <div id="container">
+                <p><button id="randomMusic">ランダム選曲</button></p>
+                <div id="selectedMusic"></div>
+
+                <p id="openMusic">▼ 曲名一覧(クリックで開きます)</p>
+                <div id="todayMusic"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 talus</p>
+        <p>※このサイトは学校非公認の個人が運営しているサイトです。学校側の問題に責任は取れませんのでご注意ください。</p>
+        <p><a href="https://www.mito1-jh.ibk.ed.jp" target="_blank" rel="noopener">茨城県立水戸第一高等学校附属中学校HP</a>
+        </p>
+    </footer>
+
+    <script type="module">
+        import { supabase } from "/mito1-website/src/supabaseClient.js";
+
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError) {
+            console.error("ユーザー情報の取得に失敗しました:", userError);
+            showCustomAlert("ログインしてください", false)
+        }
+
+        // ===== 要素参照 =====
+        const sendForm = document.getElementById("sendRequest");
+        const openMusicBtn = document.getElementById("openMusic");
+        const randomMusicBtn = document.getElementById("randomMusic");
+        const todayMusic = document.getElementById("todayMusic");
+        const todayMusicList = document.createElement("div");
+        let musicData = [];
+
+        // ===== ユーティリティ =====
+        function showNotification(message) {
+            showCustomNotification(message);
+        }
+
+        function convertEmbedLink(link) {
+            let videoId = "";
+            if (link.includes("watch?v=")) {
+                videoId = new URL(link).searchParams.get("v");
+            } else if (link.includes("youtu.be/")) {
+                videoId = link.split("youtu.be/")[1].split("?")[0];
+            }
+            return videoId ? `https://www.youtube.com/embed/${videoId}` : "";
+        }
+
+        function createMusicItem(musicName, url, desc, studentId, isOpened = false, isToggleable = false, isPlayedToggleable = true) {
+            const div = document.createElement("div");
+
+            const title = document.createElement("h3");
+            title.textContent = musicName;
+        
+            const requester = document.createElement("p");
+            requester.innerHTML = `<i class="fa-solid fa-user"></i> ${studentId}`;
+            
+            const description = document.createElement("p");
+            description.textContent = desc;
+            
+            const videoContainer = document.createElement("div");
+            const toggleText = document.createElement("p");
+            if (isToggleable) toggleText.textContent = "▼クリックで開く";
+            videoContainer.appendChild(toggleText);
+            
+            const iframe = document.createElement("iframe");
+            Object.assign(iframe, {
+                src: convertEmbedLink(url),
+                frameBorder: "0",
+                allowFullscreen: true,
+                allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            });
+
+            if (isPlayedToggleable) {
+                videoContainer.addEventListener("click", () => {
+                    const opened = videoContainer.classList.toggle("show");
+                    videoContainer.innerHTML = "";
+                    const newText = document.createElement("p");
+                    newText.textContent = opened ? "▼クリックで閉じる" : "▼クリックで開く";
+                    videoContainer.appendChild(newText);
+                    if (opened) videoContainer.appendChild(iframe);
+                });
+            } else {
+                videoContainer.appendChild(iframe);
+            }
+            
+            
+            const p = document.createElement("p");
+            const label = document.createElement("label");
+            label.textContent = "再生済み: ";
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = false;
+            checkbox.disabled = !isToggleable;
+            label.appendChild(checkbox);
+            p.appendChild(label);
+
+            checkbox.addEventListener("change", async () => {
+                const { error } = await supabase
+                    .from("request_music")
+                    .update({ isplayed: checkbox.checked })
+                    .eq("musicName", musicName)
+                    .eq("url", url);
+
+                if (error) showNotification("更新に失敗しました：" + error.message);
+                else showNotification("更新しました！");
+            });
+
+            div.append(title, requester, videoContainer, description, p, document.createElement("hr"));
+
+            if (isOpened) videoContainer.click();
+
+            return div;
+        }
+
+        // ===== データ取得 =====
+        async function getTodayMusic() {
+            const { data, error } = await supabase
+                .from("request_music")
+                .select("*")
+                .order("musicName", { ascending: true })
+                .eq("isplayed", false);
+
+            if (error) {
+                showNotification("データの取得に失敗しました。");
+                console.error(error);
+                return;
+            }
+
+            musicData = data;
+            todayMusicList.innerHTML = "";
+            data.forEach(({ musicName, url, desc, studentId }) => {
+                todayMusicList.appendChild(createMusicItem(musicName, url, desc, studentId));
+            });
+        }
+
+        function getStudentId(namesJson, fullName) {
+            for (const [cls, list] of Object.entries(namesJson)) {
+                if (!Array.isArray(list)) continue;
+                const index = list.indexOf(fullName);
+                if (index !== -1) {
+                    return `${cls}${String(index + 1).padStart(2, "0")}`;
+                }
+            }
+            return "0A00";
+        }
+
+        // ===== 送信処理 =====
+        sendForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const now = new Date();
+            const lastDateStr = localStorage.getItem("lastRequestMusicDate");
+            if (lastDateStr) {
+                const lastDate = new Date(lastDateStr);
+                const lastMonday = new Date(now);
+                lastMonday.setDate(now.getDate() - now.getDay() + 1);
+                if (lastDate < lastMonday) localStorage.setItem("weekofRequestMusicNumber", "0");
+            }
+
+            if ((localStorage.getItem("weekofRequestMusicNumber") || "0") >= "5") {
+                showNotification("今週の上限に達しました。");
+                return;
+            }
+
+            // --- 学籍番号取得 ---
+            let studentId = "0A00";
+            try {
+                // 🔐 studentsテーブルから取得
+                const { data: student, error } = await supabase
+                    .from("students")
+                    .select("student_id")
+                    .eq("name", user.user_metadata.full_name)
+                    .single();
+                if (error) {
+                    console.error(error);
+                    return;
+                }
+                studentId = student.student_id;
+            } catch (e) {
+                console.error("名前より学籍番号 読み込み失敗", e);
+            }
+            const musicName = document.getElementById("musicName").value.trim();
+            const url = document.getElementById("musicUrl").value.trim();
+            const desc = document.getElementById("description").value.trim();
+            const userId = user.id;
+
+            if (!studentId.startsWith("3A")) {
+                showNotification("3A組の生徒のみがリクエストできます。");
+                return;
+            }
+
+            if (!studentId || !musicName || !url || (!url.includes("watch?v=") && !url.includes("youtu.be/"))) {
+                showNotification("正しく入力してください");
+                return;
+            }
+
+            const { data: existingData, error: existingError } = await supabase
+                .from("request_music")
+                .select("*")
+                .or(`musicName.eq.${musicName},url.eq.${url}`);
+
+            if (existingError) return showNotification("確認中にエラー：" + existingError.message);
+            if (existingData && existingData.length > 0) return showNotification("この曲はすでに登録されています。");
+
+            const { error } = await supabase.from("request_music").insert([{ studentId, musicName, url, desc, user_id: userId }]);
+            if (error) return showNotification("送信に失敗しました：" + error.message);
+
+            showNotification("送信しました！");
+            sendForm.reset();
+            getTodayMusic();
+            localStorage.setItem("weekofRequestMusicNumber", String(Number(localStorage.getItem("weekofRequestMusicNumber") || "0") + 1));
+            localStorage.setItem("lastRequestMusicDate", new Date().toISOString());
+        });
+
+        // ===== ボタン操作 =====
+        openMusicBtn.addEventListener("click", () => {
+            const isOpen = todayMusic.classList.toggle("open");
+            if (isOpen) todayMusic.appendChild(todayMusicList);
+            else if (todayMusic.contains(todayMusicList)) todayMusic.removeChild(todayMusicList);
+        });
+
+        function buildSubmitCountMap(data) {
+            const map = {};
+            data
+                .filter(item => !item.isplayed)
+                .forEach(item => {
+                    map[item.studentId] = (map[item.studentId] || 0) + 1;
+                });
+            return map;
+        }
+
+        let lastSelectedStudentId = null;
+
+        function weightedRandomChoice(items, submitCountMap) {
+            // 未再生のみ対象
+            const unplayed = items.filter(item => !item.isplayed);
+
+            if (!unplayed.length) return null;
+
+            // 連続同一学籍番号回避
+            const filtered = unplayed.filter(
+                item => item.studentId !== lastSelectedStudentId
+            );
+            const targetItems = filtered.length ? filtered : unplayed;
+
+            const weights = targetItems.map(item => {
+                const count = submitCountMap[item.studentId] || 1;
+                return 1 / count;
+            });
+
+            const total = weights.reduce((a, b) => a + b, 0);
+            let r = Math.random() * total;
+
+            for (let i = 0; i < targetItems.length; i++) {
+                r -= weights[i];
+                if (r <= 0) {
+                    lastSelectedStudentId = targetItems[i].studentId;
+                    return targetItems[i];
+                }
+            }
+
+            lastSelectedStudentId = targetItems[targetItems.length - 1].studentId;
+            return targetItems[targetItems.length - 1];
+        }
+
+        randomMusicBtn.addEventListener("click", () => {
+            const unplayed = musicData.filter(item => !item.isplayed);
+            if (!unplayed.length) {
+                showNotification("未再生の曲がありません。");
+                return;
+            }
+
+            const submitCountMap = buildSubmitCountMap(unplayed);
+
+            let count = 0;
+            const selectedMusic = document.getElementById("selectedMusic");
+
+            const intervalId = setInterval(() => {
+                const item = weightedRandomChoice(unplayed, submitCountMap);
+                if (!item) return;
+
+                const { musicName, url, desc, studentId } = item;
+
+                selectedMusic.innerHTML = "";
+                selectedMusic.classList.add("open");
+                selectedMusic.appendChild(
+                    createMusicItem(musicName, url, desc, studentId, true, true, false)
+                );
+
+                if (++count >= 20) {
+                    clearInterval(intervalId);
+                    enlargeIframe(selectedMusic.querySelector("iframe"));
+                }
+            }, 50);
+        });
+
+        // ===== YouTube全画面アニメ =====
+        function enlargeIframe(iframe) {
+            if (!iframe) return;
+            const startWidth = 200, startHeight = 150;
+            const targetWidth = window.innerWidth, targetHeight = window.innerHeight;
+
+            Object.assign(iframe.style, {
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                width: startWidth + "px",
+                height: startHeight + "px",
+                transform: "translate(-50%, -50%)",
+                zIndex: 9999,
+                border: "none",
+                margin: 0,
+                borderRadius: "0",
+            });
+
+            const startTime = performance.now();
+            const duration = 500;
+
+            function expandAnimation(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+
+                iframe.style.width = `${startWidth + (targetWidth - startWidth) * ease}px`;
+                iframe.style.height = `${startHeight + (targetHeight - startHeight) * ease}px`;
+
+                if (progress < 1) requestAnimationFrame(expandAnimation);
+                else Object.assign(iframe.style, { top: 0, left: 0, width: "100vw", height: "100vh", transform: "none" });
+            }
+
+            requestAnimationFrame(expandAnimation);
+
+            const closeBtn = document.createElement("button");
+            Object.assign(closeBtn.style, {
+                position: "fixed",
+                top: "10px",
+                right: "10px",
+                zIndex: 10000,
+                fontSize: "24px",
+                background: "rgba(0,0,0,0.5)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "5px",
+                padding: "5px 10px",
+                cursor: "pointer",
+            });
+            closeBtn.textContent = "✖";
+            document.body.appendChild(closeBtn);
+
+            closeBtn.addEventListener("click", () => {
+                iframe.style.width = "auto";
+                iframe.style.height = "auto";
+                iframe.style.position = "static";
+                closeBtn.remove();
+            });
+        }
+
+        function shrinkIframe(iframe, closeBtn, startW, startH, targetW, targetH) {
+            const shrinkStart = performance.now();
+            const shrinkDuration = 300;
+
+            function shrinkAnimation(now) {
+                const elapsed = now - shrinkStart;
+                const progress = Math.min(elapsed / shrinkDuration, 1);
+                const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+
+                iframe.style.width = `${targetW - (targetW - startW) * ease}px`;
+                iframe.style.height = `${targetH - (targetH - startH) * ease}px`;
+
+                if (progress < 1) requestAnimationFrame(shrinkAnimation);
+                else {
+                    iframe.remove();
+                    closeBtn.remove();
+                }
+            }
+
+            requestAnimationFrame(shrinkAnimation);
+        }
+
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                const iframe = document.querySelector("#selectedMusic iframe");
+                if (iframe) {
+                    iframe.style.width = "auto";
+                    iframe.style.height = "auto";
+                    iframe.style.position = "static";
+                    const closeBtn = document.querySelector("button[style*='position: fixed']");
+                    if (closeBtn) closeBtn.remove();
+                }
+            }
+        });
+
+        // ===== 初回読み込み =====
+        getTodayMusic();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"></script>
+    <script type="module" src="/mito1-website/src/notice/notice.js"></script>
+    <script src="/mito1-website/src/customAlert.js" type="module"></script>
+    <script type="module" src="/mito1-website/src/restriction.js"></script>
+    <script type="module" src="/mito1-website/src/notification.js"></script>
+    <script src="/mito1-website/src/verification.js" type="module"></script>
+
+    <script data-goatcounter="https://talus.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+
+</html>

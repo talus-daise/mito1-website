@@ -1,0 +1,281 @@
+:root {
+    --aside-bg: #e3f2fd;
+    --aside-text: #0a2540;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.18);
+
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* サイドメニュー本体 */
+#asideMenu {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 40dvw;
+    height: 100dvh;
+    background-color: var(--aside-bg);
+    color: var(--aside-text);
+    padding: 1rem 3rem 1rem 2rem;
+    z-index: 3001;
+
+    box-shadow: var(--shadow-md);
+    overflow: auto;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+        opacity 0.4s var(--ease-standard)
+}
+
+/* 表示状態 */
+#asideMenu.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* 閉じる途中 */
+#asideMenu.closing {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* 見出し */
+#asideMenu h2,
+#asideMenu h3 {
+    color: var(--aside-text);
+}
+
+#asideMenu #noticeContainer {
+    margin-top: 1.5rem;
+}
+
+/* ===============================
+   メニューボタン
+================================ */
+
+#menuButton {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+
+    width: 3rem;
+    height: 3rem;
+
+    cursor: pointer;
+    font-size: 2rem;
+
+    padding: 0;
+
+    color: #3498db;
+    background-color: #ffffff;
+    border: none;
+    border-radius: var(--radius-sm);
+
+    box-shadow: var(--shadow-sm);
+    z-index: 3000;
+
+    transition:
+        width 0.6s var(--ease-standard),
+        height 0.6s var(--ease-standard),
+        top 0.6s var(--ease-standard),
+        right 0.6s var(--ease-standard),
+        background-color 0.3s ease,
+        border-radius 0.6s var(--ease-standard),
+        color 0.3s ease;
+}
+
+/* メニュー展開時（拡大） */
+#menuButton.open {
+    width: 40dvw;
+    height: 100dvh;
+    top: 0;
+    right: 0;
+
+    background-color: var(--aside-bg);
+    color: var(--aside-text);
+    border-radius: 0;
+    font-size: 0;
+}
+
+/* サイドメニューが表示されている時の位置 */
+#asideMenu.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0.8s;
+    /* ボタンが拡大してから表示 */
+}
+
+#asideMenu.closing {
+    opacity: 0;
+    visibility: hidden;
+    transition-delay: 0s;
+    /* ボタン縮小と同時に消える */
+}
+
+#menuButton.open {
+    width: 40dvw;
+    /* サイドメニューと同じ幅 */
+    height: 100dvh;
+    /* サイドメニューと同じ高さ */
+    right: 0;
+    top: 0;
+    margin: 0;
+    border-radius: 0;
+    background: #e3f2fd;
+    color: #0a2540;
+    font-size: 0;
+    /* アイコンを消す */
+    transition: all 0.8s ease;
+}
+
+/* ===============================
+   閉じるボタン
+================================ */
+
+#closeButton {
+    position: fixed;
+    top: 1.25rem;
+    right: -4rem;
+
+    cursor: pointer;
+    font-size: 2rem;
+
+    color: #3498db;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+
+    z-index: 3003;
+    transform: rotate(180deg);
+
+    transition:
+        right 0.5s var(--ease-standard),
+        transform 0.5s var(--ease-standard);
+}
+
+#closeButton.open {
+    right: 2rem;
+    transform: rotate(0);
+}
+
+/* ===============================
+   ナビゲーション
+================================ */
+
+nav {
+    width: 100%;
+    margin: 2rem 0;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+nav li {
+    width: 100%;
+}
+
+/* ナビリンク */
+nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    min-width: 15rem;
+    padding: 0.75rem 1rem;
+
+    background-color: #3498db;
+    color: #ffffff;
+
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+
+    transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.1s ease;
+}
+
+nav a:hover {
+    color: #ffffff;
+    background-color: #21618c;
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+nav i {
+    color: #ffffff;
+    margin: 0;
+}
+
+/* ===============================
+   アバター
+================================ */
+
+.avatar {
+    background-color: #ffffff;
+    color: var(--aside-text);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.avatar img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+/* ===============================
+   スクロール制御
+================================ */
+
+body.no-scroll {
+    overflow: hidden;
+}
+
+/* ===============================
+   レスポンシブ
+================================ */
+
+@media (max-width: 960px) {
+    nav a {
+        min-width: 50%;
+    }
+}
+
+@media (max-width: 428px) {
+    #asideMenu.open {
+        width: 100dvw;
+    }
+
+    #menuButton.open {
+        width: 100dvw;
+        height: 100dvh;
+    }
+
+    #closeButton.open {
+        right: 1rem;
+    }
+
+    nav a {
+        min-width: 100%;
+        padding: 1rem;
+    }
+}
