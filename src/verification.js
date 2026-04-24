@@ -369,7 +369,7 @@ function showLoginOverlay() {
         await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: location.href,
+                redirectTo: "https://talus-daise.github.io/mito1-website/request_music/",
                 queryParams: {
                     hd: "mito1-h.ibk.ed.jp"
                 }
